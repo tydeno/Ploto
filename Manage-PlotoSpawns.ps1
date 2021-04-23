@@ -17,5 +17,5 @@ function Manage-PlotoSpawns
         Start-Sleep 3600
     }
     
-    Until ($SpawnedCount -ne $InputAmountToSpawn)
+    Until ($SpawnedCount -eq $InputAmountToSpawn)
 }
