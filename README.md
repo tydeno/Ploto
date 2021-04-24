@@ -30,7 +30,6 @@ Get-PlotoOutDrives -OutDriveDenom "out"
 ```
 ![alt text](https://github.com/tydeno/Ploto/blob/main/Pictures/CAP_OutDrives1.PNG)
 
-
 ## Get-PlotoTempDrives
 Gets all Windows Volumes that match the -TempDriveDenom parameter and checks if free space is greater than 270 GB (amount currently used by chia plots as temp storage).
 It wraps all the needed information of the volume like DriveLetter, ChiaDriveType, VolumeName, a bool IsPlootable, and the calculated amount of plots to temp, whether it has a plot in porgress (determined by checking if the drive contains any file) into a object and returns the collection of objects as the result of that function.
@@ -40,6 +39,43 @@ Example:
 ```powershell
  Get-PlotoTempDrives -TempDriveDenom "plot"
 ```
+Output:
+
+```
+DriveLetter         : E:
+ChiaDriveType       : Temp
+VolumeName          : ChiaPlot 3 Evo 860 512GB 
+FreeSpace           : 215.19
+IsPlottable         : False
+AmountOfPlotsToTemp : 0
+HasPlotInProgress   : Likely
+
+DriveLetter         : H:
+ChiaDriveType       : Temp
+VolumeName          : ChiaPlot 2 Crucial CT 512 GB 2
+FreeSpace           : 228.14
+IsPlottable         : False
+AmountOfPlotsToTemp : 0
+HasPlotInProgress   : Likely
+
+DriveLetter         : I:
+ChiaDriveType       : Temp
+VolumeName          : ChiaPlot 1 Crucial CT 512GB  
+FreeSpace           : 451.07
+IsPlottable         : True
+AmountOfPlotsToTemp : 1
+HasPlotInProgress   : False
+
+DriveLetter         : Q:
+ChiaDriveType       : Temp
+VolumeName          : ChiaPlot 4 2TB SSD
+FreeSpace           : 1588.29
+IsPlottable         : False
+AmountOfPlotsToTemp : 5
+HasPlotInProgress   : True
+```
+
+
 
 ![alt text](https://github.com/tydeno/Ploto/blob/main/Pictures/CAP_TempDrives1.PNG)
 
