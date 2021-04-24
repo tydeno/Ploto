@@ -52,9 +52,11 @@ So for me I set the param to "plot".
 
 # FAQ
 > PlotoSpawner always tells me there are no temp drives available but there is enough storage?!
+
 It checks if a temp drive has plotting in progress by checking if the drive has any Child Items in it (Files or folders). If yes, this indicates that plotting is in progress, as I mostly use completely empty drives for plotting. When it indicates plot in progress on a temp drive, that drive is considered as not available. So if you use drives that have other files in it, you need to make sure you alter Get-PlotoTempDrives function to your needs.
 
 > Can I shut down the script when I dont want Ploto to spawn more Plots?
+
 Yep. The individual Chia Plot Jobs wont be affected by that.
 
 # HowTo Use it
