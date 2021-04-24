@@ -300,7 +300,7 @@ Transforms Twilio Credentials into securestrings to be used as Input for API Cal
 #### Example:
 
 ```powershell
-Create-TwilioCredential -AccountSid $TwilioSID -$AuthToken $TwilioAuthToken
+Format-TwilioCredential -AccountSid $TwilioSID -$AuthToken $TwilioAuthToken
 ```
 
 #### Output:
