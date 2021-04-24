@@ -1,13 +1,21 @@
 function Manage-PlotoSpawns
 {
-    $InputAmountToSpawn = 12
+	Param(
+	[parameter(Mandatory=$true)]
+	$InputAmountToSpawn,
+	[parameter(Mandatory=$true)]
+	$OutDriveDenom,
+	[parameter(Mandatory=$true)]
+	$TempDriveDenom
+)
+
     $SpawnedCount = 0
 
     Do
     {
         Write-Host "PlotoManager @"(Get-Date)": Initiating Spawning..."
  
-        $SpawnedPlots = Spawn-PlotoPlots
+        $SpawnedPlots = Spawn-PlotoPlots -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom
 
         if ($SpawnedPlots)
             {
