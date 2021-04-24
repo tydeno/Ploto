@@ -12,7 +12,7 @@ Ploto iterates once through all available TempDrives and spawns a plot per each 
 After that, Ploto checks if amount Spawned is equal as defined as input. If not, Ploto keeps going until it is.
 
 # Functions explained
-Ploto consists currently of these functions:
+Ploto consists currently of these main functions:
 * Get-PlotoOutDrives
 * Get-PlotoTempDrives
 * Spawn-PlotoPlots
@@ -32,6 +32,12 @@ Calls Get-PlotoTempDrives to get all Temp drives that are plottable. For each te
 
 ## Manage-PlotoSpawns
 Continously calls Spawn-PlotoSpawns and states progress and other information. It runs until it created the amount of specified Plot by using the -InputAmountToSpawn param.
+
+# helper Functions used 
+For sending SMS for notifications, Ploto uses these self-crafted Twilio helper wrapprs.
+## Create-TwilioCredential
+## Send-SMS
+
 
 # Parameters explained
 This section describes the params for the Main Function "Manage-PlotoSpawns". These params are passed along the stack to all needed helper functions.
@@ -65,6 +71,20 @@ It checks if a temp drive has plotting in progress by checking if the drive has 
 > Can I shut down the script when I dont want Ploto to spawn more Plots?
 
 Yep. The individual Chia Plot Jobs wont be affected by that.
+
+# Prereqs
+The following prereqs need to be met in order for Ploto to function properly:
+
+* chia.exe is installed and path is valid (currently hardcoded to v1.1.1.1, so may break upon update. Will adjust)
+* BITS (Background Intelligent Transfer Service) is functioning properly (used to move final plots around if needed -> Manage-PlotoMove) 
+
+If you want to send and receive SMS:
+
+* Twilio Account
+* Twilio AccountSid
+* Twilio AuthToken
+* Twilio Sender Number
+
 
 # HowTo Use it
 ```powershell
