@@ -20,7 +20,13 @@ Ploto consists currently of these functions:
 
 
 ## Get-PlotoOutDrives
+Gets all Windows Volumes that match the -OutDriveDenom parameter and checks if free space is greater than 107 GB (amount currently used by final chia plots).
+It wraps all the needed information of the volume like DriveLetter, ChiaDriveType, VolumeName, a bool IsPlootable, and the calculated amount of plots to hold into a object and returns the collection of objects as the result of that function.
+
 ## Get-PlotoTempDrives
+Gets all Windows Volumes that match the -TempDriveDenom parameter and checks if free space is greater than 270 GB (amount currently used by chia plots as temp storage).
+It wraps all the needed information of the volume like DriveLetter, ChiaDriveType, VolumeName, a bool IsPlootable, and the calculated amount of plots to temp, whether it has a plot in porgress (determined by checking if the drive contains any file) into a object and returns the collection of objects as the result of that function.
+
 ## Spawn-PlotoPlots
 ## Manage-PlotoSpawns
 
@@ -45,6 +51,9 @@ Use a denonimator that all your chia temp drives have in common. For me, all Chi
 So for me I set the param to "plot".
 
 # FAQ
+PlotoSpawner always tells me there are no temp drives available but there is enough storage?!
+It checks if a temp drive has plotting in progress by checking if the drive has any Child Items in it (Files or folders). If yes, this indicates that plotting is in progress, as I mostly use completely empty drives for plotting. When it indicates plot in progress on a temp drive, that drive is considered as not available. So if you use drives that have other files in it, you need to make sure you alter Get-PlotoTempDrives function to your needs.
+
 Can I shut down the script when I dont want Ploto to spawn more Plots?
 Yep. The individual Chia Plot Jobs wont be affected by that.
 
