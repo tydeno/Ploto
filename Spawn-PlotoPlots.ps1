@@ -1,8 +1,14 @@
 function Spawn-PlotoPlots
 {
+	Param(
+		[parameter(Mandatory=$true)]
+		$OutDriveDenom,
+		[parameter(Mandatory=$true)]
+		$TempDriveDenom
+		)
 
-$PlottableTempDrives = Get-PlotoTempDrives | ? {$_.IsPlottable -eq $true}   
-$PlottableOutDrives = Get-PlotoOutDrives | ? {$_.IsPlottable -eq $true}
+$PlottableTempDrives = Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom | ? {$_.IsPlottable -eq $true}   
+$PlottableOutDrives = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom | ? {$_.IsPlottable -eq $true}
 
 $collectionWithPlotJobs= New-Object System.Collections.ArrayList
 
