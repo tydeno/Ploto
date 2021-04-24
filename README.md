@@ -11,22 +11,9 @@ When there is one available, Ploto determines the best OutDrive (most free space
 Ploto iterates once through all available TempDrives and spawns a plot per each TempDrive (as long as enough OutDrive space is given).
 After that, Ploto checks if amount Spawned is equal as defined as input. If not, Ploto keeps going until it is.
 
-# Functions explained
-Ploto consists currently of these main functions:
 
-### PlotoSpawn
-* Get-PlotoOutDrives
-* Get-PlotoTempDrives
-* Spawn-PlotoPlots
-* Manage-PlotoSpawns
-
-### PlotoMove
-* Get-PlotoFinalPlotFile
-* Move-PlotoPlots
-
-
-## PlotoSpawn
-### Get-PlotoOutDrives
+# PlotoSpawn
+## Get-PlotoOutDrives
 Gets all Windows Volumes that match the -OutDriveDenom parameter and checks if free space is greater than 107 GB (amount currently used by final chia plots).
 It wraps all the needed information of the volume like DriveLetter, ChiaDriveType, VolumeName, a bool IsPlootable, and the calculated amount of plots to hold into a object and returns the collection of objects as the result of that function.
 
@@ -67,7 +54,7 @@ If a Volume has your OutDriveDenom in their VolumeName, they will also be used, 
 
 
 
-### Get-PlotoTempDrives
+## Get-PlotoTempDrives
 Gets all Windows Volumes that match the -TempDriveDenom parameter and checks if free space is greater than 270 GB (amount currently used by chia plots as temp storage).
 It wraps all the needed information of the volume like DriveLetter, ChiaDriveType, VolumeName, a bool IsPlootable, and the calculated amount of plots to temp, whether it has a plot in porgress (determined by checking if the drive contains any file) into a object and returns the collection of objects as the result of that function.
 
