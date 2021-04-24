@@ -28,6 +28,8 @@ Example:
 ```powershell
 Get-PlotoOutDrives -OutDriveDenom "out"
 ```
+![alt text](https://github.com/tydeno/Ploto/blob/main/Pictures/CAP_OutDrives.PNG)
+
 
 ## Get-PlotoTempDrives
 Gets all Windows Volumes that match the -TempDriveDenom parameter and checks if free space is greater than 270 GB (amount currently used by chia plots as temp storage).
