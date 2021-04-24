@@ -87,8 +87,12 @@ Example:
 ```powershell
 Spawn-PlotoPlots -OutDriveDenom "out" -TempDriveDenom "plot"
 ```
+Output:
 
-![alt text](https://github.com/tydeno/Ploto/blob/main/Pictures/CAP_PlotoSpawner.PNG)
+```
+PlotoSpawner @ 4/24/2021 11:20:01 PM : Checking for available temp and out drives...
+PlotoSpawner @ 4/24/2021 11:20:01 PM : No available Temp and or Out Disks found.
+```
 
 ## Manage-PlotoSpawns
 Main function that nests all else.
@@ -100,12 +104,47 @@ Example:
 Manage-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot"
 ```
 
+Output:
+
+```
+PlotoManager @ 4/24/2021 9:44:14 PM : Initiating PlotoManager...
+PlotoSpawner @ 4/24/2021 9:44:15 PM : Checking for available temp and out drives...
+PlotoSpawner @ 4/24/2021 9:44:15 PM : No available Temp and or Out Disks found.                                                                                                    PlotoManager @ 4/24/2021 9:44:15 PM : No plots spawned in this cycle, as no temp disks available                                                                                  PlotoManager @ 4/24/2021 9:44:15 PM : Overall spawned Plots since start of script:  0                                                                                             PlotoManager @ 4/24/2021 9:44:15 PM : Entering Sleep for 900, then checking again for available temp and out drives                                                               ----------------------------------------------------------------------------------------------------------------------
+PlotoManager @ 4/24/2021 9:59:15 PM : Initiating PlotoManager...
+PlotoSpawner @ 4/24/2021 9:59:15 PM : Checking for available temp and out drives...
+PlotoSpawner @ 4/24/2021 9:59:15 PM : No available Temp and or Out Disks found.
+PlotoManager @ 4/24/2021 9:59:15 PM : No plots spawned in this cycle, as no temp disks available
+PlotoManager @ 4/24/2021 9:59:15 PM : Overall spawned Plots since start of script:  0
+PlotoManager @ 4/24/2021 9:59:15 PM : Entering Sleep for 900, then checking again for available temp and out drives
+----------------------------------------------------------------------------------------------------------------------
+PlotoManager @ 4/24/2021 10:14:15 PM : Initiating PlotoManager...
+PlotoSpawner @ 4/24/2021 10:14:15 PM : Checking for available temp and out drives...
+PlotoSpawner @ 4/24/2021 10:14:15 PM : No available Temp and or Out Disks found.
+PlotoManager @ 4/24/2021 10:14:15 PM : No plots spawned in this cycle, as no temp disks available
+PlotoManager @ 4/24/2021 10:14:15 PM : Overall spawned Plots since start of script:  0
+PlotoManager @ 4/24/2021 10:14:15 PM : Entering Sleep for 900, then checking again for available temp and out drives
+----------------------------------------------------------------------------------------------------------------------
+PlotoManager @ 4/24/2021 10:29:15 PM : Initiating PlotoManager...
+PlotoSpawner @ 4/24/2021 11:10:57 PM : Checking for available temp and out drives...
+PlotoSpawner @ 4/24/2021 11:10:57 PM : Found available temp drive:  @{DriveLetter=I:; ChiaDriveType=Temp; VolumeName=ChiaPlot 1 Crucial CT 512GB  ; FreeSpace=451.07; IsPlottable=True; AmountOfPlotsToTemp=1; HasPlotInProgress=False}
+PlotoSpawner @ 4/24/2021 11:10:57 PM : Found most suitable Out Drive:  @{DriveLetter=K:; ChiaDriveType=Out; VolumeName=ChiaOut3; FreeSpace=364.24; IsPlottable=True; AmountOfPlotsToHold=3}
+PlotoSpawner @ 4/24/2021 11:10:57 PM : Using the following Arguments for Chia.exe:  plots create -k 32 -t I:\ -d K:\ -e
+PlotoSpawner @ 4/24/2021 11:10:57 PM : Starting plotting using the following Path to chia.exe:  C:\Users\Yanik\AppData\Local\chia-blockchain\app-1.1.1\resources\app.asar.unpacked\daemon\
+PlotoSpawner @ 4/24/2021 11:10:57 PM : The following Job was initiated:  @{OutDrive=K:; TempDrive=I:; StartTime=4/24/2021 11:10:57 PM}
+--------------------------------------------------------------------
+PlotoManager @ 4/24/2021 11:25:57 PM : Amount of spawned Plots in this iteration:
+PlotoManager @ 4/24/2021 11:25:57 PM : Spawned the following plots using Ploto Spawner:  @{OutDrive=K:; TempDrive=I:; StartTime=4/24/2021 11:10:57 PM}
+PlotoManager @ 4/24/2021 11:25:58 PM : Overall spawned Plots since start of script:  0
+PlotoManager @ 4/24/2021 11:25:58 PM : Entering Sleep for 900, then checking again for available temp and out drives
+----------------------------------------------------------------------------------------------------------------------
+```
+
 Example with SMS Notifications (trough Twilio):
 
 ```powershell
 Manage-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot" -SendSMSWhenJobDone $true -AccountSid $TwilioAccountSid -AuthToken $TwilioAuthToken -from $TwilioNumber -to $YourNumber
 ```
-![alt text](https://github.com/tydeno/Ploto/blob/main/Pictures/CAP_PlotoManager.PNG)
+
 
 # helper Functions used 
 For sending SMS for notifications, Ploto uses these self-crafted Twilio helper wrapprs.
