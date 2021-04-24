@@ -50,7 +50,7 @@ ChiaDriveType       : Out
 VolumeName          : ChiaOut3
 FreeSpace           : 364.24
 IsPlottable         : True
-AmountOfPlotsToHold : 3****
+AmountOfPlotsToHold : 3
 ```
 
 ## Get-PlotoTempDrives
