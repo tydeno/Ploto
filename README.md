@@ -18,6 +18,11 @@ Ploto consists currently of these main functions:
 * Spawn-PlotoPlots
 * Manage-PlotoSpawns
 
+Move final Plots around:
+
+* Get-PlotoFinalPlotFile
+* Move-PlotoPlots
+* Manage-PlotoMove
 
 ## Get-PlotoOutDrives
 Gets all Windows Volumes that match the -OutDriveDenom parameter and checks if free space is greater than 107 GB (amount currently used by final chia plots).
@@ -28,7 +33,24 @@ Example:
 ```powershell
 Get-PlotoOutDrives -OutDriveDenom "out"
 ```
-![alt text](https://github.com/tydeno/Ploto/blob/main/Pictures/CAP_OutDrives1.PNG)
+
+Output:
+
+```
+DriveLetter         : D:
+ChiaDriveType       : Out
+VolumeName          : ChiaOut2
+FreeSpace           : 363.12
+IsPlottable         : True
+AmountOfPlotsToHold : 3
+
+DriveLetter         : K:
+ChiaDriveType       : Out
+VolumeName          : ChiaOut3
+FreeSpace           : 364.24
+IsPlottable         : True
+AmountOfPlotsToHold : 3****
+```
 
 ## Get-PlotoTempDrives
 Gets all Windows Volumes that match the -TempDriveDenom parameter and checks if free space is greater than 270 GB (amount currently used by chia plots as temp storage).
@@ -74,10 +96,6 @@ IsPlottable         : False
 AmountOfPlotsToTemp : 5
 HasPlotInProgress   : True
 ```
-
-
-
-![alt text](https://github.com/tydeno/Ploto/blob/main/Pictures/CAP_TempDrives1.PNG)
 
 ## Spawn-PlotoPlots
 Calls Get-PlotoTempDrives to get all Temp drives that are plottable. For each tempDrive it determines the most appropriate OutDrive (using Get-PlotoOutDrives function), stitches together the ArgumentList for chia and fires off the chia plot job using chia.exe. For each created PlotJob the function creates an Object and appends it to a collection of objects, which are returned upon the function call. 
