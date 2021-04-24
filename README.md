@@ -71,12 +71,12 @@ If a Volume has your OutDriveDenom in their VolumeName, they will also be used, 
 Gets all Windows Volumes that match the -TempDriveDenom parameter and checks if free space is greater than 270 GB (amount currently used by chia plots as temp storage).
 It wraps all the needed information of the volume like DriveLetter, ChiaDriveType, VolumeName, a bool IsPlootable, and the calculated amount of plots to temp, whether it has a plot in porgress (determined by checking if the drive contains any file) into a object and returns the collection of objects as the result of that function.
 
-Example:
+#### Example:
 
 ```powershell
  Get-PlotoTempDrives -TempDriveDenom "plot"
 ```
-Output:
+#### Output:
 
 ```
 DriveLetter         : E:
@@ -111,6 +111,17 @@ IsPlottable         : False
 AmountOfPlotsToTemp : 5
 HasPlotInProgress   : True
 ```
+
+#### Parameters:
+```
+-TempDriveDenom
+```
+
+The same as -OutDriveDenom but for your temporary drives chia uses to actually plot on. Usually these are are your SATA/NVMe SSDs.
+Use a denonimator that all your chia temp drives have in common. For me, all Chia Temp drives (drives I plot on) are called "ChiaPlot 1-4".
+So for me I set the param to "plot". 
+
+Make sure your TempDriveDenom is unique to your real SSDs you want to use to create chia Plots. If a Volume has your TempDriveDenom in their VolumeName, they will also be used, if enough free space is given.
 
 ### Spawn-PlotoPlots
 Calls Get-PlotoTempDrives to get all Temp drives that are plottable. For each tempDrive it determines the most appropriate OutDrive (using Get-PlotoOutDrives function), stitches together the ArgumentList for chia and fires off the chia plot job using chia.exe. For each created PlotJob the function creates an Object and appends it to a collection of objects, which are returned upon the function call. 
