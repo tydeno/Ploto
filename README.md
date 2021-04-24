@@ -56,7 +56,10 @@ AmountOfPlotsToHold : 3
 
 #### Parameters:
 
-##### OutDriveDenom
+```powershell
+-OutDriveDenom
+```
+
 This param defines your OutDrives. An OutDrive in Ploto Terms is the drive chia stores the final plot to. Usually these are your big capacity HDDs.
 
 Make sure your OutDriveDenom is unique to your real HDD you want to use to store chia Plots. 
