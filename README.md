@@ -40,6 +40,8 @@ If you want to send and receive SMS:
 
 
 # PlotoSpawn
+PlotoSpawn spawns one plot job on each available SSD defined as a TempDrive, if it has enough free space (270 GB) and there is no plotting in progress on that drive. Plotting in progress is considered when a SSD defined as a TempDrive has less than 270 GB free space or has ANY files or folders in it (Yes, the whole drive has to be completely empty. I always plot in root :))
+
 ## Get-PlotoOutDrives
 Gets all Windows Volumes that match the -OutDriveDenom parameter and checks if free space is greater than 107 GB (amount currently used by final chia plots).
 It wraps all the needed information of the volume like DriveLetter, ChiaDriveType, VolumeName, a bool IsPlootable, and the calculated amount of plots to hold into a object and returns the collection of objects as the result of that function.
@@ -223,6 +225,7 @@ See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/b
 See Parameters Section of [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-1)
 
 # PlotoMove
+It continously searches for final Plots on your OutDrives and moves them to your desired location, if the desired location has enough free space. I do this for transferring plots from my plotting machine to my farming machine.
 
 ## Get-PlotoFinalPlotFile
 Searches specified Outdrives for final .PLOT files and returns an array of objects with all final plots found, their names and Path.
