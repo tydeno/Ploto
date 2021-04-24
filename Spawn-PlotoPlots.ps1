@@ -1,69 +1,77 @@
 function Spawn-PlotoPlots
 {
 
-Write-Host "Checking for available temp and out drives..."
-Write-Host " "
-
 $PlottableTempDrives = Get-PlotoTempDrives | ? {$_.IsPlottable -eq $true}   
 $PlottableOutDrives = Get-PlotoOutDrives | ? {$_.IsPlottable -eq $true}
 
 $collectionWithPlotJobs= New-Object System.Collections.ArrayList
-foreach ($PlottableTempDrive in $PlottableTempDrives)
+
+Write-Host "PlotoSpawner @"(Get-Date)": Checking for available temp and out drives..."
+
+if ($PlottableTempDrives)
     {
-        Write-Host "Found available temp drive:"
-        Write-Host $PlottableTempDrive
-        Write-Host " "
+         foreach ($PlottableTempDrive in $PlottableTempDrives)
+            {
+                Write-Host "PlotoSpawner @"(Get-Date)": Found available temp drive:"
+                Write-Host $PlottableTempDrive | ft
 
-        #Choose most suitable OutDrive (assumed the one with most space)
-        $max = ($PlottableOutDrives | measure-object -Property FreeSpace -maximum).maximum
-        $OutDrive = $PlottableOutDrives | ? { $_.FreeSpace -eq $max}
-        $OutDriveLetter = $OutDrive.DriveLetter
+                #Choose most suitable OutDrive (assumed the one with most space)
+                $max = ($PlottableOutDrives | measure-object -Property FreeSpace -maximum).maximum
+                $OutDrive = $PlottableOutDrives | ? { $_.FreeSpace -eq $max}
+                $OutDriveLetter = $OutDrive.DriveLetter
 
-        Write-Host "Found most suitable Out Drive:"
-        Write-Host $OutDrive
-        Write-Host " "
+                Write-Host "PlotoSpawner @"(Get-Date)": Found most suitable Out Drive:"
+                Write-Host $OutDrive | ft
         
-        #stitch together ArgumentsList for chia.exe
-        $ArgumentList = "plots create -k 32 -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\ -e"
+                #stitch together ArgumentsList for chia.exe
+                $ArgumentList = "plots create -k 32 -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\ -e"
 
-        Write-Host "Using the following Arguments for Chia.exe:"
-        Write-Host $ArgumentList
-        Write-Host " "
+                Write-Host "PlotoSpawner @"(Get-Date)": Using the following Arguments for Chia.exe:"
+                Write-Host $ArgumentList | ft
 
-        $PathToChia = "$env:LOCALAPPDATA\chia-blockchain\app-1.1.1\resources\app.asar.unpacked\daemon\"
+                $PathToChia = "$env:LOCALAPPDATA\chia-blockchain\app-1.1.1\resources\app.asar.unpacked\daemon\"
 
-        Write-Host "Using the following Path to chia.exe:"
-        Write-Host $PathToChia
-        Write-Host " "
-       
-        $LogPath = "$env:LOCALAPPDATA\chia-blockchain\log01.log"
-        Write-Host "Starting plotting using chia.exe. Host is redirected to:"
-        Write-Host $LogPath
-        Write-Host " "
+                Write-Host "PlotoSpawner @"(Get-Date)": Using the following Path to chia.exe: "$PathToChia
+                Write-Host "PlotoSpawner @"(Get-Date)": Starting plotting using chia.exe."
+
             
-        #Fire off chia
-        cd $PathToChia
-        Start-Process .\chia.exe -ArgumentList $ArgumentList
+                #Fire off chia
+                try 
+                    {
+                        cd $PathToChia
+                        Start-Process .\chia.exe -ArgumentList $ArgumentList
+                    }
+                catch
+                    {
+                        Write-Host "PlotoSpawner @"(Get-Date)": ERROR! Could not launch chia.exe. Check chiapath and arguments (make sure version is set correctly!)"
+                    }
 
-        #Deduct 106GB from OutDrive Capacity in Var
-        $DeductionOutDrive = ($OutDrive.FreeSpace - 106)
-        $OutDrive.FreeSpace="$DeductionOutDrive"
+                #Deduct 106GB from OutDrive Capacity in Var
+                $DeductionOutDrive = ($OutDrive.FreeSpace - 106)
+                $OutDrive.FreeSpace="$DeductionOutDrive"
 
-        Write-Host "Deducted 106 GB from OutDrive for next Iteration. Sadly cant change AmountOfPlotsToHold.."
-        Write-Host "_________________________________________________________________________________________"
-        Start-Sleep 1800
+                #Getting Plot Object Ready
+                $PlotJob = [PSCustomObject]@{
+                OutDrive     =  $OutDriveLetter
+                TempDrive = $PlottableTempDrive.DriveLetter
+                StartTime = (Get-Date)
+                }
 
-        #Getting Host Object Ready
-        $PlotJob = [PSCustomObject]@{
-        OutDrive     =  $OutDriveLetter
-        TempDrive = $PlottableTempDrive.DriveLetter
-        StartTime = (Get-Date)
-        }
+                Write-Host "PlotoSpawner @"(Get-Date)": The following Job was initiated:"
+                Write-Host $PlotJob | ft
 
-        $collectionWithPlotJobs.Add($PlotJob) | Out-Null
+                $collectionWithPlotJobs.Add($PlotJob) | Out-Null
+
+                Write-Host "--------------------------------------------------------------------"
+                Start-Sleep 900
+
+            }
+    
     }
-
-   Write-Host "Exiting spawn function."
+else
+    {
+        Write-Host "PlotoSpawner @"(Get-Date)": No available Temp and or Out Disks found."
+    }
 
    return $collectionWithPlotJobs
 }
