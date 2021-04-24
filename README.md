@@ -6,12 +6,12 @@ Basically spawns and moves Plots around.
 
 * [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotooutdrives)
 * [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#get-plototempdrives)
-* [Spawn-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/README.md#spawn-plotoplots)
-* [Manage-PlotoSpawns](https://github.com/tydeno/Ploto/blob/main/README.md#manage-plotospawns)
+* [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#spawn-plotoplots)
+* [Start-PlotoSpawns](https://github.com/tydeno/Ploto/blob/main/README.md#manage-plotospawns)
 
 ### PlotoMove
 
-* [Get-PlotoFinalPlotFile](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotofinalplotfile)
+* [Get-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotofinalplotfile)
 * [Move-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/README.md#move-plotoplots)
 
 
@@ -139,13 +139,13 @@ So for me I set the param to "plot".
 
 Make sure your TempDriveDenom is unique to your real SSDs you want to use to create chia Plots. If a Volume has your TempDriveDenom in their VolumeName, they will also be used, if enough free space is given.
 
-## Spawn-PlotoPlots
+## Invoke-PlotoJob
 Calls Get-PlotoTempDrives to get all Temp drives that are plottable. For each tempDrive it determines the most appropriate OutDrive (using Get-PlotoOutDrives function), stitches together the ArgumentList for chia and fires off the chia plot job using chia.exe. For each created PlotJob the function creates an Object and appends it to a collection of objects, which are returned upon the function call. 
 
 #### Example:
 
 ```powershell
-Spawn-PlotoPlots -OutDriveDenom "out" -TempDriveDenom "plot"
+Invoke-PlotoJob -OutDriveDenom "out" -TempDriveDenom "plot"
 ```
 #### Output:
 
@@ -168,14 +168,14 @@ See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/b
 
 See Parameters Section of [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-1)
 
-## Manage-PlotoSpawns
+## Start-PlotoSpawns
 Main function that nests all else.
-Continously calls Spawn-PlotoSpawns and states progress and other information. It runs until it created the amount of specified Plot by using the -InputAmountToSpawn param.
+Continously calls Invoke-PlotoJob and states progress and other information. It runs until it created the amount of specified Plot by using the -InputAmountToSpawn param.
 
 #### Example:
 
 ```powershell
-Manage-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot"
+Start-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot"
 ```
 
 #### Output:
@@ -199,7 +199,7 @@ PlotoManager @ 4/24/2021 11:25:58 PM : Entering Sleep for 900, then checking aga
 Example with SMS Notifications (trough Twilio):
 
 ```powershell
-Manage-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot" -SendSMSWhenJobDone $true -AccountSid $TwilioAccountSid -AuthToken $TwilioAuthToken -from $TwilioNumber -to $YourNumber
+Start-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot" -SendSMSWhenJobDone $true -AccountSid $TwilioAccountSid -AuthToken $TwilioAuthToken -from $TwilioNumber -to $YourNumber
 ```
 
 #### Parameters
@@ -227,14 +227,14 @@ See Parameters Section of [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/
 # PlotoMove
 It continously searches for final Plots on your OutDrives and moves them to your desired location, if the desired location has enough free space. I do this for transferring plots from my plotting machine to my farming machine.
 
-## Get-PlotoFinalPlotFile
+## Get-PlotoPlots
 Searches specified Outdrives for final .PLOT files and returns an array of objects with all final plots found, their names and Path.
 A final plot is solely determined by a file on a OutDrive with the file extension .PLOT (Actual item property, not file name)
 
 #### Example:
 
 ```powershell
-Get-PlotoFinalPlotFile -OutDriveDenom "out"
+Get-PlotoPlots -OutDriveDenom "out"
 ```
 
 #### Output:
@@ -262,7 +262,7 @@ See Parameters Section of Get-PlotoOutDrives.
 
 ## Move-PlotoPlots
 Gets all final Plot files and moves them to a destination drive. Can also use UNC Paths, as the transfer method is BITS (Background Intelligence Transfer Service).
-Calls Get-PlotoFinalPlotFile to get all final plots. Then checks if destination drive has enough free space. If yes, PlotoMover moves the file to the destination using BITS.
+Calls Get-PlotoPlots to get all final plots. Then checks if destination drive has enough free space. If yes, PlotoMover moves the file to the destination using BITS.
 If no, the function exits and displays a message.
 
 The function supports SMS Notifications using Twilio. When there is a transferable Plot, but the destination drive does not have enough free space to store the plot, an SMS Notifciation is sent to the number specified.
