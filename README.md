@@ -1,5 +1,5 @@
 # Ploto
-A Windows PowerShell based Chia Plotting Manager. Cause I was tired of spawning them myself.
+A basic Windows PowerShell based Chia Plotting Manager. Cause I was tired of spawning them myself.
 
 # How it works
 TLDR: It plots 1x plot on each TempDrive (if you have 6x TempDrives = 6x parallel Plot Jobs) as long as you want it to and as long as you have OutDrive space.
@@ -10,6 +10,19 @@ If there is no TempDrive available, or no OutDrive, Ploto checks again in 3600 s
 When there is one available, Ploto determines the best OutDrive (most free space) and calls chia.exe to start the plot.
 Ploto iterates once through all available TempDrives and spawns a plot per each TempDrive (as long as enough OutDrive space is given).
 After that, Ploto checks if amount Spawned is equal as defined as input. If not, Ploto keeps going until it is.
+
+# Prereqs
+The following prereqs need to be met in order for Ploto to function properly:
+
+* chia.exe is installed and path is valid (currently hardcoded to v1.1.1.1, so may break upon update. Will adjust)
+* BITS (Background Intelligent Transfer Service) is functioning properly (used to move final plots around if needed -> Manage-PlotoMove) 
+
+If you want to send and receive SMS:
+
+* Twilio Account
+* Twilio AccountSid
+* Twilio AuthToken
+* Twilio Sender Number
 
 
 # PlotoSpawn
@@ -295,24 +308,7 @@ It checks if a temp drive has plotting in progress by checking if the drive has 
 
 Yep. The individual Chia Plot Jobs wont be affected by that.
 
-# Prereqs
-The following prereqs need to be met in order for Ploto to function properly:
-
-* chia.exe is installed and path is valid (currently hardcoded to v1.1.1.1, so may break upon update. Will adjust)
-* BITS (Background Intelligent Transfer Service) is functioning properly (used to move final plots around if needed -> Manage-PlotoMove) 
-
-If you want to send and receive SMS:
-
-* Twilio Account
-* Twilio AccountSid
-* Twilio AuthToken
-* Twilio Sender Number
 
 
-# HowTo Use it
-```powershell
-Manage-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot"
-```
-This will create 12 Plots across all drives that have "plot" in the name properrty and storing these plots on all drives having "out" in their name property.
-Ploto attempts to parallelilze as much as possible, meaning that it uses each temp disk in parallel bot only for 1 plot job at the time. If a plot job is running on a temp disk, Ploto wont use that disk. 
+
 
