@@ -11,10 +11,6 @@ When there is one available, Ploto determines the best OutDrive (most free space
 Ploto iterates once through all available TempDrives and spawns a plot per each TempDrive (as long as enough OutDrive space is given).
 After that, Ploto checks if amount Spawned is equal as defined as input. If not, Ploto keeps going until it is.
 
-# HowTo Use it
-```Manage-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot"
-
-
 # Config
 TempDrives and OutDrives are the key-concept used by Ploto.
 You can edit the definition of Temp & OutDrives directly in the scripts hardocded variable.
@@ -22,3 +18,10 @@ You can edit the definition of Temp & OutDrives directly in the scripts hardocde
 # FAQ
 Can I shut down the script when I dont want Ploto to spawn more Plots?
 Yep. The individual Chia Plot Jobs wont be affected by that.
+
+# HowTo Use it
+```powershell
+Manage-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot"
+```
+
+
