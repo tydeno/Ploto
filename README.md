@@ -12,8 +12,8 @@ Ploto iterates once through all available TempDrives and spawns a plot per each 
 After that, Ploto checks if amount Spawned is equal as defined as input. If not, Ploto keeps going until it is.
 
 # HowTo Use it
-Setup yout Out & TempDrives as defined "Config" section below. Then just simply run the script and let it work.
-You of course may adjust it your very own needs and also let me about your innovations :)
+```Manage-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot"
+
 
 # Config
 TempDrives and OutDrives are the key-concept used by Ploto.
