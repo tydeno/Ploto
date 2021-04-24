@@ -45,13 +45,17 @@ If disk space is running low, the script will continue, but wont launch any new 
 
 This param defines your OutDrives. An OutDrive in Ploto Terms is the drive chia stores the final plot to. Usually these are your big capacity HDDs.
 Use a denonimator that all your chia out drives have in common. For me, all Chia Out drives (drives I store my plots) are called "ChiaOut 1-2".
-So for me I set the param to "out". Make sure your OutDriveDenom is unique to your real HDD you want to use to store chia Plots. If a Volume has your OutDriveDenom in their VolumeName, they will also be used, if enough free space is given.
+So for me I set the param to "out". 
+
+Make sure your OutDriveDenom is unique to your real HDD you want to use to store chia Plots. If a Volume has your OutDriveDenom in their VolumeName, they will also be used, if enough free space is given.
 
 ## -TempDriveDenom
 
 The same as -OutDriveDenom but for your temporary drives chia uses to actually plot on. Usually these are are your SATA/NVMe SSDs.
 Use a denonimator that all your chia temp drives have in common. For me, all Chia Temp drives (drives I plot on) are called "ChiaPlot 1-4".
-So for me I set the param to "plot". Make sure your TempDriveDenom is unique to your real SSDs you want to use to create chia Plots. If a Volume has your TempDriveDenom in their VolumeName, they will also be used, if enough free space is given.
+So for me I set the param to "plot". 
+
+Make sure your TempDriveDenom is unique to your real SSDs you want to use to create chia Plots. If a Volume has your TempDriveDenom in their VolumeName, they will also be used, if enough free space is given.
 
 # FAQ
 > PlotoSpawner always tells me there are no temp drives available but there is enough storage?!
