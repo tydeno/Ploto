@@ -127,7 +127,7 @@ Output:
 ```
 PlotoManager @ 4/24/2021 9:44:14 PM : Initiating PlotoManager...
 PlotoSpawner @ 4/24/2021 9:44:15 PM : Checking for available temp and out drives...
-PlotoSpawner @ 4/24/2021 9:44:15 PM : No available Temp and or Out Disks found.                                                                                                    PlotoManager @ 4/24/2021 9:44:15 PM : No plots spawned in this cycle, as no temp disks available                                                                                  PlotoManager @ 4/24/2021 9:44:15 PM : Overall spawned Plots since start of script:  0                                                                                             PlotoManager @ 4/24/2021 9:44:15 PM : Entering Sleep for 900, then checking again for available temp and out drives                                                               ----------------------------------------------------------------------------------------------------------------------
+PlotoSpawner @ 4/24/2021 9:44:15 PM : No available Temp and or Out Disks found.                                                                                               PlotoManager @ 4/24/2021 9:44:15 PM : No plots spawned in this cycle, as no temp disks available                                                                               PlotoManager @ 4/24/2021 9:44:15 PM : Overall spawned Plots since start of script:  0                                                                                         PlotoManager @ 4/24/2021 9:44:15 PM : Entering Sleep for 900, then checking again for available temp and out drives                                                           ----------------------------------------------------------------------------------------------------------------------
 PlotoManager @ 4/24/2021 9:59:15 PM : Initiating PlotoManager...
 PlotoSpawner @ 4/24/2021 9:59:15 PM : Checking for available temp and out drives...
 PlotoSpawner @ 4/24/2021 9:59:15 PM : No available Temp and or Out Disks found.
@@ -162,6 +162,64 @@ Example with SMS Notifications (trough Twilio):
 ```powershell
 Manage-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot" -SendSMSWhenJobDone $true -AccountSid $TwilioAccountSid -AuthToken $TwilioAuthToken -from $TwilioNumber -to $YourNumber
 ```
+
+## Get-PlotoFinalPlotFile
+Searches specified Outdrives for final .PLOT files and returns an array of objects with all final plots found, their names and Path.
+A final plot is solely determined by a file on a OutDrive with the file extension .PLOT (Actual item property, not file name)
+
+Example:
+
+```powershell
+Get-PlotoFinalPlotFile -OutDriveDenom "out"
+```
+
+Output:
+
+```
+-------------------------------------------------------------
+Iterating trough Drive:  @{DriveLetter=D:; ChiaDriveType=Out; VolumeName=ChiaOut2; FreeSpace=363.12; IsPlottable=True; AmountOfPlotsToHold=3}
+Checking if any item in that drive contains .PLOT as file ending...
+Found a Final plot:  plot-k32-2021-04-23-14-31-674b9f72e0df0a35c6918afd4fd3eb2780915a7a4f776b803328a40972c99db6.plot
+-------------------------------------------------------------
+Iterating trough Drive:  @{DriveLetter=K:; ChiaDriveType=Out; VolumeName=ChiaOut3; FreeSpace=364.24; IsPlottable=True; AmountOfPlotsToHold=3}
+Checking if any item in that drive contains .PLOT as file ending...
+Found a Final plot:  plot-k32-2021-04-24-06-52-a1dfce79910040323cab0d10baafe24f25cc0cef592978984e91603acdb3434a.plot
+--------------------------------------------------------------------------------------------------
+
+FilePath                                                                                           Name                                                                 
+--------                                                                                           ----                                                                 
+D:\plot-k32-2021-04-23-14-31-674b9f72e0df0a35c6918afd4fd3eb2780915a7a4f776b803328a40972c99db6.plot plot-k32-2021-04-23-14-31-674b9f72e0df0a35c6918afd4fd3eb2780915a7a...
+K:\plot-k32-2021-04-24-06-52-a1dfce79910040323cab0d10baafe24f25cc0cef592978984e91603acdb3434a.plot plot-k32-2021-04-24-06-52-a1dfce79910040323cab0d10baafe24f25cc0cef...
+```
+
+## Move-PlotoPlots
+Gets all final Plot files and moves them to a destination drive. Can also use UNC Paths, as the transfer method is BITS (Background Intelligence Transfer Service).
+Calls Get-PlotoFinalPlotFile to get all final plots. Then checks if destination drive has enough free space. If yes, PlotoMover moves the file to the destination using BITS.
+If no, the function exits and displays a message.
+
+The function supports SMS Notifications using Twilio. When there is a transferable Plot, but the destination drive does not have enough free space to store the plot, an SMS Notifciation is sent to the number specified.
+
+Example:
+
+```powershell
+Move-PlotoPlots -DestinationDrive "J:" -OutDriveDenom "out" 
+```
+
+Output:
+
+```
+PlotoMover @ 4/24/2021 11:48:29 PM : There are Plots found to be moved:  @{FilePath=D:\plot-k32-2021-04-23-14-31-674b9f72e0df0a35c6918afd4fd3eb2780915a7a4f776b803328a409
+72c99db6.plot; Name=plot-k32-2021-04-23-14-31-674b9f72e0df0a35c6918afd4fd3eb2780915a7a4f776b803328a40972c99db6.plot; Size=101.4} @{FilePath=K:\plot-k32-2021-04-24-06-52-
+a1dfce79910040323cab0d10baafe24f25cc0cef592978984e91603acdb3434a.plot; Name=plot-k32-2021-04-24-06-52-a1dfce79910040323cab0d10baafe24f25cc0cef592978984e91603acdb3434a.pl
+ot; Size=101.36}
+PlotoMover @ 4/24/2021 11:48:29 PM : Not enough space on destination drive: J: available space on Disk:  95.22
+PlotoMover @ 4/24/2021 11:48:29 PM : Not enough space on destination drive: J: available space on Disk:  95.22
+```
+
+## Manage-PlotoMove
+
+
+
 
 
 # helper Functions used 
