@@ -52,6 +52,8 @@ Example:
 Spawn-PlotoPlots -OutDriveDenom "out" -TempDriveDenom "plot
 ```
 
+![alt text](https://github.com/tydeno/Ploto/blob/main/Pictures/CAP_PlotoSpawner.PNG)
+
 ## Manage-PlotoSpawns
 Main function that nests all else.
 Continously calls Spawn-PlotoSpawns and states progress and other information. It runs until it created the amount of specified Plot by using the -InputAmountToSpawn param.
@@ -67,6 +69,7 @@ Example with SMS Notifications (trough Twilio):
 ```powershell
 Manage-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot" -SendSMSWhenJobDone $true -AccountSid $TwilioAccountSid -AuthToken $TwilioAuthToken -from $TwilioNumber -to $YourNumber
 ```
+![alt text](https://github.com/tydeno/Ploto/blob/main/Pictures/CAP_PlotoManager.PNG)
 
 # helper Functions used 
 For sending SMS for notifications, Ploto uses these self-crafted Twilio helper wrapprs.
