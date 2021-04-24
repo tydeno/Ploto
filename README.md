@@ -28,8 +28,8 @@ Example:
 ```powershell
 Get-PlotoOutDrives -OutDriveDenom "out"
 ```
-![alt text](https://github.com/)
-https://github.com/tydeno/Ploto/blob/main/Pictures/CAP_OutDrives1.PNG
+![alt text](https://github.com/tydeno/Ploto/blob/main/Pictures/CAP_OutDrives1.PNG)
+
 
 ## Get-PlotoTempDrives
 Gets all Windows Volumes that match the -TempDriveDenom parameter and checks if free space is greater than 270 GB (amount currently used by chia plots as temp storage).
@@ -38,8 +38,10 @@ It wraps all the needed information of the volume like DriveLetter, ChiaDriveTyp
 Example:
 
 ```powershell
-Manage-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot"
+ Get-PlotoTempDrives -TempDriveDenom "plot"
 ```
+
+![alt text](https://github.com/tydeno/Ploto/blob/main/Pictures/CAP_TempDrives1.PNG)
 
 ## Spawn-PlotoPlots
 Calls Get-PlotoTempDrives to get all Temp drives that are plottable. For each tempDrive it determines the most appropriate OutDrive (using Get-PlotoOutDrives function), stitches together the ArgumentList for chia and fires off the chia plot job using chia.exe. For each created PlotJob the function creates an Object and appends it to a collection of objects, which are returned upon the function call. 
