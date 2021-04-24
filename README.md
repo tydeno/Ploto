@@ -294,7 +294,7 @@ PlotoMover @ 4/24/2021 11:48:29 PM : Not enough space on destination drive: J: a
 # helper Functions 
 For sending SMS for notifications, Ploto uses these self-crafted Twilio helper wrapprs.
 
-## Create-TwilioCredential
+## Format-TwilioCredential
 Transforms Twilio Credentials into securestrings to be used as Input for API Call.
 
 #### Example:
