@@ -34,9 +34,9 @@ The following prereqs need to be met in order for Ploto to function properly:
 If you want to send and receive SMS:
 
 * Twilio Account
-* Twilio AccountSid
-* Twilio AuthToken
-* Twilio Sender Number
+  * Twilio AccountSid
+  * Twilio AuthToken
+  * Twilio Sender Number
 
 
 # PlotoSpawn
@@ -345,6 +345,13 @@ ParsedHtml        :
 RawContentLength  : 825
 
 ```
+
+# How to use
+If you want to use Ploto follow along:
+
+1. Download Ploto as .ZIP from [here](https://github.com/tydeno/Ploto/archive/refs/heads/main.zip)
+2. 
+
 
 # FAQ
 > PlotoSpawner always tells me there are no temp drives available but there is enough storage?!
