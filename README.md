@@ -13,13 +13,14 @@ After that, Ploto checks if amount Spawned is equal as defined as input. If not,
 
 # Functions explained
 Ploto consists currently of these main functions:
+
+##PlotoSpawn
 * Get-PlotoOutDrives
 * Get-PlotoTempDrives
 * Spawn-PlotoPlots
 * Manage-PlotoSpawns
 
-Move final Plots around:
-
+##PlotoMove
 * Get-PlotoFinalPlotFile
 * Move-PlotoPlots
 * Manage-PlotoMove
