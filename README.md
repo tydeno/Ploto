@@ -1,5 +1,6 @@
 # Ploto
 A basic Windows PowerShell based Chia Plotting Manager. Cause I was tired of spawning them myself.
+
 Basically spawns and moves Plots around.
 
 Indcluded functions:
