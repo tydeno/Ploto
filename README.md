@@ -1,6 +1,19 @@
 # Ploto
 A basic Windows PowerShell based Chia Plotting Manager. Cause I was tired of spawning them myself.
 
+### PlotoSpawn
+
+* Get-PlotoOutDrives
+* Get-PlotoTempDrives
+* Spawn-PlotoPlots
+* Manage-PlotoSpawns
+
+### PlotoMove
+
+* Get-PlotoFinalPlotFile
+* Move-PlotoPlots
+
+
 # How it works
 TLDR: It plots 1x plot on each TempDrive (if you have 6x TempDrives = 6x parallel Plot Jobs) as long as you want it to and as long as you have OutDrive space.
 
