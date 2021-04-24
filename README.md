@@ -14,18 +14,20 @@ After that, Ploto checks if amount Spawned is equal as defined as input. If not,
 # Functions explained
 Ploto consists currently of these main functions:
 
-## PlotoSpawn
+### PlotoSpawn
 * Get-PlotoOutDrives
 * Get-PlotoTempDrives
 * Spawn-PlotoPlots
 * Manage-PlotoSpawns
 
-## PlotoMove
+### PlotoMove
 * Get-PlotoFinalPlotFile
 * Move-PlotoPlots
 * Manage-PlotoMove
 
-## Get-PlotoOutDrives
+
+## PlotoSpawn
+### Get-PlotoOutDrives
 Gets all Windows Volumes that match the -OutDriveDenom parameter and checks if free space is greater than 107 GB (amount currently used by final chia plots).
 It wraps all the needed information of the volume like DriveLetter, ChiaDriveType, VolumeName, a bool IsPlootable, and the calculated amount of plots to hold into a object and returns the collection of objects as the result of that function.
 
@@ -53,7 +55,7 @@ IsPlottable         : True
 AmountOfPlotsToHold : 3
 ```
 
-## Get-PlotoTempDrives
+### Get-PlotoTempDrives
 Gets all Windows Volumes that match the -TempDriveDenom parameter and checks if free space is greater than 270 GB (amount currently used by chia plots as temp storage).
 It wraps all the needed information of the volume like DriveLetter, ChiaDriveType, VolumeName, a bool IsPlootable, and the calculated amount of plots to temp, whether it has a plot in porgress (determined by checking if the drive contains any file) into a object and returns the collection of objects as the result of that function.
 
@@ -98,7 +100,7 @@ AmountOfPlotsToTemp : 5
 HasPlotInProgress   : True
 ```
 
-## Spawn-PlotoPlots
+### Spawn-PlotoPlots
 Calls Get-PlotoTempDrives to get all Temp drives that are plottable. For each tempDrive it determines the most appropriate OutDrive (using Get-PlotoOutDrives function), stitches together the ArgumentList for chia and fires off the chia plot job using chia.exe. For each created PlotJob the function creates an Object and appends it to a collection of objects, which are returned upon the function call. 
 
 Example:
@@ -113,7 +115,7 @@ PlotoSpawner @ 4/24/2021 11:20:01 PM : Checking for available temp and out drive
 PlotoSpawner @ 4/24/2021 11:20:01 PM : No available Temp and or Out Disks found.
 ```
 
-## Manage-PlotoSpawns
+### Manage-PlotoSpawns
 Main function that nests all else.
 Continously calls Spawn-PlotoSpawns and states progress and other information. It runs until it created the amount of specified Plot by using the -InputAmountToSpawn param.
 
@@ -163,8 +165,9 @@ Example with SMS Notifications (trough Twilio):
 ```powershell
 Manage-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot" -SendSMSWhenJobDone $true -AccountSid $TwilioAccountSid -AuthToken $TwilioAuthToken -from $TwilioNumber -to $YourNumber
 ```
+## PlotoMove
 
-## Get-PlotoFinalPlotFile
+### Get-PlotoFinalPlotFile
 Searches specified Outdrives for final .PLOT files and returns an array of objects with all final plots found, their names and Path.
 A final plot is solely determined by a file on a OutDrive with the file extension .PLOT (Actual item property, not file name)
 
@@ -193,7 +196,7 @@ D:\plot-k32-2021-04-23-14-31-674b9f72e0df0a35c6918afd4fd3eb2780915a7a4f776b80332
 K:\plot-k32-2021-04-24-06-52-a1dfce79910040323cab0d10baafe24f25cc0cef592978984e91603acdb3434a.plot plot-k32-2021-04-24-06-52-a1dfce79910040323cab0d10baafe24f25cc0cef...
 ```
 
-## Move-PlotoPlots
+### Move-PlotoPlots
 Gets all final Plot files and moves them to a destination drive. Can also use UNC Paths, as the transfer method is BITS (Background Intelligence Transfer Service).
 Calls Get-PlotoFinalPlotFile to get all final plots. Then checks if destination drive has enough free space. If yes, PlotoMover moves the file to the destination using BITS.
 If no, the function exits and displays a message.
@@ -217,7 +220,7 @@ PlotoMover @ 4/24/2021 11:48:29 PM : Not enough space on destination drive: J: a
 PlotoMover @ 4/24/2021 11:48:29 PM : Not enough space on destination drive: J: available space on Disk:  95.22
 ```
 
-## Manage-PlotoMove
+### Manage-PlotoMove
 
 
 
