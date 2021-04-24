@@ -49,11 +49,24 @@ Calls Get-PlotoTempDrives to get all Temp drives that are plottable. For each te
 Example:
 
 ```powershell
-Manage-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot"
+Spawn-PlotoPlots -OutDriveDenom "out" -TempDriveDenom "plot
 ```
 
 ## Manage-PlotoSpawns
+Main function that nests all else.
 Continously calls Spawn-PlotoSpawns and states progress and other information. It runs until it created the amount of specified Plot by using the -InputAmountToSpawn param.
+
+Example:
+
+```powershell
+Manage-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot"
+```
+
+Example with SMS Notifications (trough Twilio):
+
+```powershell
+Manage-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot" -SendSMSWhenJobDone $true -AccountSid $TwilioAccountSid -AuthToken $TwilioAuthToken -from $TwilioNumber -to $YourNumber
+```
 
 # helper Functions used 
 For sending SMS for notifications, Ploto uses these self-crafted Twilio helper wrapprs.
