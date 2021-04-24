@@ -4,7 +4,7 @@ Basically spawns and moves Plots around.
 
 ### PlotoSpawn
 
-* [Get-PlotoOutDrives] (https://github.com/tydeno/Ploto/blob/main/README.md#get-plotooutdrives)
+* [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotooutdrives)
 * Get-PlotoTempDrives
 * Spawn-PlotoPlots
 * Manage-PlotoSpawns
