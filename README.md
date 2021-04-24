@@ -153,7 +153,18 @@ PlotoSpawner @ 4/24/2021 11:20:01 PM : No available Temp and or Out Disks found.
 ```
 
 #### Parameters
-See Parameters Section of Get-PlotoOutDrives and Get-PlotoTempDrives
+
+```
+-OutDriveDenom
+```
+
+See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters)
+
+```
+-TempDriveDenom
+```
+
+See Parameters Section of [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-1)
 
 ## Manage-PlotoSpawns
 Main function that nests all else.
@@ -190,7 +201,26 @@ Manage-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "
 ```
 
 #### Parameters
-See Parameters Section of Get-PlotoOutDrives, Get-PlotoTempDrives and Spawn-PlotoPlots 
+
+```
+-InputAmountToSpawn 
+
+```
+
+Amount of total plots to be spanwed by PlotoSpawner.
+
+
+```
+-OutDriveDenom
+```
+
+See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters)
+
+```
+-TempDriveDenom
+```
+
+See Parameters Section of [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-1)
 
 # PlotoMove
 
