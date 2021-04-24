@@ -28,7 +28,7 @@ Example:
 ```powershell
 Get-PlotoOutDrives -OutDriveDenom "out"
 ```
-![alt text](https://github.com/tydeno/Ploto/blob/main/Pictures/CAP_OutDrives.PNG)
+![alt text](https://github.com/)
 
 
 ## Get-PlotoTempDrives
