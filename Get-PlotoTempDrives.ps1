@@ -1,7 +1,11 @@
 function Get-PlotoTempDrives
 {
+	Param(
+		[parameter(Mandatory=$true)]
+		$TempDriveDenom
+		)
 
-$tmpDrives = get-WmiObject win32_logicaldisk | ? {$_.VolumeName -like "*plot*"}
+$tmpDrives = get-WmiObject win32_logicaldisk | ? {$_.VolumeName -like "*$TempDriveDenom*"}
 
 #Check Space for outDrives
 $collectionWithDisks= New-Object System.Collections.ArrayList
