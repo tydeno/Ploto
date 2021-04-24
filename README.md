@@ -11,7 +11,22 @@ When there is one available, Ploto determines the best OutDrive (most free space
 Ploto iterates once through all available TempDrives and spawns a plot per each TempDrive (as long as enough OutDrive space is given).
 After that, Ploto checks if amount Spawned is equal as defined as input. If not, Ploto keeps going until it is.
 
+# Functions explained
+Ploto consists currently of these functions:
+* Get-PlotoOutDrives
+* Get-PlotoTempDrives
+* Spawn-PlotoPlots
+* Manage-PlotoSpawns
+
+
+## Get-PlotoOutDrives
+## Get-PlotoTempDrives
+## Spawn-PlotoPlots
+## Manage-PlotoSpawns
+
 # Parameters explained
+This section describes the params for the Main Function "Manage-PlotoSpawns". These params are passed along the stack to all needed helper functions.
+
 ## -InputAmountToSpawn
 
 Defines the amount of total plots the Script will manage to plot. Stops when that count ot plots is reached. 
