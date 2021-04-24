@@ -28,7 +28,10 @@ Gets all Windows Volumes that match the -TempDriveDenom parameter and checks if 
 It wraps all the needed information of the volume like DriveLetter, ChiaDriveType, VolumeName, a bool IsPlootable, and the calculated amount of plots to temp, whether it has a plot in porgress (determined by checking if the drive contains any file) into a object and returns the collection of objects as the result of that function.
 
 ## Spawn-PlotoPlots
+Calls Get-PlotoTempDrives to get all Temp drives that are plottable. For each tempDrive it determines the most appropriate OutDrive (using Get-PlotoOutDrives function), stitches together the ArgumentList for chia and fires off the chia plot job using chia.exe. For each created PlotJob the function creates an Object and appends it to a collection of objects, which are returned upon the function call. 
+
 ## Manage-PlotoSpawns
+Continously calls Spawn-PlotoSpawns and states progress and other information. It runs until it created the amount of specified Plot by using the -InputAmountToSpawn param.
 
 # Parameters explained
 This section describes the params for the Main Function "Manage-PlotoSpawns". These params are passed along the stack to all needed helper functions.
