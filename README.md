@@ -49,7 +49,7 @@ Calls Get-PlotoTempDrives to get all Temp drives that are plottable. For each te
 Example:
 
 ```powershell
-Spawn-PlotoPlots -OutDriveDenom "out" -TempDriveDenom "plot
+Spawn-PlotoPlots -OutDriveDenom "out" -TempDriveDenom "plot"
 ```
 
 ![alt text](https://github.com/tydeno/Ploto/blob/main/Pictures/CAP_PlotoSpawner.PNG)
