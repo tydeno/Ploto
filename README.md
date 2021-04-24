@@ -12,16 +12,16 @@ Ploto iterates once through all available TempDrives and spawns a plot per each 
 After that, Ploto checks if amount Spawned is equal as defined as input. If not, Ploto keeps going until it is.
 
 # Parameters explained
--InputAmountToSpawn
+*-InputAmountToSpawn
 Defines the amount of total plots the Script will manage to plot. Stops when that count ot plots is reached. 
 If disk space is running low, the script will continue, but wont launch any new plots until there is disk space again. 
 
--OutDriveDenom
+*-OutDriveDenom
 This param defines your OutDrives. An OutDrive in Ploto Terms is the drive chia stores the final plot to. Usually these are your big capacity HDDs.
 Use a denonimator that all your chia out drives have in common. For me, all Chia Out drives (drives I store my plots) are called "ChiaOut 1-2".
 So for me I set the param to "out".
 
--TempDriveDenom
+*-TempDriveDenom
 The same as -OutDriveDenom but for your temporary drives chia uses to actually plot on. Usually these are are your SATA/NVMe SSDs.
 Use a denonimator that all your chia temp drives have in common. For me, all Chia Temp drives (drives I plot on) are called "ChiaPlot 1-4".
 So for me I set the param to "plot".
