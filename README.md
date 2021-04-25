@@ -350,7 +350,9 @@ RawContentLength  : 825
 If you want to use Ploto follow along:
 
 1. Download Ploto as .ZIP from [here](https://github.com/tydeno/Ploto/archive/refs/heads/main.zip)
-2. 
+2. Adjust Start Params in Start-Ploto.ps1
+3. Launch Start-Ploto.ps1
+4. Check if Background Jobs are running properly by launching "Get-Job"
 
 
 # FAQ
