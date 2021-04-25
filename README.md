@@ -350,10 +350,24 @@ RawContentLength  : 825
 If you want to use Ploto follow along:
 
 1. Download Ploto as .ZIP from [here](https://github.com/tydeno/Ploto/archive/refs/heads/main.zip)
-2. Adjust Start Params in Start-Ploto.ps1
-3. Launch Start-Ploto.ps1
-4. Check if Background Jobs are running properly by launching "Get-Job"
+2. Install Module "Ploto" 
+3. Launch Start-Ploto with params
 
+Example:
+```powershell
+Start-Ploto -DestinationDrive "\\Desktop-XXXX\d" -OutDriveDenom "out" -TempDriveDenom "plot" -InputAmountToSpawn 36 -SendSMSNotification $false
+```
+In the PowerShell Session opened, you can now use "Get-Job" to see two Background Jobs running. If you pass "Retrieve-Job -Job ID $JobID" you can get the output of Spawner and Mover.
+
+```powershell
+Get-Job
+```
+```
+Id     Name            PSJobTypeName   State         HasMoreData     Location             Command                  
+--     ----            -------------   -----         -----------     --------             -------                  
+25     Job25           BackgroundJob   Running       True            localhost            Start-PlotoMove -Desti...
+27     Job27           BackgroundJob   Running       True            localhost            Start-PlotoSpawns -Inp...
+```
 
 # FAQ
 > PlotoSpawner always tells me there are no temp drives available but there is enough storage?!
