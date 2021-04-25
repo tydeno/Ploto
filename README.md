@@ -350,8 +350,9 @@ RawContentLength  : 825
 If you want to use Ploto follow along:
 
 1. Download Ploto as .ZIP from [here](https://github.com/tydeno/Ploto/archive/refs/heads/main.zip)
-2. Install Module "Ploto" 
-3. Launch Start-Ploto with params
+2. Install Module "Ploto"
+3. Import-Module "Ploto" 
+4. Launch Start-Ploto with params
 
 Example:
 ```powershell
