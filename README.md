@@ -370,6 +370,26 @@ Id     Name            PSJobTypeName   State         HasMoreData     Location   
 27     Job27           BackgroundJob   Running       True            localhost            Start-PlotoSpawns -Inp...
 ```
 
+```powershell
+Receive-Job -id 27
+```
+
+```
+PlotoManager @ 4/25/2021 1:54:18 PM : Initiating PlotoManager...
+PlotoSpawner @ 4/25/2021 1:54:18 PM : Checking for available temp and out drives...
+PlotoSpawner @ 4/25/2021 1:54:18 PM : No available Temp and or Out Disks found.
+PlotoManager @ 4/25/2021 1:54:18 PM : No plots spawned in this cycle, as no temp disks available
+PlotoManager @ 4/25/2021 1:54:18 PM : Overall spawned Plots since start of script:  2
+PlotoManager @ 4/25/2021 1:54:18 PM : Entering Sleep for 900, then checking again for available temp and out drives
+----------------------------------------------------------------------------------------------------------------------
+PlotoManager @ 4/25/2021 2:09:18 PM : Initiating PlotoManager...
+PlotoSpawner @ 4/25/2021 2:09:18 PM : Checking for available temp and out drives...
+PlotoSpawner @ 4/25/2021 2:09:18 PM : No available Temp and or Out Disks found.
+PlotoManager @ 4/25/2021 2:09:18 PM : No plots spawned in this cycle, as no temp disks available
+PlotoManager @ 4/25/2021 2:09:18 PM : Overall spawned Plots since start of script:  2
+PlotoManager @ 4/25/2021 2:09:18 PM : Entering Sleep for 900, then checking again for available temp and out drives
+```
+
 # FAQ
 > PlotoSpawner always tells me there are no temp drives available but there is enough storage?!
 
