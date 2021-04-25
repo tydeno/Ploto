@@ -362,7 +362,6 @@ function Move-PlotoPlots
         $to
 		)
 
-Write-Host "Move-PlotoPlots: Using destination drive: "$DestinationDrive
 
 $PlotsToMove = Get-PlotoPlots -OutDriveDenom $OutDriveDenom
 
@@ -378,16 +377,47 @@ if ($PlotsToMove)
 
         foreach ($plot in $PlotsToMove)
         {
+            #Check if BITS Transfer already in progress:
+            $HasBITSinProgress = Get-BitsTransfer | ? {$_.FileList.RemoteName -eq $plot.Filepath} 
 
-            try {
-                    Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestinationDrive
-                    $source = $plot.FilePath
-                    $BITSOut = Start-BitsTransfer -Source $source -Destination $DestinationDrive -Description "Moving Plot" -DisplayName "Moving Plot"
-            }
-
-            catch
+            if ($HasBITSinProgress)
                 {
-                    Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
+                    Write-Host "PlotoMover @"(Get-Date)": WARN:" $plot.FilePath "has already a BITS transfer in progress"
+                }
+
+            else
+                {
+                     try 
+                        {
+                            Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestinationDrive
+                            $source = $plot.FilePath
+                            $BITSOut = Start-BitsTransfer -Source $source -Destination $DestinationDrive -Description "Moving Plot" -DisplayName "Moving Plot"
+                            
+                            while ((Get-BitsTransfer | ? { $_.JobState -eq "Transferring" }).Count -gt 0) {     
+                                $totalbytes=0;    
+                                $bytestransferred=0; 
+                                $timeTaken = 0;    
+                                foreach ($job in (Get-BitsTransfer | ? { $_.JobState -eq "Transferring" } | Sort-Object CreationTime)) {         
+                                    $totalbytes += $job.BytesTotal;         
+                                    $bytestransferred += $job.bytestransferred     
+                                    if ($timeTaken -eq 0) { 
+                                        #Get the time of the oldest transfer aka the one that started first
+                                        $timeTaken = ((Get-Date) - $job.CreationTime).TotalMinutes 
+                                    }
+                                }    
+                                #TimeRemaining = (TotalFileSize - BytesDownloaded) * TimeElapsed/BytesDownloaded
+                                if ($totalbytes -gt 0) {        
+                                    [int]$timeLeft = ($totalBytes - $bytestransferred) * ($timeTaken / $bytestransferred)
+                                    [int]$pctComplete = $(($bytestransferred*100)/$totalbytes);     
+                                    Write-Progress -Status "Transferring $bytestransferred of $totalbytes ($pctComplete%). $timeLeft minutes remaining." -Activity "Dowloading files" -PercentComplete $pctComplete  
+                                }
+                            }
+                        }
+
+                    catch
+                        {
+                            Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
+                        }        
                 }
         }
     }
@@ -471,7 +501,7 @@ function Install-PlotoModule
                         Remove-Item -Path $Zip -Force 
 
                         $PathToModule = $ZipPath+"\Ploto-main\Ploto.psm1"
-                        Copy-Item -Path $PlotoModule -Destination "C:\Windows\System32\WindowsPowerShell\v1.0\Modules"
+                        Copy-Item -Path $PathToModule -Destination "C:\Windows\System32\WindowsPowerShell\v1.0\Modules"
                         Import-Module $PathToModule
 
                         Write-Host "PlotoBooter @"(Get-Date)": Module installed successfully. Ready to roll. Or plot." -ForegroundColor Green
@@ -507,6 +537,9 @@ function Start-Ploto
         $from,
         $to
 		)
+
+    Write-Host $DestinationDrive
+    Write-Host $Inp
 
     $ModuleUp = Install-PlotoModule
     if ($ModuleUp -eq $true)
