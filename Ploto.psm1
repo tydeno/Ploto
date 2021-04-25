@@ -545,7 +545,7 @@ function Start-Ploto
     if ($ModuleUp -eq $true)
         {
           $Mover = Start-Job -ScriptBlock {Start-PlotoMove -DestinationDrive "\\Desktop-v32b75u\d" -OutDriveDenom "out"} -verbose
-          $Spawner = Start-Job -ScriptBlock {Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "temp" -SendSMSWhenJobDone $false } -Verbose
+          $Spawner = Start-Job -ScriptBlock {Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -SendSMSWhenJobDone $false } -Verbose
           Write-Host "PlotoBooter @"(Get-Date)": Launched Spawner and Mover. Use Get-Job / Retrieve-Job to see details."
         }
 
