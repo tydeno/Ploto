@@ -362,6 +362,8 @@ function Move-PlotoPlots
         $to
 		)
 
+Write-Host "Move-PlotoPlots: Using destination drive: "$DestinationDrive
+
 $PlotsToMove = Get-PlotoPlots -OutDriveDenom $OutDriveDenom
 
 if ($PlotsToMove)
@@ -413,6 +415,8 @@ function Start-PlotoMove
 
     $count = 0
     $endlessCount = 1000
+
+    Write-Host "Start-PlotoMove: Using destination drive: "$DestinationDrive
 
     Do
         {
@@ -495,6 +499,8 @@ function Start-Ploto
           $Mover = Start-Job -ScriptBlock {Start-PlotoMove -DestinationDrive "\\Desktop-v32b75u\d" -OutDriveDenom "out"} -verbose
           $Spawner = Start-Job -ScriptBlock {Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -SendSMSWhenJobDone $false } -Verbose
           Write-Host "PlotoBooter @"(Get-Date)": Launched Spawner and Mover. Use Get-Job / Retrieve-Job to see details."
+          Write-Host $Spawner
+          Write-Host $Mover
 
         }
 
