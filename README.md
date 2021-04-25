@@ -225,7 +225,7 @@ See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/b
 See Parameters Section of [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-1)
 
 # PlotoMove
-It continously searches for final Plots on your OutDrives and moves them to your desired location, if the desired location has enough free space. I do this for transferring plots from my plotting machine to my farming machine.
+It continously searches for final Plots on your OutDrives and moves them to your desired location. I do this for transferring plots from my plotting machine to my farming machine.
 
 ## Get-PlotoPlots
 Searches specified Outdrives for final .PLOT files and returns an array of objects with all final plots found, their names and Path.
