@@ -471,9 +471,8 @@ function Install-PlotoModule
                         Remove-Item -Path $Zip -Force 
 
                         $PathToModule = $ZipPath+"\Ploto-main\Ploto.psm1"
-                        Import-Module $PathToModule
-
                         Copy-Item -Path $PlotoModule -Destination "C:\Windows\System32\WindowsPowerShell\v1.0\Modules"
+                        Import-Module $PathToModule
 
                         Write-Host "PlotoBooter @"(Get-Date)": Module installed successfully. Ready to roll. Or plot." -ForegroundColor Green
                         $ModuleOK = $true
@@ -492,21 +491,33 @@ function Install-PlotoModule
 
 function Start-Ploto
 {
+	Param(
+		[parameter(Mandatory=$true)]
+		$DestinationDrive,
+		[parameter(Mandatory=$true)]
+		$OutDriveDenom,
+		[parameter(Mandatory=$true)]
+		$TempDriveDenom,
+        [parameter(Mandatory=$true)]
+	    $SendSMSNotification,
+        [parameter(Mandatory=$true)]
+	    $InputAmountToSpawn,
+        $AccountSid,
+        $AuthToken,
+        $from,
+        $to
+		)
 
     $ModuleUp = Install-PlotoModule
     if ($ModuleUp -eq $true)
         {
-          $Mover = Start-Job -ScriptBlock {Start-PlotoMove -DestinationDrive "\\Desktop-v32b75u\d" -OutDriveDenom "out"} -verbose
-          $Spawner = Start-Job -ScriptBlock {Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -SendSMSWhenJobDone $false } -Verbose
+          $Mover = Start-Job -ScriptBlock {Start-PlotoMove -DestinationDrive $DestinationDrive -OutDriveDenom $OutDriveDenom} -verbose
+          $Spawner = Start-Job -ScriptBlock {Start-PlotoSpawns -InputAmountToSpawn $InputAmountToSpawn -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -SendSMSWhenJobDone $false } -Verbose
           Write-Host "PlotoBooter @"(Get-Date)": Launched Spawner and Mover. Use Get-Job / Retrieve-Job to see details."
-          Write-Host $Spawner
-          Write-Host $Mover
-
         }
 
     else
         {
-        Write-Host "ERROR! Modules arent up!" -ForegroundColor Red
+            Write-Host "ERROR! Modules arent up!" -ForegroundColor Red
         }
 }
-
