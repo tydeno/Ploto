@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 Name: Ploto
 Version: 1.0
@@ -373,9 +373,12 @@ if ($PlotsToMove)
             }
         Write-Host "PlotoMover @"(Get-Date)": A total of "$PlotsToMove.Count" plot have been found."
          
+        Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestinationDrive
+                            
+
         foreach ($plot in $PlotsToMove)
         {
-            #Check if Destination drive has enough capacity for file to move
+            <#Check if Destination drive has enough capacity for file to move
             $DestinationLogicalDisk = get-WmiObject win32_logicaldisk | ? {$_.DeviceID -eq $DestinationDrive}
             $DestinationDriveFreeSpace = [math]::Round($DestinationLogicalDisk.FreeSpace  / 1073741824, 2)
 
@@ -386,9 +389,6 @@ if ($PlotsToMove)
                    #Move Item using BITS
                    try
                         {
-                            Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestinationDrive
-                            $BITSOut = Start-BitsTransfer -Source $plot.FilePath -Destination $DestinationDrive -Description "Moving Plot" -DisplayName "Moving Plot"
-
                             $TwilioMessage = "A plot Has been moved and is ready for transfer: "+$plot 
                             $BadErrorNotification = Send-SMS -AccountSid $AccountSid -AuthToken $AuthToken -Message $TwilioMessage -from $from -to $to
                         }
@@ -397,6 +397,9 @@ if ($PlotsToMove)
                         {
                             Write-Output "PlotoMover @"(Get-Date)": BITS Transfer failed!" -ForegroundColor Red
                         }
+                        
+
+
 
                 } 
             else
@@ -408,6 +411,15 @@ if ($PlotsToMove)
                         $TwilioMessage = "A plot to move has been found, but Destination Disk has no space. Make free space on Disk:"+$DestinationDrive 
                         $BadErrorNotification = Send-SMS -AccountSid $AccountSid -AuthToken $AuthToken -Message $TwilioMessage -from $from -to $to
                     }
+                }
+                #>
+            try {
+            $BITSOut = Start-BitsTransfer -Source $plot.FilePath -Destination $DestinationDrive -Description "Moving Plot" -DisplayName "Moving Plot"
+            }
+
+            catch
+                {
+                    Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
                 }
         }
     }
@@ -444,3 +456,84 @@ function Start-PlotoMove
 
     Until ($count -eq $endlessCount)
 }
+
+function Install-PlotoModule
+{
+    
+    $PlotoModule = Get-Module | ? {$_.Name -eq "Ploto"}
+
+    if ($PlotoModule)
+        {
+           Write-Host "PlotoBooter @"(Get-Date)": Ploto Module is present. Ready to roll. Or plot." -ForegroundColor Green
+           $ModuleOK = $true 
+        }
+
+    else
+        {
+            Write-Host "PlotoBooter @"(Get-Date)": Ploto Module not present. Trying to Import." -ForegroundColor yellow
+            try
+            {
+                Import-Module Ploto -ErrorAction Stop
+                $ModuleOK = $true 
+            }
+
+            catch
+            {
+                Write-Host "PlotoBooter @"(Get-Date)": Could not import due to Error:"$_.Exception.Message -ForegroundColor red
+
+                if ($_.Exception.Message -eq "The specified module 'Ploto' was not loaded because no valid module file was found in any module directory.")
+                    {
+                        Write-Host "PlotoBooter @"(Get-Date)": The error is known. Starting Module download from Github now. Using URL: https://github.com/tydeno/Ploto/archive/refs/heads/main.zip "
+                        $repo = "https://github.com/tydeno/Ploto/archive/refs/heads/main.zip"
+                    
+                        $ZipPath = $env:TEMP+"\ploto"+(Get-Date).TimeOfDay.Seconds
+                        Write-Host "PlotoBooter @"(Get-Date)": Storing local .ZIP in "$ZipPath
+                        $Zip = $ZipPath+".zip"
+
+                        New-Item $Zip -ItemType File -Force | Out-Null
+                        Invoke-RestMethod -Uri $repo -OutFile $Zip | Out-Null
+
+                        Write-Host "PlotoBooter @"(Get-Date)": Downloaded Ploto Module from Github Repo. Extracting now."
+                        Expand-Archive -Path $Zip -DestinationPath $ZipPath | Out-Null
+
+
+                        Write-Host "PlotoBooter @"(Get-Date)": Module extracting, cleaning up Downloaded file and starting import."
+                        Remove-Item -Path $Zip -Force 
+
+                        $PathToModule = $ZipPath+"\Ploto-main\Ploto.psm1"
+                        Import-Module $PathToModule
+
+                        Copy-Item -Path $PlotoModule -Destination "C:\Windows\System32\WindowsPowerShell\v1.0\Modules"
+
+                        Write-Host "PlotoBooter @"(Get-Date)": Module installed successfully. Ready to roll. Or plot." -ForegroundColor Green
+                        $ModuleOK = $true
+                    }
+
+                else
+                    {
+                        Write-Host "PlotoBooter @"(Get-Date)": The error" $_.Exception.Message " is unknown." -ForegroundColor Red
+                        $ModuleOK = $false
+                
+                    }
+            }
+         }
+    return $ModuleOK
+}
+
+function Start-Ploto
+{
+    $ModuleUp = Boot-Ploto
+    if ($ModuleUp -eq $true)
+        {
+          $Mover = Start-Job -ScriptBlock {Start-PlotoMove -DestinationDrive "Desktop-v32b75u\d" -OutDriveDenom "out"} -verbose
+          $Spawner = Start-Job -ScriptBlock {Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -SendSMSWhenJobDone $false } -Verbose
+          Write-Host "PlotoBooter @"(Get-Date)": Launched Spawner and Mover. Use Get-Job / Retrieve-Job to see details."
+
+        }
+
+    else
+        {
+        Write-Host "ERROR! Modules arent up!" -ForegroundColor Red
+        }
+}
+
