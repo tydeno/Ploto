@@ -267,7 +267,7 @@ Calls Get-PlotoPlots to get all final plots and moves one by one to the destinat
 #### Example:
 
 ```powershell
-Move-PlotoPlots -DestinationDrive "J:" -OutDriveDenom "out" 
+Move-PlotoPlots -DestinationDrive "\\DESKTOP-XXXX\d" -OutDriveDenom "out" 
 ```
 
 #### Parameters
