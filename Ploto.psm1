@@ -488,21 +488,12 @@ function Install-PlotoModule
 
 function Start-Ploto
 {
-	Param(
-		[parameter(Mandatory=$true)]
-		$DestinationDrive,
-		[parameter(Mandatory=$true)]
-		$OutDriveDenom,
-        [parameter(Mandatory=$true)]
-        $TempDriveDenom,
-        [parameter(Mandatory=$true)]
-        $InputAmountToSpawn
-		)
+
     $ModuleUp = Install-PlotoModule
     if ($ModuleUp -eq $true)
         {
-          $Mover = Start-Job -ScriptBlock {Start-PlotoMove -DestinationDrive $DestinationDrive -OutDriveDenom $OutDriveDenom} -verbose
-          $Spawner = Start-Job -ScriptBlock {Start-PlotoSpawns -InputAmountToSpawn $InputAmountToSpawn -OutDriveDenom $OutDriveDenom -TempDriveDenom $tempDriveDenom -SendSMSWhenJobDone $false } -Verbose
+          $Mover = Start-Job -ScriptBlock {Start-PlotoMove -DestinationDrive "\\Desktop-v32b75u\d" -OutDriveDenom "out"} -verbose
+          $Spawner = Start-Job -ScriptBlock {Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -SendSMSWhenJobDone $false } -Verbose
           Write-Host "PlotoBooter @"(Get-Date)": Launched Spawner and Mover. Use Get-Job / Retrieve-Job to see details."
 
         }
