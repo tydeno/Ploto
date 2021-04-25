@@ -280,12 +280,26 @@ See Parameters Section of Get-PlotoOutDrives.
 #### Output:
 
 ```
-PlotoMover @ 4/24/2021 11:48:29 PM : There are Plots found to be moved:  @{FilePath=D:\plot-k32-2021-04-23-14-31-674b9f72e0df0a35c6918afd4fd3eb2780915a7a4f776b803328a409
-72c99db6.plot; Name=plot-k32-2021-04-23-14-31-674b9f72e0df0a35c6918afd4fd3eb2780915a7a4f776b803328a40972c99db6.plot; Size=101.4} @{FilePath=K:\plot-k32-2021-04-24-06-52-
-a1dfce79910040323cab0d10baafe24f25cc0cef592978984e91603acdb3434a.plot; Name=plot-k32-2021-04-24-06-52-a1dfce79910040323cab0d10baafe24f25cc0cef592978984e91603acdb3434a.pl
-ot; Size=101.36}
-PlotoMover @ 4/24/2021 11:48:29 PM : Not enough space on destination drive: J: available space on Disk:  95.22
-PlotoMover @ 4/24/2021 11:48:29 PM : Not enough space on destination drive: J: available space on Disk:  95.22
+Iterating trough Drive:  @{DriveLetter=D:; ChiaDriveType=Out; VolumeName=ChiaOut2; FreeSpace=261.79; IsPlottable=True; AmountOfPlotsToHold=2}
+Checking if any item in that drive contains .PLOT as file ending...
+Found a Final plot:  plot-k32-2021-04-23-14-31-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1.plot
+Found a Final plot:  plot-k32-2021-04-24-17-35-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2.plot
+Iterating trough Drive:  @{DriveLetter=K:; ChiaDriveType=Out; VolumeName=ChiaOut3; FreeSpace=60.18; IsPlottable=False; AmountOfPlotsToHold=0}
+Checking if any item in that drive contains .PLOT as file ending...
+Found a Final plot:  plot-k32-2021-04-24-06-52-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3.plot
+Found a Final plot:  plot-k32-2021-04-24-17-20-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx4.plot
+Found a Final plot:  plot-k32-2021-04-24-23-10-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5.plot
+Found a Final plot:  plot-k32-2021-04-25-00-40-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx6.plot
+--------------------------------------------------------------------------------------------------
+PlotoMover @ 4/25/2021 12:09:17 PM : There are Plots found to be moved: 
+D:\plot-k32-2021-04-23-14-31-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1.plot
+D:\plot-k32-2021-04-24-17-35-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2.plot
+K:\plot-k32-2021-04-24-06-52-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3.plot
+K:\plot-k32-2021-04-24-17-20-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx4.plot
+K:\plot-k32-2021-04-24-23-10-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5.plot
+K:\plot-k32-2021-04-25-00-40-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx6.plot
+PlotoMover @ 4/25/2021 12:09:17 PM : A total of  6  plot have been found.
+PlotoMover @ 4/25/2021 12:09:17 PM : Moving plot:  D:\plot-k32-2021-04-23-14-31-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1.plot to \\Desktop-XXXXX\d
 ```
 
 # helper Functions 
