@@ -390,6 +390,24 @@ PlotoManager @ 4/25/2021 2:09:18 PM : Overall spawned Plots since start of scrip
 PlotoManager @ 4/25/2021 2:09:18 PM : Entering Sleep for 900, then checking again for available temp and out drives
 ```
 
+To see Mover BITS Job in the Backrgound, use "Get-BitsTransfer".
+```powershell
+Get-BitsTransfer
+```
+
+```
+JobId                                DisplayName TransferType JobState     OwnerAccount         
+-----                                ----------- ------------ --------     ------------         
+2f4996c9-9a3d-46a1-8b3f-8f53fdf63956 Moving Plot Download     Transferring DESKTOP-XXXX\me
+```
+
+## Stop SpawnerJobs and Moves
+If you want to stop all Ploto Jobs, use "Remove-Job" in the PowerShell Session you launched Start-Ploto
+```powershell
+Get-Job | Stop-Job | Remove-Job
+```
+You can also stop the jobs individually by selecting the one you want to stop.
+
 # FAQ
 > PlotoSpawner always tells me there are no temp drives available but there is enough storage?!
 
