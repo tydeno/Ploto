@@ -493,7 +493,9 @@ function Start-Ploto
 		$DestinationDrive,
 		[parameter(Mandatory=$true)]
 		$OutDriveDenom,
+        [parameter(Mandatory=$true)]
         $TempDriveDenom,
+        [parameter(Mandatory=$true)]
         $InputAmountToSpawn
 		)
     $ModuleUp = Install-PlotoModule
