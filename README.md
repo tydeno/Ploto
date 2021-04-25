@@ -262,10 +262,7 @@ See Parameters Section of Get-PlotoOutDrives.
 
 ## Move-PlotoPlots
 Gets all final Plot files and moves them to a destination drive. Can also use UNC Paths, as the transfer method is BITS (Background Intelligence Transfer Service).
-Calls Get-PlotoPlots to get all final plots. Then checks if destination drive has enough free space. If yes, PlotoMover moves the file to the destination using BITS.
-If no, the function exits and displays a message.
-
-The function supports SMS Notifications using Twilio. When there is a transferable Plot, but the destination drive does not have enough free space to store the plot, an SMS Notifciation is sent to the number specified.
+Calls Get-PlotoPlots to get all final plots and moves one by one to the destination drive.
 
 #### Example:
 
