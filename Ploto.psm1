@@ -372,49 +372,15 @@ if ($PlotsToMove)
                 Write-Host $plot.filepath -ForegroundColor Green
             }
         Write-Host "PlotoMover @"(Get-Date)": A total of "$PlotsToMove.Count" plot have been found."
-         
-        Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestinationDrive
-                            
+                          
 
         foreach ($plot in $PlotsToMove)
         {
-            <#Check if Destination drive has enough capacity for file to move
-            $DestinationLogicalDisk = get-WmiObject win32_logicaldisk | ? {$_.DeviceID -eq $DestinationDrive}
-            $DestinationDriveFreeSpace = [math]::Round($DestinationLogicalDisk.FreeSpace  / 1073741824, 2)
 
-            if ($DestinationDriveFreeSpace -gt $plot.Size)
-                {
-                   Write-Host "PlotoMover @"(Get-Date)": Destination Drive has enough Space:"$DestinationLogicalDisk.DeviceID "available space on Disk: "$DestinationDriveFreeSpace -ForegroundColor Green
-
-                   #Move Item using BITS
-                   try
-                        {
-                            $TwilioMessage = "A plot Has been moved and is ready for transfer: "+$plot 
-                            $BadErrorNotification = Send-SMS -AccountSid $AccountSid -AuthToken $AuthToken -Message $TwilioMessage -from $from -to $to
-                        }
-
-                    catch
-                        {
-                            Write-Output "PlotoMover @"(Get-Date)": BITS Transfer failed!" -ForegroundColor Red
-                        }
-                        
-
-
-
-                } 
-            else
-                {
-        
-                   Write-Host "PlotoMover @"(Get-Date)": ERROR. Not enough space on destination drive:"$DestinationLogicalDisk.DeviceID "available space on Disk: "$DestinationDriveFreeSpace "for transfer." -ForegroundColor Red
-                   if ($SendSMSNotification -eq $true) 
-                    {
-                        $TwilioMessage = "A plot to move has been found, but Destination Disk has no space. Make free space on Disk:"+$DestinationDrive 
-                        $BadErrorNotification = Send-SMS -AccountSid $AccountSid -AuthToken $AuthToken -Message $TwilioMessage -from $from -to $to
-                    }
-                }
-                #>
             try {
-            $BITSOut = Start-BitsTransfer -Source $plot.FilePath -Destination $DestinationDrive -Description "Moving Plot" -DisplayName "Moving Plot"
+                    Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestinationDrive
+                    $source = $plot.FilePath
+                    $BITSOut = Start-BitsTransfer -Source $source -Destination $DestinationDrive -Description "Moving Plot" -DisplayName "Moving Plot"
             }
 
             catch
@@ -450,7 +416,7 @@ function Start-PlotoMove
 
     Do
         {
-            Move-PlotoPlots -DestinationDrive "J:" -OutDriveDenom "out"
+            Move-PlotoPlots -DestinationDrive $DestinationDrive -OutDriveDenom $OutDriveDenom
             Start-Sleep 900
         }
 
@@ -522,11 +488,19 @@ function Install-PlotoModule
 
 function Start-Ploto
 {
-    $ModuleUp = Boot-Ploto
+	Param(
+		[parameter(Mandatory=$true)]
+		$DestinationDrive,
+		[parameter(Mandatory=$true)]
+		$OutDriveDenom,
+        $TempDriveDenom,
+        $InputAmountToSpawn
+		)
+    $ModuleUp = Install-PlotoModule
     if ($ModuleUp -eq $true)
         {
-          $Mover = Start-Job -ScriptBlock {Start-PlotoMove -DestinationDrive "Desktop-v32b75u\d" -OutDriveDenom "out"} -verbose
-          $Spawner = Start-Job -ScriptBlock {Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -SendSMSWhenJobDone $false } -Verbose
+          $Mover = Start-Job -ScriptBlock {Start-PlotoMove -DestinationDrive $DestinationDrive -OutDriveDenom $OutDriveDenom} -verbose
+          $Spawner = Start-Job -ScriptBlock {Start-PlotoSpawns -InputAmountToSpawn $InputAmountToSpawn -OutDriveDenom $OutDriveDenom -TempDriveDenom $tempDriveDenom -SendSMSWhenJobDone $false } -Verbose
           Write-Host "PlotoBooter @"(Get-Date)": Launched Spawner and Mover. Use Get-Job / Retrieve-Job to see details."
 
         }
