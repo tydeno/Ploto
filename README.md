@@ -69,6 +69,8 @@ Available Parameters.
 
 ##### -OutDriveDenom
 Requiered: Yes
+
+
 TypeExpecetd: String
 
 This param defines your OutDrives. An OutDrive in Ploto Terms is the drive chia stores the final plot to. Usually these are your big capacity HDDs.
