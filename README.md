@@ -143,7 +143,7 @@ Calls Get-PlotoTempDrives to get all Temp drives that are plottable. For each te
 #### Example:
 
 ```powershell
-Invoke-PlotoJob -OutDriveDenom "out" -TempDriveDenom "plot"
+Invoke-PlotoJob -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $true -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 60
 ```
 #### Output:
 
@@ -158,18 +158,28 @@ StartTime       : 4/29/2021 1:55:50 PM
 ```
 
 #### Parameters
+| Name          | Required | Type   | Description                                                                                                                              |
+|---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
+|OutDriveDenom  | Yes      | String | See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters)
+|TempDriveDenom | Yes      | String | See Parameters Section of [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-1)
+|WaitTimeBetweenPlotOnSeparateDisks | Yes | Int | gugus gewese, gugus gebliebe
+|WaitTimeBetweenPlotOnSameDisk | Yes | Int | gugus gewese, gugus gebliebe
+|EnableBitfield | No | bool | gugus gewese, gugus gebliebe
+|ParallelAmount | No | String | gugus gewese, gugus gebliebe
+
+
 
 ```
 Invoke-PlotoJob -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $true -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 60
 ```
 
-See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters)
+
 
 ```
 -TempDriveDenom
 ```
 
-See Parameters Section of [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-1)
+
 
 ## Start-PlotoSpawns
 Main function that nests all else.
