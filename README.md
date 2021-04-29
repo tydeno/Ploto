@@ -69,11 +69,9 @@ Available Parameters.
 
 | Name          | Required | Type   | Description                                                                                                     |
 |---------------|----------|--------|-----------------------------------------------------------------------------------------------------------------|
-|-OutDriveDenom | Yes      | String | This param defines your OutDrives. 
-                                      An OutDrive in Ploto Terms is the drive chia stores the final plot to. 
-                                      Usually these are your big capacity HDDs.
-                                      Make sure your OutDriveDenom is unique to your real HDD you want to use to store chia Plots. 
-                                      If a Volume has your OutDriveDenom in their VolumeName, they will also be used, if enough free space is given.
+|-OutDriveDenom | Yes      | String | An OutDrive in Ploto Terms is the drive chia stores the final plot to. Usually these are your bigcapacity HDDs. |
+                                    | Make sure your OutDriveDenom is unique to your real HDD you want to use to store chia Plots.                    |
+                                    | If a Volume has your OutDriveDenom in their VolumeName, they will also be used, if enough free space is given. |
 
 
 
