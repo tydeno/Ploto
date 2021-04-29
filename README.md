@@ -174,7 +174,7 @@ Continously calls Invoke-PlotoJob and states progress and other information. It 
 #### Example:
 
 ```powershell
-Start-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot"
+Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $true -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 60
 ```
 
 #### Output:
