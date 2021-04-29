@@ -27,9 +27,9 @@ You can specify several vital parameters to control when and where plots are spa
 PlotoSpawner identifies your drives for temping and storing plots by a common denominator you specify. 
 
 For reference heres my setup:
-CPU: i9-9900k
-RAM: 32 GB DDR4
-TempDrives:
+* CPU: i9-9900k
+* RAM: 32 GB DDR4
+* TempDrives:
 
 | Name          | DriveLetter | Type   | Size      |
 |---------------|----------|--------|--------------|
