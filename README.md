@@ -77,11 +77,17 @@ PlotoSpawner will max out the available temp drives. This means for my temp driv
 
 So there will be 9x Plot jobs running in parallel with defined wait time in minutes betwen jobs on each disk.
 
+When a job is done and a temp drive becomes available again, PlotoSpawner will spawn the next jobs, until it has spawned the amount you specified as -InputAmountToSpawn
+
 # Prereqs
 The following prereqs need to be met in order for Ploto to function properly:
-
 * chia.exe is installed 
-* BITS (Background Intelligent Transfer Service) is functioning properly (used to move final plots around if needed -> Manage-PlotoMove) 
+* You may need to change PowerShell Execution Policy to allow the script to be imported.
+
+You can do it by using Set-ExecutionPolicy like this:
+```powershell
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
 
 
 # PlotoSpawn
