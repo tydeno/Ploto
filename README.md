@@ -275,13 +275,14 @@ Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "p
 
 # FAQ
 > Can I shut down the script when I dont want Ploto to spawn more Plots?
+
 Yep. The individual Chia Plot Jobs wont be affected by that.
 
 # PlotoManage
 Allows you to check status of your current plot jobs aswell as stopping them and cleaning the temp drives.
 
 ## Get-PlotoJobs
-Analyzes the plotter logs (standard chia.exe output redirected, enriched with additional data) and shows the status, pid and drives in use.
+Analyzes the plotter logs (standard chia.exe output redirected, enriched with additional data) and shows the status, pid and drives in use. The function only pick up data of plot logs that have been spawned using PlotoSpawner (as it deploys initial data like PID of process and drives use). The additional logs are stored in the same location as the standrad logs. If you delete those, this function wont be able to read certain properties anymore. 
 
 #### Example:
 ```powershell
