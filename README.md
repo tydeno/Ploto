@@ -15,7 +15,7 @@ OutDrive          : K:
 TempDrive         : E:
 ArgumentsList     : plots create -k 32 -t E:\ -d K:\ -e
 ChiaVersionUsed   : 1.1.2
-LogPath           : C:\Users\Yanik\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b
+LogPath           : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b
                     _Tmp-E_Out-K.txt
 StartTime         : 4/30/2021 12:49:13 AM
 ```
