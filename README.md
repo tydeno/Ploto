@@ -39,6 +39,15 @@ For reference heres my setup:
 |ChiaPlot 4 | Q:\ | SATA SSD | 465 GB
 |ChiaPlot 5 | J:\ | NVME SSD PCI 16x | 18100 GB
 
+* OutDrives:
+
+| Name          | DriveLetter | Type   | Size      |
+|---------------|----------|--------|--------------|
+|ChiaOut 1 | K:\ | SATA HDD | 465 GB
+|ChiaOut 2 | D:\ | SATA HDD | 465 GB
+
+
+
 
 When there is one available, Ploto determines the best OutDrive (most free space) and calls chia.exe to start the plot.
 Ploto iterates once through all available TempDrives and spawns a plot per each TempDrive (as long as enough OutDrive space is given).
