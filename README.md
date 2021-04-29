@@ -213,7 +213,7 @@ OutDrive        : D:
 TempDrive       : H:
 ArgumentsList   : plots create -k 32 -t H:\ -d D:\
 ChiaVersionUsed : 1.1.2
-LogPath         : C:\Users\Yanik\.chia\mainnet\plotter\PlotoSpawnerLog_29_4_13_55_Tmp-H_Out-D.txt
+LogPath         : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_29_4_13_55_Tmp-H_Out-D.txt
 StartTime       : 4/29/2021 1:55:50 PM
 ```
 
