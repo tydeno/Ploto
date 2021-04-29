@@ -220,8 +220,7 @@ Yep. The individual Chia Plot Jobs wont be affected by that.
 
 
 # PlotoMove
-Heavy WORK IN PROGRESS HERE!
-It continously searches for final Plots on your OutDrives and moves them to your desired location. I do this for transferring plots from my plotting machine to my farming machine.
+Continously searches for final Plots on your OutDrives and moves them to your desired location. I do this for transferring plots from my plotting machine to my farming machine.
 
 ## Get-PlotoPlots
 
