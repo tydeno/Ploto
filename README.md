@@ -184,19 +184,18 @@ PlotoManager @ 4/29/2021 1:45:38 PM : Amount of spawned Plots in this iteration:
 PlotoManager @ 4/29/2021 1:45:38 PM : Overall spawned Plots since start of script: 1
 ```
 
-#### Parameters
+#### Parameters:
 
+| Name          | Required | Type   | Description                                                                                                                              |
+|---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
+|InputAmounttoSpawn| Yes | Int | Defines amount of plot to be spanwed overall. Ploto will stop when that amount is reached.
+|OutDriveDenom  | Yes      | String | See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters)
+|TempDriveDenom | Yes      | String | See Parameters Section of [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-1)
+|WaitTimeBetweenPlotOnSeparateDisks | Yes | Int | See Parameters Section of [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-1)
+|WaitTimeBetweenPlotOnSameDisk | Yes | Int | See Parameters Section of [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-1)
+|EnableBitfield | No | bool | See Parameters Section of [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-1)
+|ParallelAmount | No | String | See Parameters Section of [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-1)
 
-##### -InputAmountToSpawn 
-
-Amount of total plots to be spanwed by PlotoSpawner.
-
-##### OutDriveDenom
-See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters)
-
-
-##### TempDriveDenom
-See Parameters Section of [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-1)
 
 
 # How to use
@@ -219,6 +218,7 @@ Yep. The individual Chia Plot Jobs wont be affected by that.
 
 
 # PlotoMove
+Heavy WORK IN PROGRESS HERE!
 It continously searches for final Plots on your OutDrives and moves them to your desired location. I do this for transferring plots from my plotting machine to my farming machine.
 
 ## Get-PlotoPlots
