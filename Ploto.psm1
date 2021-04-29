@@ -550,34 +550,34 @@ foreach ($log in $logs)
         $CurrentStatus = $status[($status.count-1)]
         $ErrorActionPreference = "SilentlyContinue"
 
-        $PlotId = ($status -match "ID:").line.split(" ")[1]
+        $plotId = ($status -match "ID").line.Split(" ")[1]
 
         switch -Wildcard ($CurrentStatus)
             {
                 "Starting plotting progress into temporary dirs:*" {$StatusReturn = "Initializing"}
-                "Starting phase 1/4*" {$StatusReturn = "1:0"}
-                "F1 complete, time*" {$StatusReturn = "1:1"}
-                "Computing table 1" {$StatusReturn = "1:1"}
-                "Computing table 2" {$StatusReturn = "1:1"}
-                "Computing table 3" {$StatusReturn = "1:2"}
-                "Computing table 4" {$StatusReturn = "1:3"}
-                "Computing table 5" {$StatusReturn = "1:4"}
-                "Computing table 6" {$StatusReturn = "1:5"}
-                "Computing table 7" {$StatusReturn = "1:6"}
-                "Starting phase 2/4*" {$StatusReturn = "2:0"}
-                "Backpropagating on table 7" {$StatusReturn = "2:1"}
-                "Backpropagating on table 6" {$StatusReturn = "2:2"}
-                "Backpropagating on table 5" {$StatusReturn = "2:3"}
-                "Backpropagating on table 4" {$StatusReturn = "2:4"}
-                "Backpropagating on table 3" {$StatusReturn = "2:5"}
-                "Backpropagating on table 2" {$StatusReturn = "2:6"}
-                "Starting phase 3/4*" {$StatusReturn = "3:0"}
-                "Compressing tables 1 and 2" {$StatusReturn = "3:1"}
-                "Compressing tables 2 and 3" {$StatusReturn = "3:2"}
-                "Compressing tables 3 and 4" {$StatusReturn = "3:3"}
-                "Compressing tables 4 and 5" {$StatusReturn = "3:4"}
-                "Compressing tables 5 and 6" {$StatusReturn = "3:5"}
-                "Compressing tables 6 and 7" {$StatusReturn = "3:6"}
+                "Starting phase 1/4*" {$StatusReturn = "1.0"}
+                "Computing table 1" {$StatusReturn = "1.1"}
+                "F1 complete, time*" {$StatusReturn = "1.1"}
+                "Computing table 2" {$StatusReturn = "1.1"}
+                "Computing table 3" {$StatusReturn = "1.2"}
+                "Computing table 4" {$StatusReturn = "1.3"}
+                "Computing table 5" {$StatusReturn = "1.4"}
+                "Computing table 6" {$StatusReturn = "1.5"}
+                "Computing table 7" {$StatusReturn = "1.6"}
+                "Starting phase 2/4*" {$StatusReturn = "2.0"}
+                "Backpropagating on table 7" {$StatusReturn = "2.1"}
+                "Backpropagating on table 6" {$StatusReturn = "2.2"}
+                "Backpropagating on table 5" {$StatusReturn = "2.3"}
+                "Backpropagating on table 4" {$StatusReturn = "2.4"}
+                "Backpropagating on table 3" {$StatusReturn = "2.5"}
+                "Backpropagating on table 2" {$StatusReturn = "2.6"}
+                "Starting phase 3/4*" {$StatusReturn = "3.0"}
+                "Compressing tables 1 and 2" {$StatusReturn = "3.1"}
+                "Compressing tables 2 and 3" {$StatusReturn = "3.2"}
+                "Compressing tables 3 and 4" {$StatusReturn = "3.3"}
+                "Compressing tables 4 and 5" {$StatusReturn = "3.4"}
+                "Compressing tables 5 and 6" {$StatusReturn = "3.5"}
+                "Compressing tables 6 and 7" {$StatusReturn = "3.6"}
                 default {$StatusReturn = "Could not fetch Status"}
             }
 
@@ -595,27 +595,47 @@ foreach ($log in $logs)
                            $loggerRead = Get-Content ($PlotterBaseLogPath+"\"+$logger.Name) | Select-String -Pattern $pattern2
                            $OutDrive = ($loggerRead -match "OutDrive").line.Split("=").split(";")[1]
                            $tempDrive = ($loggerRead -match "TempDrive").line.Split("=").split(";")[1]
-                           $Pid = ($loggerRead -match "PID").line.Split(" ")[1]
+                           $chiaPid = ($loggerRead -match "PID").line.Split(" ")[1]
                            $PlotoSpawnerJobId = ($loggerRead -match "PlotoSpawnerJobId").line.Split(" ")[1]
+                           $StatLogPath = $logger.FullName
+
+                           $p = $((Get-Counter '\Process(*)\ID Process' -ErrorAction SilentlyContinue).CounterSamples | % {[regex]$a = "^.*\($([regex]::Escape($_.InstanceName))(.*)\).*$";[PSCustomObject]@{InstanceName=$_.InstanceName;PID=$_.CookedValue;InstanceId=$a.Matches($($_.Path)).groups[1].value}})
+                           $id = $chiaPID
+                           $p1 = $p | where {$_.PID -eq $id}
+                           $ProcessName = (Get-Process -Id $ProcessPID).Name
+                           $CpuCores = (Get-WMIObject Win32_ComputerSystem).NumberOfLogicalProcessors
+                           $Samples = (Get-Counter -Counter "\Process($($p1.InstanceName+$p1.InstanceId))\% Processor Time").CounterSamples
+                           $cpuout = $Samples | Select `
+                           InstanceName,
+                           @{Name="CPU %";Expression={[Decimal]::Round(($_.CookedValue / $CpuCores), 2)}}
+                           $cpuUsage = $cpuout.'CPU %'
+
+                           $MemUsage = (Get-WMIObject WIN32_PROCESS | ? {$_.processid -eq $chiapid} | Sort-Object -Property ws -Descending | Select processname,processid, @{Name="Mem Usage(MB)";Expression={[math]::round($_.ws / 1mb)}}).'Mem Usage(MB)'
+
                         }
                 }
+
                 
             #Getting Plot Object Ready
             $PlotJobOut = [PSCustomObject]@{
             PlotoSpawnerJobId = $PlotoSpawnerJobId
             PlotId = $plotId
-            PID = $Pid
-            PlotJobStatus = $StatusReturn
+            PID = $chiaPid
+            PlotJobPhase = $StatusReturn
             TempDrive = $tempDrive
             OutDrive = $OutDrive
-            LogPath = $log.name
+            LogPath = $log.FullName
+            StatLogPath = $StatLogPath
+            cpuUsagePercent = $cpuUsage
+            memUsageMB = $MemUsage
             }
 
         $collectionWithPlotJobsOut.Add($PlotJobOut) | Out-Null
-        $plotId = $null
+        $pid= $null
         $StatusReturn = $null
         $tempDrive = $null
         $OutDrive = $null
+        $AmountOfThreads = $null
     }
 
 $ErrorActionPreference = "Continue"
@@ -630,12 +650,14 @@ function Stop-PlotoJob
 		[parameter(Mandatory=$true)]
 		$PlotoSpawnerJobId
 		)
+        $ErrorActionPreference = "Stop"
 
         $Job = Get-PlotoJobs | ? {$_.PlotoSpawnerJobId -eq $PlotoSpawnerJobId}
 
         try 
             {
                 Stop-Process -id $job.PID
+                Write-Host "PlotoStopJob @"(Get-Date)": Stopped chia.exe with PID:" $job.pid -ForegroundColor Green 
             }
 
         catch
@@ -650,14 +672,32 @@ function Stop-PlotoJob
 
         if ($FileArrToDel)
             {
+                Write-Host "PlotoStopJob @"(Get-Date)": Found .tmp files for this job to be deleted. Continue with deletion."
                 try 
                     {
-                         $FileArrToDel | Remove-Item -Force
+                        $FileArrToDel | Remove-Item -Force
+                        Write-Host "PlotoStopJob @"(Get-Date)": Removed temp files on"$Job.TempDrive -ForegroundColor Green   
                     }
 
                 catch
                     {
                         Write-Host "PlotoStopJob @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red   
                     }               
-            }        
+            }     
+
+        #Remove logs
+        try
+            {
+                Remove-Item -Path $Job.LogPath
+                Remove-Item -Path $Job.StatLogPath
+                Write-Host "PlotoStopJob @"(Get-Date)": Removed log files for this job." -ForegroundColor Green     
+            }
+
+        catch
+            {
+               Write-Host "PlotoStopJob @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red 
+            }
 }
+
+
+
