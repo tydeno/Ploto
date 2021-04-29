@@ -23,6 +23,10 @@ TLDR: It plots 1x plot on each TempDrive (if you have 6x TempDrives = 6x paralle
 Ploto checks periodically, if a TempDrive and OutDrive is available for plotting. 
 If there is no TempDrive available, or no OutDrive, Ploto checks again in 300 seconds.
 
+When there is one available, Ploto determines the best OutDrive (most free space) and calls chia.exe to start the plot.
+Ploto iterates once through all available TempDrives and spawns a plot per each TempDrive (as long as enough OutDrive space is given).
+After that, Ploto checks if amount Spawned is equal as defined as input. If not, Ploto keeps going until it is.
+
 You can specify several vital parameters to control when and where plots are spawned, temped and stored. 
 PlotoSpawner identifies your drives for temping and storing plots by a common denominator you specify. 
 
@@ -47,12 +51,7 @@ For reference heres my setup:
 |ChiaOut 1 | K:\ | SATA HDD | 465 GB
 |ChiaOut 2 | D:\ | SATA HDD | 465 GB
 
-
-
-
-When there is one available, Ploto determines the best OutDrive (most free space) and calls chia.exe to start the plot.
-Ploto iterates once through all available TempDrives and spawns a plot per each TempDrive (as long as enough OutDrive space is given).
-After that, Ploto checks if amount Spawned is equal as defined as input. If not, Ploto keeps going until it is.
+So my denominators for my TempDrives its "plot" and for my destination drives its "out".
 
 # Prereqs
 The following prereqs need to be met in order for Ploto to function properly:
