@@ -4,6 +4,26 @@ Basically spawns Plots.
 
 Way dumber than plotman. Still does what it should for all those Windows Farmers out there.
 
+```powershell
+Get-PlotoJobs
+```
+
+```
+PlotoSpawnerJobId : 49ab3c48-532b-4f17-855d-3c5b4981528b
+PlotId            : 08f1762f01fb8ddb3d2f3382ca47c9cba8014c9a96dbbe6946c827e60dc629fc
+PID               : 11856
+PlotJobPhase      : 1.1
+TempDrive         : E:
+OutDrive          : K:
+LogPath           : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b
+                    _Tmp-E_Out-K.txt
+StatLogPath       : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b
+                    _Tmp-E_Out-K@Stat.txt
+cpuUsagePercent   : 11.38
+memUsageMB        : 164
+```
+
+
 ### PlotoSpawn
 * [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotooutdrives)
 * [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#get-plototempdrives)
@@ -210,12 +230,13 @@ Invoke-PlotoJob -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $tru
 #### Output:
 
 ```
+PlotoSpawnerJobId : 49ab3c48-532b-4f17-855d-3c5b4981528b
 ProcessID       : 9024
 OutDrive        : D:
 TempDrive       : H:
 ArgumentsList   : plots create -k 32 -t H:\ -d D:\
 ChiaVersionUsed : 1.1.2
-LogPath         : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_29_4_13_55_Tmp-H_Out-D.txt
+LogPath           : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b_Tmp-E_Out-K.txt
 StartTime       : 4/29/2021 1:55:50 PM
 ```
 
@@ -270,7 +291,7 @@ Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
 ```
 5. Launch PlotoSpawner
 ```powershell
-Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $true -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 60
+Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $true -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 30 -WaitTimeBetweenPlotOnSameDisk 60
 ```
 
 # FAQ
@@ -291,21 +312,18 @@ Get-PlotoJobs
 
 #### Output:
 ```
-PlotoSpawnerJobId : 5a0213af-2610-49ab-a339-0fd1dec1de29
-PlotId            : a3d0083ced7e26724a644791c82aaa9d8b070f5fb8eb6c5d767fe5457fe37aab
-PID               : 2540
-PlotJobStatus     : 1:1
-TempDrive         : F:
-OutDrive          : D:
-LogPath           : PlotoSpawnerLog_29_4_21_27_5a0213af-2610-49ab-a339-0fd1dec1de29_Tmp-F_Out-D.txt
-
-PlotoSpawnerJobId : e66695ca-97ee-432d-b095-beab630622b7
-PlotId            : c47aa6d7d9e41bb8e7270033f11145cddfde59da52c23e5bcdbb17f1dfe6b003
-PID               : 8156
-PlotJobStatus     : 1:1
-TempDrive         : F:
-OutDrive          : D:
-LogPath           : PlotoSpawnerLog_29_4_21_30_e66695ca-97ee-432d-b095-beab630622b7_Tmp-F_Out-D.txt
+PlotoSpawnerJobId : 49ab3c48-532b-4f17-855d-3c5b4981528b
+PlotId            : 08f1762f01fb8ddb3d2f3382ca47c9cba8014c9a96dbbe6946c827e60dc629fc
+PID               : 11856
+PlotJobPhase      : 1.1
+TempDrive         : E:
+OutDrive          : K:
+LogPath           : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b
+                    _Tmp-E_Out-K.txt
+StatLogPath       : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b
+                    _Tmp-E_Out-K@Stat.txt
+cpuUsagePercent   : 11.38
+memUsageMB        : 164
 ```
 
 #### Parameters:
