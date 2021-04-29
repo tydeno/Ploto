@@ -21,7 +21,24 @@ Way dumber than plotman. Still does what it should for all those Windows Farmers
 TLDR: It plots 1x plot on each TempDrive (if you have 6x TempDrives = 6x parallel Plot Jobs) as long as you want it to and as long as you have OutDrive space.
 
 Ploto checks periodically, if a TempDrive and OutDrive is available for plotting. 
-If there is no TempDrive available, or no OutDrive, Ploto checks again in 3600 seconds.
+If there is no TempDrive available, or no OutDrive, Ploto checks again in 300 seconds.
+
+You can specify several vital parameters to control when and where plots are spawned, temped and stored. 
+PlotoSpawner identifies your drives for temping and storing plots by a common denominator you specify. 
+
+For reference heres my setup:
+CPU: i9-9900k
+RAM: 32 GB DDR4
+TempDrives:
+
+| Name          | DriveLetter | Type   | Size      |
+|---------------|----------|--------|--------------|
+|ChiaPlot 1 | I:\ | SATA SSD | 465 GB
+|ChiaPlot 2 | H:\ | SATA SSD | 465 GB
+|ChiaPlot 3 | E:\ | SATA SSD | 465 GB
+|ChiaPlot 4 | Q:\ | SATA SSD | 465 GB
+|ChiaPlot 5 | J:\ | NVME SSD PCI 16x | 18100 GB
+
 
 When there is one available, Ploto determines the best OutDrive (most free space) and calls chia.exe to start the plot.
 Ploto iterates once through all available TempDrives and spawns a plot per each TempDrive (as long as enough OutDrive space is given).
