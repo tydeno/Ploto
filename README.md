@@ -5,14 +5,16 @@ Basically spawns Plots.
 Way dumber than plotman. Still does what it should for all those Windows Farmers out there.
 
 ### PlotoSpawn
-
 * [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotooutdrives)
 * [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#get-plototempdrives)
 * [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#invoke-plotojob)
 * [Start-PlotoSpawns](https://github.com/tydeno/Ploto/blob/main/README.md#start-plotospawns)
 
-### PlotoMove - Work in progress
+### PlotoManage
+* [Get-PlotoJobs](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotooutdrives)
+* [Stop-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#get-plototempdrives)
 
+### PlotoMove - Work in progress
 * [Get-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotoplots)
 * [Move-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/README.md#move-plotoplots)
 
@@ -275,7 +277,40 @@ Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "p
 > Can I shut down the script when I dont want Ploto to spawn more Plots?
 Yep. The individual Chia Plot Jobs wont be affected by that.
 
+# PlotoManage
+Allows you to check status of your current plot jobs aswell as stopping them and cleaning the temp drives.
 
+## Get-PlotoJobs
+Analyzes the plotter logs (standard chia.exe output redirected, enriched with additional data) and shows the status, pid and drives in use.
+
+#### Example:
+```powershell
+Get-PlotoJobs
+```
+
+#### Output:
+```
+PlotoSpawnerJobId : 5a0213af-2610-49ab-a339-0fd1dec1de29
+PlotId            : a3d0083ced7e26724a644791c82aaa9d8b070f5fb8eb6c5d767fe5457fe37aab
+PID               : 2540
+PlotJobStatus     : 1:1
+TempDrive         : F:
+OutDrive          : D:
+LogPath           : PlotoSpawnerLog_29_4_21_27_5a0213af-2610-49ab-a339-0fd1dec1de29_Tmp-F_Out-D.txt
+
+PlotoSpawnerJobId : e66695ca-97ee-432d-b095-beab630622b7
+PlotId            : c47aa6d7d9e41bb8e7270033f11145cddfde59da52c23e5bcdbb17f1dfe6b003
+PID               : 8156
+PlotJobStatus     : 1:1
+TempDrive         : F:
+OutDrive          : D:
+LogPath           : PlotoSpawnerLog_29_4_21_30_e66695ca-97ee-432d-b095-beab630622b7_Tmp-F_Out-D.txt
+```
+
+#### Parameters:
+| Name          | Required | Type   | Description                                                                                                                              |
+|---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
+| |    | | 
 
 
 
