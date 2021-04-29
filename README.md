@@ -41,8 +41,8 @@ For reference heres my setup:
 |ChiaPlot 1 | I:\ | SATA SSD | 465 GB
 |ChiaPlot 2 | H:\ | SATA SSD | 465 GB
 |ChiaPlot 3 | E:\ | SATA SSD | 465 GB
-|ChiaPlot 4 | Q:\ | SATA SSD | 465 GB
-|ChiaPlot 5 | J:\ | NVME SSD PCI 16x | 1810 GB
+|ChiaPlot 4 | Q:\ | SATA SSD | 1810 GB
+|ChiaPlot 5 | J:\ | NVME SSD PCI 16x | 465 GB
 
 * OutDrives:
 
@@ -52,6 +52,30 @@ For reference heres my setup:
 |ChiaOut 2 | D:\ | SATA HDD | 465 GB
 
 So my denominators for my TempDrives its "plot" and for my destination drives its "out".
+
+By default, Ploto spawns only 1x Plot Job on each Disk in parallel. So when I launch Ploto with default amount to spawn:
+```powershell
+Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $false -ParallelAmount default -WaitTimeBetweenPlotOnSeparateDisks 30 -WaitTimeBetweenPlotOnSameDisk 60
+```
+
+the following will happen:
+If there is enough free space on the temp and out drive, Ploto spawns 1x job on each disk with the specified wait time between jobs. For each job, it calculates the mot suitable out drive anew, being aware of the plot jobs in progress on that disk. So it should not allow over commiting of temp and or out drives.
+
+If I launch PlotoSpawner with max Parallel Amount param like this:
+```powershell
+Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $false -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 30 -WaitTimeBetweenPlotOnSameDisk 60
+```
+
+PlotoSpawner will max out the available temp drives. This means for my temp drive setup the following:
+| Name          | DriveLetter | Type   | Size      | Total Plots in parallel |
+|---------------|----------|--------|--------------|-------------------------|
+|ChiaPlot 1 | I:\ | SATA SSD | 465 GB | 1
+|ChiaPlot 2 | H:\ | SATA SSD | 465 GB | 1
+|ChiaPlot 3 | E:\ | SATA SSD | 465 GB | 1
+|ChiaPlot 4 | Q:\ | SATA SSD | 1810 GB | 5
+|ChiaPlot 5 | J:\ | NVME SSD PCI 16x | 465 GB | 1
+
+So there will be 9x Plot jobs running in parallel with defined wait time in minutes betwen jobs on each disk.
 
 # Prereqs
 The following prereqs need to be met in order for Ploto to function properly:
