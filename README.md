@@ -29,6 +29,7 @@ PlotoSpawner identifies your drives for temping and storing plots by a common de
 For reference heres my setup:
 * CPU: i9-9900k
 * RAM: 32 GB DDR4
+* GPU: RTX 3080 (refernecing cause its worth to note that I mine eth next to plotting on that machine)
 * TempDrives:
 
 | Name          | DriveLetter | Type   | Size      |
@@ -37,7 +38,7 @@ For reference heres my setup:
 |ChiaPlot 2 | H:\ | SATA SSD | 465 GB
 |ChiaPlot 3 | E:\ | SATA SSD | 465 GB
 |ChiaPlot 4 | Q:\ | SATA SSD | 465 GB
-|ChiaPlot 5 | J:\ | NVME SSD PCI 16x | 18100 GB
+|ChiaPlot 5 | J:\ | NVME SSD PCI 16x | 1810 GB
 
 * OutDrives:
 
