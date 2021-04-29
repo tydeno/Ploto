@@ -79,6 +79,12 @@ So there will be 9x Plot jobs running in parallel with defined wait time in minu
 
 When a job is done and a temp drive becomes available again, PlotoSpawner will spawn the next jobs, until it has spawned the amount you specified as -InputAmountToSpawn
 
+
+# PlotoSpawn
+PlotoSpawn spawns one plot job on each available Drive defined as a TempDrive, if it has enough free space (270 GB) and there is no plotting in progress on that drive. Plotting in progress is considered when a SSD defined as a TempDrive has less than 270 GB free space or has ANY files or folders in it that have file extension ".tmp".
+Using the -ParallelAmount Parameter, you may also plot several Jobs in Parallel on a disk. It determines the amount of available plots to to temp on a disk and maxes it out.
+
+
 # Prereqs
 The following prereqs need to be met in order for Ploto to function properly:
 * chia.exe is installed 
@@ -89,10 +95,6 @@ You can do it by using Set-ExecutionPolicy like this:
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-
-# PlotoSpawn
-PlotoSpawn spawns one plot job on each available Drive defined as a TempDrive, if it has enough free space (270 GB) and there is no plotting in progress on that drive. Plotting in progress is considered when a SSD defined as a TempDrive has less than 270 GB free space or has ANY files or folders in it that have file extension ".tmp".
-Using the -ParallelAmount Parameter, you may also plot several Jobs in Parallel on a disk. It determines the amount of available plots to to temp on a disk and maxes it out.
 
 ## Get-PlotoOutDrives
 Gets all Windows Volumes that match the -OutDriveDenom parameter and checks if free space is greater than 107 GB (amount currently used by final chia plots).
