@@ -162,24 +162,10 @@ StartTime       : 4/29/2021 1:55:50 PM
 |---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
 |OutDriveDenom  | Yes      | String | See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters)
 |TempDriveDenom | Yes      | String | See Parameters Section of [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-1)
-|WaitTimeBetweenPlotOnSeparateDisks | Yes | Int | gugus gewese, gugus gebliebe
-|WaitTimeBetweenPlotOnSameDisk | Yes | Int | gugus gewese, gugus gebliebe
-|EnableBitfield | No | bool | gugus gewese, gugus gebliebe
-|ParallelAmount | No | String | gugus gewese, gugus gebliebe
-
-
-
-```
-Invoke-PlotoJob -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $true -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 60
-```
-
-
-
-```
--TempDriveDenom
-```
-
-
+|WaitTimeBetweenPlotOnSeparateDisks | Yes | Int | Amount of minutes to be waited for spawning plots on separate disks.
+|WaitTimeBetweenPlotOnSameDisk | Yes | Int | Amount of minutes to be waited for spawning plots on the same disk.
+|EnableBitfield | No | bool | Enable or disable Bitfield for all jobs to be spawned. If not set, default is off.
+|ParallelAmount | No | String | Defines amount of Plot Jobs to be spawned on same disks at once (with delay). If set to "max" utilizes entire available temp disk space.
 
 ## Start-PlotoSpawns
 Main function that nests all else.
