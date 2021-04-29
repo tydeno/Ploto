@@ -66,9 +66,8 @@ AmountOfPlotsToHold : 3
 
 #### Parameters:
 
-```powershell
--OutDriveDenom
-```
+
+##### OutDriveDenom
 
 This param defines your OutDrives. An OutDrive in Ploto Terms is the drive chia stores the final plot to. Usually these are your big capacity HDDs.
 
@@ -138,10 +137,8 @@ PlotInProgressName      :
 ```
 
 #### Parameters:
-```
--TempDriveDenom
-```
 
+##### TempDriveDenom
 The same as -OutDriveDenom but for your temporary drives chia uses to actually plot on. Usually these are are your SATA/NVMe SSDs.
 Use a denonimator that all your chia temp drives have in common. For me, all Chia Temp drives (drives I plot on) are called "ChiaPlot 1-4".
 So for me I set the param to "plot". 
@@ -199,12 +196,6 @@ PlotoManager @ 4/29/2021 1:45:38 PM : Amount of spawned Plots in this iteration:
 PlotoManager @ 4/29/2021 1:45:38 PM : Overall spawned Plots since start of script: 1
 ```
 
-Example with SMS Notifications (trough Twilio):
-
-```powershell
-Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $true -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 60
-```
-
 #### Parameters
 
 
@@ -212,17 +203,11 @@ Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "p
 
 Amount of total plots to be spanwed by PlotoSpawner.
 
-
-```
--OutDriveDenom
-```
-
+##### OutDriveDenom
 See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters)
 
-```
--TempDriveDenom
-```
 
+##### TempDriveDenom
 See Parameters Section of [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-1)
 
 
@@ -236,7 +221,7 @@ Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
 ```
 5. Launch PlotoSpawner
 ```powershell
-Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
+Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $true -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 60
 ```
 
 # FAQ
