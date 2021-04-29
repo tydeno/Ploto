@@ -6,12 +6,12 @@ Basically spawns and moves Plots around.
 
 * [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotooutdrives)
 * [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#get-plototempdrives)
-* [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#spawn-plotoplots)
-* [Start-PlotoSpawns](https://github.com/tydeno/Ploto/blob/main/README.md#manage-plotospawns)
+* [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#invoke-plotojob)
+* [Start-PlotoSpawns](https://github.com/tydeno/Ploto/blob/main/README.md#start-plotospawns)
 
 ### PlotoMove
 
-* [Get-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotofinalplotfile)
+* [Get-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotoplots)
 * [Move-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/README.md#move-plotoplots)
 
 
