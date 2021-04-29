@@ -28,19 +28,13 @@ After that, Ploto checks if amount Spawned is equal as defined as input. If not,
 # Prereqs
 The following prereqs need to be met in order for Ploto to function properly:
 
-* chia.exe is installed and path is valid (currently hardcoded to v1.1.1.1, so may break upon update. Will adjust)
+* chia.exe is installed 
 * BITS (Background Intelligent Transfer Service) is functioning properly (used to move final plots around if needed -> Manage-PlotoMove) 
-
-If you want to send and receive SMS:
-
-* Twilio Account
-  * Twilio AccountSid
-  * Twilio AuthToken
-  * Twilio Sender Number
 
 
 # PlotoSpawn
-PlotoSpawn spawns one plot job on each available SSD defined as a TempDrive, if it has enough free space (270 GB) and there is no plotting in progress on that drive. Plotting in progress is considered when a SSD defined as a TempDrive has less than 270 GB free space or has ANY files or folders in it (Yes, the whole drive has to be completely empty. I always plot in root :))
+PlotoSpawn spawns one plot job on each available Drive defined as a TempDrive, if it has enough free space (270 GB) and there is no plotting in progress on that drive. Plotting in progress is considered when a SSD defined as a TempDrive has less than 270 GB free space or has ANY files or folders in it that have file extension ".tmp".
+Using the -ParallelAmount Parameter, you may also plot several Jobs in Parallel on a disk. It determines the amount of available plots to to temp on a disk and maxes it out.
 
 ## Get-PlotoOutDrives
 Gets all Windows Volumes that match the -OutDriveDenom parameter and checks if free space is greater than 107 GB (amount currently used by final chia plots).
@@ -95,37 +89,52 @@ It wraps all the needed information of the volume like DriveLetter, ChiaDriveTyp
 #### Output:
 
 ```
-DriveLetter         : E:
-ChiaDriveType       : Temp
-VolumeName          : ChiaPlot 3 Evo 860 512GB 
-FreeSpace           : 215.19
-IsPlottable         : False
-AmountOfPlotsToTemp : 0
-HasPlotInProgress   : Likely
+DriveLetter             : J:
+ChiaDriveType           : Temp
+VolumeName              : ChiaPlot 5 NVME 980 Pro
+FreeSpace               : 361.62
+TotalSpace              : 465.75
+IsPlottable             : False
+AmountOfPlotsToTempMax  : 0
+HasPlotInProgress       : True
+AmountOfPlotsInProgress : 1
+PlotInProgressName      : {plot-k32-2021-04-29-02-37-d9357f04bf93860757e611003228351b050c23d84c4813def7a87ced03e26bf3}
 
-DriveLetter         : H:
-ChiaDriveType       : Temp
-VolumeName          : ChiaPlot 2 Crucial CT 512 GB 2
-FreeSpace           : 228.14
-IsPlottable         : False
-AmountOfPlotsToTemp : 0
-HasPlotInProgress   : Likely
+DriveLetter             : Q:
+ChiaDriveType           : Temp
+VolumeName              : ChiaPlot 4 2TB SSD
+FreeSpace               : 678.18
+TotalSpace              : 1863
+IsPlottable             : False
+AmountOfPlotsToTempMax  : -2
+HasPlotInProgress       : True
+AmountOfPlotsInProgress : 4
+PlotInProgressName      : {plot-k32-2021-04-28-14-24-120fc317c4a837d79550b7c16c1faccc101f75aaeeb4fd526c67025b7cedf543,
+                          plot-k32-2021-04-28-14-44-4cec8c5141115d41263c5148f0bec5345bdbfe6fe7ede5b8e3c950517cd91601,
+                          plot-k32-2021-04-28-15-04-f93405d93b3811085fd4ede4a22b0c349a042bd1d39b7b67b2582cade2d7bf0f,
+                          plot-k32-2021-04-28-15-24-b0bc562f8e90d18110f9dce50bb394ede3425970a1ddf27dd498bc65ee42e2b1}
+                          
+DriveLetter             : E:
+ChiaDriveType           : Temp
+VolumeName              : ChiaPlot 3 Evo 860 512GB
+FreeSpace               : 238.99
+TotalSpace              : 465.76
+IsPlottable             : False
+AmountOfPlotsToTempMax  : 0
+HasPlotInProgress       : True
+AmountOfPlotsInProgress :
+PlotInProgressName      :
 
-DriveLetter         : I:
-ChiaDriveType       : Temp
-VolumeName          : ChiaPlot 1 Crucial CT 512GB  
-FreeSpace           : 451.07
-IsPlottable         : True
-AmountOfPlotsToTemp : 1
-HasPlotInProgress   : False
-
-DriveLetter         : Q:
-ChiaDriveType       : Temp
-VolumeName          : ChiaPlot 4 2TB SSD
-FreeSpace           : 1588.29
-IsPlottable         : False
-AmountOfPlotsToTemp : 5
-HasPlotInProgress   : True
+DriveLetter             : F:
+ChiaDriveType           : Temp
+VolumeName              : ChiaPlot4 NVME FullDisk 1
+FreeSpace               : 246.88
+TotalSpace              : 465.75
+IsPlottable             : False
+AmountOfPlotsToTempMax  : 0
+HasPlotInProgress       : True
+AmountOfPlotsInProgress :
+PlotInProgressName      :
 ```
 
 #### Parameters:
@@ -150,14 +159,19 @@ Invoke-PlotoJob -OutDriveDenom "out" -TempDriveDenom "plot"
 #### Output:
 
 ```
-PlotoSpawner @ 4/24/2021 11:20:01 PM : Checking for available temp and out drives...
-PlotoSpawner @ 4/24/2021 11:20:01 PM : No available Temp and or Out Disks found.
+ProcessID       : 9024
+OutDrive        : D:
+TempDrive       : H:
+ArgumentsList   : plots create -k 32 -t H:\ -d D:\
+ChiaVersionUsed : 1.1.2
+LogPath         : C:\Users\Yanik\.chia\mainnet\plotter\PlotoSpawnerLog_29_4_13_55_Tmp-H_Out-D.txt
+StartTime       : 4/29/2021 1:55:50 PM
 ```
 
 #### Parameters
 
 ```
--OutDriveDenom
+Invoke-PlotoJob -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $true -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 60
 ```
 
 See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters)
@@ -181,33 +195,20 @@ Start-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "p
 #### Output:
 
 ```
-PlotoManager @ 4/24/2021 10:29:15 PM : Initiating PlotoManager...
-PlotoSpawner @ 4/24/2021 11:10:57 PM : Checking for available temp and out drives...
-PlotoSpawner @ 4/24/2021 11:10:57 PM : Found available temp drive:  @{DriveLetter=I:; ChiaDriveType=Temp; VolumeName=ChiaPlot 1 Crucial CT 512GB  ; FreeSpace=451.07; IsPlottable=True; AmountOfPlotsToTemp=1; HasPlotInProgress=False}
-PlotoSpawner @ 4/24/2021 11:10:57 PM : Found most suitable Out Drive:  @{DriveLetter=K:; ChiaDriveType=Out; VolumeName=ChiaOut3; FreeSpace=364.24; IsPlottable=True; AmountOfPlotsToHold=3}
-PlotoSpawner @ 4/24/2021 11:10:57 PM : Using the following Arguments for Chia.exe:  plots create -k 32 -t I:\ -d K:\ -e
-PlotoSpawner @ 4/24/2021 11:10:57 PM : Starting plotting using the following Path to chia.exe:  C:\Users\Yanik\AppData\Local\chia-blockchain\app-1.1.1\resources\app.asar.unpacked\daemon\
-PlotoSpawner @ 4/24/2021 11:10:57 PM : The following Job was initiated:  @{OutDrive=K:; TempDrive=I:; StartTime=4/24/2021 11:10:57 PM}
---------------------------------------------------------------------
-PlotoManager @ 4/24/2021 11:25:57 PM : Amount of spawned Plots in this iteration:
-PlotoManager @ 4/24/2021 11:25:57 PM : Spawned the following plots using Ploto Spawner:  @{OutDrive=K:; TempDrive=I:; StartTime=4/24/2021 11:10:57 PM}
-PlotoManager @ 4/24/2021 11:25:58 PM : Overall spawned Plots since start of script:  0
-PlotoManager @ 4/24/2021 11:25:58 PM : Entering Sleep for 900, then checking again for available temp and out drives
-----------------------------------------------------------------------------------------------------------------------
+PlotoManager @ 4/29/2021 1:45:38 PM : Amount of spawned Plots in this iteration: 1
+PlotoManager @ 4/29/2021 1:45:38 PM : Overall spawned Plots since start of script: 1
 ```
 
 Example with SMS Notifications (trough Twilio):
 
 ```powershell
-Start-PlotoSpawns -InputAmountToSpawn 12 -OutDriveDenom "out" -TempDriveDenom "plot" -SendSMSWhenJobDone $true -AccountSid $TwilioAccountSid -AuthToken $TwilioAuthToken -from $TwilioNumber -to $YourNumber
+Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $true -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 60
 ```
 
 #### Parameters
 
-```
--InputAmountToSpawn 
 
-```
+##### -InputAmountToSpawn 
 
 Amount of total plots to be spanwed by PlotoSpawner.
 
@@ -302,128 +303,24 @@ PlotoMover @ 4/25/2021 12:09:17 PM : A total of  6  plot have been found.
 PlotoMover @ 4/25/2021 12:09:17 PM : Moving plot:  D:\plot-k32-2021-04-23-14-31-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1.plot to \\Desktop-XXXXX\d
 ```
 
-# helper Functions 
-For sending SMS for notifications, Ploto uses these self-crafted Twilio helper wrapprs.
 
-## Format-TwilioCredential
-Transforms Twilio Credentials into securestrings to be used as Input for API Call.
-
-#### Example:
-
-```powershell
-Format-TwilioCredential -AccountSid $TwilioSID -$AuthToken $TwilioAuthToken
-```
-
-#### Output:
-
-```
-UserName                      Password
---------                      --------
-kjsdkksjk System.Security.SecureString
-
-```
-
-### Send-SMS
-Calls the Twilio API using the credentials generated by Create-TwilioCredential and send the message defined as input to the defined number.
-
-#### Example:
-
-```powershell
-Send-SMS -AccountSid $TwillioSID -AuthToken $TwilioAuthToken -Message $TwilioMessage -from $from -to $to
-```
-
-#### Output:
-
-```
-StatusCode        : 201
-StatusDescription : Created
-Content           : {"sid": "xxxxxxxxxxxxxxx", "date_created": "Sat, 24 Apr 2021 21:59:25 +0000", "date_updated": "Sat, 24 Apr 2021 21:59:25 +0000", 
-                    "date_sent": null, "account_sid": "xxxx...
-RawContent        : HTTP/1.1 201 Created
-                    Connection: keep-alive
-                    Twilio-Concurrent-Requests: 1
-                    Twilio-Request-Id: xxxfc8exxx
-                    Twilio-Request-Duration: 0.093
-                    Access-Control-Allow-Origin: *
-                    Acce...
-Forms             : 
-Headers           : {[Connection, keep-alive], [Twilio-Concurrent-Requests, 1], [Twilio-Request-Id, xxxxxx0f078fc8eff], [Twilio-Request-Duration, 
-                    0.09x3]...}
-Images            : {}
-InputFields       : {}
-Links             : {}
-ParsedHtml        : 
-RawContentLength  : 825
-
-```
 
 # How to use
 If you want to use Ploto follow along:
 
 1. Download Ploto as .ZIP from [here](https://github.com/tydeno/Ploto/archive/refs/heads/main.zip)
-2. Install Module "Ploto"
 3. Import-Module "Ploto" 
-4. Launch Start-Ploto with params
+```powershell
+Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
+```
+5. Launch Start-Ploto with params
 
 Example:
 ```powershell
 Start-Ploto -DestinationDrive "\\Desktop-XXXX\d" -OutDriveDenom "out" -TempDriveDenom "plot" -InputAmountToSpawn 36 -SendSMSNotification $false
 ```
-In the PowerShell Session opened, you can now use "Get-Job" to see two Background Jobs running. If you pass "Retrieve-Job -Job ID $JobID" you can get the output of Spawner and Mover.
-
-```powershell
-Get-Job
-```
-```
-Id     Name            PSJobTypeName   State         HasMoreData     Location             Command                  
---     ----            -------------   -----         -----------     --------             -------                  
-25     Job25           BackgroundJob   Running       True            localhost            Start-PlotoMove -Desti...
-27     Job27           BackgroundJob   Running       True            localhost            Start-PlotoSpawns -Inp...
-```
-
-```powershell
-Receive-Job -id 27
-```
-
-```
-PlotoManager @ 4/25/2021 1:54:18 PM : Initiating PlotoManager...
-PlotoSpawner @ 4/25/2021 1:54:18 PM : Checking for available temp and out drives...
-PlotoSpawner @ 4/25/2021 1:54:18 PM : No available Temp and or Out Disks found.
-PlotoManager @ 4/25/2021 1:54:18 PM : No plots spawned in this cycle, as no temp disks available
-PlotoManager @ 4/25/2021 1:54:18 PM : Overall spawned Plots since start of script:  2
-PlotoManager @ 4/25/2021 1:54:18 PM : Entering Sleep for 900, then checking again for available temp and out drives
-----------------------------------------------------------------------------------------------------------------------
-PlotoManager @ 4/25/2021 2:09:18 PM : Initiating PlotoManager...
-PlotoSpawner @ 4/25/2021 2:09:18 PM : Checking for available temp and out drives...
-PlotoSpawner @ 4/25/2021 2:09:18 PM : No available Temp and or Out Disks found.
-PlotoManager @ 4/25/2021 2:09:18 PM : No plots spawned in this cycle, as no temp disks available
-PlotoManager @ 4/25/2021 2:09:18 PM : Overall spawned Plots since start of script:  2
-PlotoManager @ 4/25/2021 2:09:18 PM : Entering Sleep for 900, then checking again for available temp and out drives
-```
-
-To see Mover BITS Job in the Backrgound, use "Get-BitsTransfer".
-```powershell
-Get-BitsTransfer
-```
-
-```
-JobId                                DisplayName TransferType JobState     OwnerAccount         
------                                ----------- ------------ --------     ------------         
-2f4996c9-9a3d-46a1-8b3f-8f53fdf63956 Moving Plot Download     Transferring DESKTOP-XXXX\me
-```
-
-## Stop SpawnerJobs and Moves
-If you want to stop all Ploto Jobs, use "Remove-Job" in the PowerShell Session you launched Start-Ploto
-```powershell
-Get-Job | Stop-Job | Remove-Job
-```
-You can also stop the jobs individually by selecting the one you want to stop.
 
 # FAQ
-> PlotoSpawner always tells me there are no temp drives available but there is enough storage?!
-
-It checks if a temp drive has plotting in progress by checking if the drive has any Child Items in it (Files or folders). If yes, this indicates that plotting is in progress, as I mostly use completely empty drives for plotting. When it indicates plot in progress on a temp drive, that drive is considered as not available. So if you use drives that have other files in it, you need to make sure you alter Get-PlotoTempDrives function to your needs.
-
 > Can I shut down the script when I dont want Ploto to spawn more Plots?
 
 Yep. The individual Chia Plot Jobs wont be affected by that.
