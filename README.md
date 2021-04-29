@@ -4,6 +4,22 @@ Basically spawns Plots.
 
 Way dumber than plotman. Still does what it should for all those Windows Farmers out there.
 
+```powershell 
+Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $false -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 30 -WaitTimeBetweenPlotOnSameDisk 60
+```
+```
+PlotoSpawner @ 4/30/2021 12:49:13 AM : Spawned the following plot Job:
+PlotoSpawnerJobId : 49ab3c48-532b-4f17-855d-3c5b4981528b
+ProcessID         : 11856
+OutDrive          : K:
+TempDrive         : E:
+ArgumentsList     : plots create -k 32 -t E:\ -d K:\ -e
+ChiaVersionUsed   : 1.1.2
+LogPath           : C:\Users\Yanik\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b
+                    _Tmp-E_Out-K.txt
+StartTime         : 4/30/2021 12:49:13 AM
+```
+
 ```powershell
 Get-PlotoJobs
 ```
