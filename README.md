@@ -79,11 +79,16 @@ So there will be 9x Plot jobs running in parallel with defined wait time in minu
 
 When a job is done and a temp drive becomes available again, PlotoSpawner will spawn the next jobs, until it has spawned the amount you specified as -InputAmountToSpawn
 
+PlotoSpawner redirects the output of chia.exe to to the following path: 
+* C:\Users\me\.chia\mainnet\plotter
+
+And creates a log for each job with the following notation:
+* PlotoSpawnerLog_29_4_15_26_Tmp-H_Out-D.txt
+
 
 # PlotoSpawn
 PlotoSpawn spawns one plot job on each available Drive defined as a TempDrive, if it has enough free space (270 GB) and there is no plotting in progress on that drive. Plotting in progress is considered when a SSD defined as a TempDrive has less than 270 GB free space or has ANY files or folders in it that have file extension ".tmp".
 Using the -ParallelAmount Parameter, you may also plot several Jobs in Parallel on a disk. It determines the amount of available plots to to temp on a disk and maxes it out.
-
 
 # Prereqs
 The following prereqs need to be met in order for Ploto to function properly:
