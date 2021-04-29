@@ -11,7 +11,7 @@ Way dumber than plotman. Still does what it should for all those Windows Farmers
 * [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#invoke-plotojob)
 * [Start-PlotoSpawns](https://github.com/tydeno/Ploto/blob/main/README.md#start-plotospawns)
 
-### PlotoMove - WIP!
+### PlotoMove - Work in progress!
 
 * [Get-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotoplots)
 * [Move-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/README.md#move-plotoplots)
