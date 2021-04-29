@@ -73,7 +73,7 @@ PlotoSpawner will max out the available temp drives. This means for my temp driv
 
 So there will be 9x Plot jobs running in parallel with defined wait time in minutes betwen jobs on each disk.
 
-WWARNING: This may overcommit you plotter by far! Pay attention when using it, because maxing really means maxing all available drive space, not taking RAM/CPU etc. in condieration).
+WWARNING: This may overcommit your plotter by far! Pay attention when using it, because maxing really means maxing all available drive space, not taking RAM/CPU etc. in condieration).
 
 When a job is done and a temp drive becomes available again, PlotoSpawner will spawn the next jobs, until it has spawned the amount you specified as -InputAmountToSpawn
 
