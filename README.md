@@ -225,6 +225,26 @@ See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/b
 
 See Parameters Section of [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-1)
 
+
+# How to use
+If you want to use PlotoSpawner follow along:
+
+1. Download Ploto as .ZIP from [here](https://github.com/tydeno/Ploto/archive/refs/heads/main.zip)
+3. Import-Module "Ploto" 
+```powershell
+Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
+```
+5. Launch PlotoSpawner
+```powershell
+Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
+```
+
+# FAQ
+> Can I shut down the script when I dont want Ploto to spawn more Plots?
+Yep. The individual Chia Plot Jobs wont be affected by that.
+
+
+
 # PlotoMove
 It continously searches for final Plots on your OutDrives and moves them to your desired location. I do this for transferring plots from my plotting machine to my farming machine.
 
@@ -302,28 +322,6 @@ K:\plot-k32-2021-04-25-00-40-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 PlotoMover @ 4/25/2021 12:09:17 PM : A total of  6  plot have been found.
 PlotoMover @ 4/25/2021 12:09:17 PM : Moving plot:  D:\plot-k32-2021-04-23-14-31-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1.plot to \\Desktop-XXXXX\d
 ```
-
-
-
-# How to use
-If you want to use Ploto follow along:
-
-1. Download Ploto as .ZIP from [here](https://github.com/tydeno/Ploto/archive/refs/heads/main.zip)
-3. Import-Module "Ploto" 
-```powershell
-Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
-```
-5. Launch Start-Ploto with params
-
-Example:
-```powershell
-Start-Ploto -DestinationDrive "\\Desktop-XXXX\d" -OutDriveDenom "out" -TempDriveDenom "plot" -InputAmountToSpawn 36 -SendSMSNotification $false
-```
-
-# FAQ
-> Can I shut down the script when I dont want Ploto to spawn more Plots?
-
-Yep. The individual Chia Plot Jobs wont be affected by that.
 
 
 
