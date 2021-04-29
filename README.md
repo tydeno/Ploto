@@ -4,42 +4,6 @@ Basically spawns Plots.
 
 Way dumber than plotman. Still does what it should for all those Windows Farmers out there.
 
-```powershell 
-Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $false -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 30 -WaitTimeBetweenPlotOnSameDisk 60
-```
-```
-PlotoSpawner @ 4/30/2021 12:49:13 AM : Spawned the following plot Job:
-PlotoSpawnerJobId : 49ab3c48-532b-4f17-855d-3c5b4981528b
-ProcessID         : 11856
-OutDrive          : K:
-TempDrive         : E:
-ArgumentsList     : plots create -k 32 -t E:\ -d K:\ -e
-ChiaVersionUsed   : 1.1.2
-LogPath           : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b
-                    _Tmp-E_Out-K.txt
-StartTime         : 4/30/2021 12:49:13 AM
-```
-
-```powershell
-Get-PlotoJobs
-```
-
-```
-PlotoSpawnerJobId : 49ab3c48-532b-4f17-855d-3c5b4981528b
-PlotId            : 08f1762f01fb8ddb3d2f3382ca47c9cba8014c9a96dbbe6946c827e60dc629fc
-PID               : 11856
-PlotJobPhase      : 1.1
-TempDrive         : E:
-OutDrive          : K:
-LogPath           : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b
-                    _Tmp-E_Out-K.txt
-StatLogPath       : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b
-                    _Tmp-E_Out-K@Stat.txt
-cpuUsagePercent   : 11.38
-memUsageMB        : 164
-```
-
-
 ### PlotoSpawn
 * [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotooutdrives)
 * [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#get-plototempdrives)
@@ -190,7 +154,7 @@ IsPlottable             : False
 AmountOfPlotsToTempMax  : 0
 HasPlotInProgress       : True
 AmountOfPlotsInProgress : 1
-PlotInProgressName      : {plot-k32-2021-04-29-02-37-d9357f04bf93860757e611003228351b050c23d84c4813def7a87ced03e26bf3}
+PlotInProgressName      : {plot-k32-2021-04-xx-0x-37-xxxxxx}
 
 DriveLetter             : Q:
 ChiaDriveType           : Temp
@@ -201,10 +165,10 @@ IsPlottable             : False
 AmountOfPlotsToTempMax  : -2
 HasPlotInProgress       : True
 AmountOfPlotsInProgress : 4
-PlotInProgressName      : {plot-k32-2021-04-28-14-24-120fc317c4a837d79550b7c16c1faccc101f75aaeeb4fd526c67025b7cedf543,
-                          plot-k32-2021-04-28-14-44-4cec8c5141115d41263c5148f0bec5345bdbfe6fe7ede5b8e3c950517cd91601,
-                          plot-k32-2021-04-28-15-04-f93405d93b3811085fd4ede4a22b0c349a042bd1d39b7b67b2582cade2d7bf0f,
-                          plot-k32-2021-04-28-15-24-b0bc562f8e90d18110f9dce50bb394ede3425970a1ddf27dd498bc65ee42e2b1}
+PlotInProgressName      : {plot-k32-2021-04-xx-0x-37-xxxxxx,
+                          plot-k32-2021-04-xx-0x-37-xxxxxx,
+                          plot-k32-2021-04-xx-0x-37-xxxxxx,
+                          plot-k32-2021-04-xx-0x-37-xxxxxx}
                           
 DriveLetter             : E:
 ChiaDriveType           : Temp
@@ -329,7 +293,7 @@ Get-PlotoJobs
 #### Output:
 ```
 PlotoSpawnerJobId : 49ab3c48-532b-4f17-855d-3c5b4981528b
-PlotId            : 08f1762f01fb8ddb3d2f3382ca47c9cba8014c9a96dbbe6946c827e60dc629fc
+PlotId            : xxxx176xxxx2f01fxxxxb3d2f338xxxxxxxxxxxxx
 PID               : 11856
 PlotJobPhase      : 1.1
 TempDrive         : E:
