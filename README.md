@@ -16,8 +16,7 @@ Way dumber than plotman. Still does what it should for all those Windows Farmers
 * [Get-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotoplots)
 * [Move-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/README.md#move-plotoplots)
 
-
-# How it works
+# PlotoSpawn
 TLDR: It plots 1x plot on each TempDrive (if you have 6x TempDrives = 6x parallel Plot Jobs) as long as you want it to and as long as you have OutDrive space.
 
 Ploto checks periodically, if a TempDrive and OutDrive is available for plotting. 
@@ -85,10 +84,6 @@ PlotoSpawner redirects the output of chia.exe to to the following path:
 And creates a log for each job with the following notation:
 * PlotoSpawnerLog_29_4_15_26_Tmp-H_Out-D.txt
 
-
-# PlotoSpawn
-PlotoSpawn spawns one plot job on each available Drive defined as a TempDrive, if it has enough free space (270 GB) and there is no plotting in progress on that drive. Plotting in progress is considered when a SSD defined as a TempDrive has less than 270 GB free space or has ANY files or folders in it that have file extension ".tmp".
-Using the -ParallelAmount Parameter, you may also plot several Jobs in Parallel on a disk. It determines the amount of available plots to to temp on a disk and maxes it out.
 
 # Prereqs
 The following prereqs need to be met in order for Ploto to function properly:
