@@ -65,14 +65,9 @@ AmountOfPlotsToHold : 3
 ```
 
 #### Parameters:
-Available Parameters.
-
 | Name          | Required | Type   | Description                                                                                                                              |
 |---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
-|OutDriveDenom  | Yes      | String | A common denominator for all your drives used as temp drives. All drives with that denom in name will be used to as temp drives for chia.
-
-
-
+|OutDriveDenom  | Yes      | String | A common denominator for all your drives used as out drives. All drives with that denom in name will be used to store done plots.
 
 
 
@@ -137,13 +132,10 @@ PlotInProgressName      :
 ```
 
 #### Parameters:
+| Name          | Required | Type   | Description                                                                                                                              |
+|---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
+|TempDriveDenom  | Yes      | String | A common denominator for all your drives used as temp drives. All drives with that denom in name will be used to as temp drives for chia.
 
-##### TempDriveDenom
-The same as -OutDriveDenom but for your temporary drives chia uses to actually plot on. Usually these are are your SATA/NVMe SSDs.
-Use a denonimator that all your chia temp drives have in common. For me, all Chia Temp drives (drives I plot on) are called "ChiaPlot 1-4".
-So for me I set the param to "plot". 
-
-Make sure your TempDriveDenom is unique to your real SSDs you want to use to create chia Plots. If a Volume has your TempDriveDenom in their VolumeName, they will also be used, if enough free space is given.
 
 ## Invoke-PlotoJob
 Calls Get-PlotoTempDrives to get all Temp drives that are plottable. For each tempDrive it determines the most appropriate OutDrive (using Get-PlotoOutDrives function), stitches together the ArgumentList for chia and fires off the chia plot job using chia.exe. For each created PlotJob the function creates an Object and appends it to a collection of objects, which are returned upon the function call. 
