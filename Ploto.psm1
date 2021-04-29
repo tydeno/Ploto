@@ -10,62 +10,7 @@ A basic Windows PowerShell based Chia Plotting Manager. Cause I was tired of spa
 https://github.com/tydeno/Ploto
 #>
 
-function Format-TwilioCredential {
-    Param(
-        [string] $AccountSid,
-        [string] $AuthToken,
-        [Hashtable] $Connection
-    )
 
-    if(!$Connection -and (!$AuthToken -or !$AccountSid)) {
-        throw("No connection data specified. You must use either the Connection parameter, or the AccountSid and AuthToken parameters.")
-    }
-
-    if(!$Connection) {
-        $con = @{}
-    }
-    elseif(!$Connection.AccountSid -or !$Connection.AuthToken) {
-        throw("Connection object must contain AccountSid and AuthToken properties.")
-    }
-    else {
-        $con = @{
-            AccountSid = $Connection.AccountSid;
-            AuthToken = $Connection.AuthToken
-        }
-    }
-
-    if($AccountSid) {
-        $con.AccountSid = $AccountSid
-    }
-
-    if($AuthToken) {
-        $con.AuthToken = $AuthToken
-    }
-
-    $secpasswd = ConvertTo-SecureString $con.AuthToken -AsPlainText -Force
-    $cred = New-Object System.Management.Automation.PSCredential ($con.AccountSid, $secpasswd)
-
-    return $cred
-}
-
-function Send-SMS
-{
-param ($AccountSid,$AuthToken,$Message,$from,$to)
-$cred = Format-TwilioCredential -AccountSid $AccountSid -AuthToken $AuthToken
-
-$TWILIO_BASE_URL = "https://api.twilio.com/2010-04-01"
-$URI = "$TWILIO_BASE_URL" + "/Accounts/$AccountSid/Messages.json"
-
-$body = @{
-            To = $To;
-            From = $From;
-            Body = $Message
-         }
-
-$responsePOST = Invoke-WebRequest $URI -Method Post -Credential $cred -Body $body -UseBasicParsing 
-return $responsePOST
-
-}
 
 function Get-PlotoOutDrives
 {
@@ -80,7 +25,8 @@ $outDrives = get-WmiObject win32_logicaldisk | ? {$_.VolumeName -like "*$OutDriv
 $collectionWithDisks= New-Object System.Collections.ArrayList
 foreach ($drive in $outDrives)
     {
-  
+
+        $DiskSize = [math]::Round($tmpDrive.Size  / 1073741824, 2)
         $FreeSpace = [math]::Round($drive.FreeSpace  / 1073741824, 2)
         If ($FreeSpace -gt 107)
             {
@@ -96,6 +42,7 @@ foreach ($drive in $outDrives)
         ChiaDriveType = "Out"
         VolumeName = $drive.VolumeName
         FreeSpace = $FreeSpace
+        TotalSpace = $DiskSize
         IsPlottable    = $PlotToDest
         AmountOfPlotsToHold = [math]::Floor(($FreeSpace / 100))
         }
@@ -119,27 +66,83 @@ $tmpDrives = get-WmiObject win32_logicaldisk | ? {$_.VolumeName -like "*$TempDri
 $collectionWithDisks= New-Object System.Collections.ArrayList
 foreach ($tmpDrive in $tmpDrives)
     {
-  
+        $DiskSize = [math]::Round($tmpDrive.Size  / 1073741824, 2)
         $FreeSpace = [math]::Round($tmpDrive.FreeSpace  / 1073741824, 2)
-        If ($FreeSpace -gt 270)
-            {
-                $ChildItemsOfDrive = Get-ChildItem $tmpDrive.DeviceID
+        $TempPlotFiles = Get-ChildItem $tmpDrive.DeviceID | ? {$_.Extension -eq ".tmp"}
 
-                if ($ChildItemsOfDrive)
+        If ($FreeSpace -gt 290)
+            {
+
+                if ($TempPlotFiles)
                     {
-                        $IsPlottable = $false
                         $HasPlotInProgress = $true
+                        $PlotInProgressName = ((($TempPlotFiles)[0].Name).Split("."))[0]
+
+                        #Get Amount of Plot Jobs on Disk. Alist of files. If more than 1 file with other name within same notation, more than pigress.
+                        $baseNotation = "plot-k32-"
+
+                        $ErrorActionPreference = “silentlycontinue”
+
+                        $collectionWithJobs= New-Object System.Collections.ArrayList
+                        $Job1 = ($eqbase = Get-ChildItem $tmpDrive.DeviceID | ? {$_.Name -like "*$baseNotation*"})[0].Name.Split(".")[0] 
+                        if ($job1) {$collectionWithJobs.Add($Job1) | Out-Null}
+
+                        $Job2 = (($eqbase | ? {$_.Name -notlike "*$Job1*"})[0]).Name.Split(".")[0]
+                        if ($job2) {$collectionWithJobs.Add($Job2) | Out-Null}
+
+                        $Job3 = (($eqbase | ? {$_.Name -notlike "*$Job1*" -and $_.Name -notlike "*$Job2*"})[0]).Name.Split(".")[0] 
+                        if ($job3) {$collectionWithJobs.Add($Job3) | Out-Null}
+
+                        $Job4 = (($eqbase | ? {$_.Name -notlike "*$Job1*" -and $_.Name -notlike "*$Job2*" -and $_.Name -notlike "*$Job3*"})[0]).Name.Split(".")[0]
+                        if ($job4) {$collectionWithJobs.Add($Job4) | Out-Null}
+
+                        $Job5 = (($eqbase | ? {$_.Name -notlike "*$Job1*" -and $_.Name -notlike "*$Job2*" -and $_.Name -notlike "*$Job3*" -and $_.Name -notlike "*$Job4*"})[0]).Name.Split(".")[0]
+                        if ($job5) {$collectionWithJobs.Add($Job5) | Out-Null}
+
+                        $AmountofPlotsInProgress = $collectionWithJobs.Count
+
+                        $AmountOfPlotsToTempMax = ([math]::Floor(($FreeSpace / 290))) - $AmountofPlotsInProgress
+                        $ErrorActionPreference = "continue"
+
+                        if ($AmountOfPlotsToTempMax -gt 0)
+                            {
+                                $IsPlottable = $true
+                            }
+                        else
+                            {
+                                $IsPlottable = $false
+                            }
+                        
+                        
                     }
                 else
                     {
                         $IsPlottable = $true
                         $HasPlotInProgress = $false
+                        $PlotInProgressName = "No plot in progress"
+                        $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / 290))
+
                     }
             }
         else
             {
-                $IsPlottable = $false
-                $HasPlotInProgress = "Likely"
+                if ($TempPlotFiles)
+                    {
+
+                        $PlotInProgressName = ((($TempPlotFiles)[0].Name).Split("."))[0]
+                        $HasPlotInProgress = $true
+                        $IsPlottable = $false
+                        $AmountOfPlotsToTempMax = 0
+                        
+                    }
+                else
+                    {
+                        $PlotInProgressName = "No plot in progress"
+                        $HasPlotInProgress = $false
+                        $IsPlottable = $false
+                        $AmountOfPlotsToTempMax = 0
+                    }
+           
             }
 
         $driveToPass = [PSCustomObject]@{
@@ -147,9 +150,12 @@ foreach ($tmpDrive in $tmpDrives)
         ChiaDriveType = "Temp"
         VolumeName = $tmpDrive.VolumeName
         FreeSpace = $FreeSpace
+        TotalSpace = $DiskSize
         IsPlottable    = $IsPlottable
-        AmountOfPlotsToTemp = [math]::Floor(($FreeSpace / 270))
+        AmountOfPlotsToTempMax = $AmountOfPlotsToTempMax
         HasPlotInProgress = $HasPlotInProgress
+        AmountOfPlotsInProgress =  $AmountOfPlotsInProgress
+        PlotInProgressName = $collectionWithJobs
         }
 
         $collectionWithDisks.Add($driveToPass) | Out-Null
@@ -164,7 +170,13 @@ function Invoke-PlotoJob
 		[parameter(Mandatory=$true)]
 		$OutDriveDenom,
 		[parameter(Mandatory=$true)]
-		$TempDriveDenom
+		$TempDriveDenom,
+	    [parameter(Mandatory=$true)]
+	    $WaitTimeBetweenPlotOnSeparateDisks,
+	    [parameter(Mandatory=$true)]
+	    $WaitTimeBetweenPlotOnSameDisk,
+        $EnableBitfield,
+        $ParallelAmount
 		)
 
 $PlottableTempDrives = Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom | ? {$_.IsPlottable -eq $true}   
@@ -172,36 +184,83 @@ $PlottableOutDrives = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom | ? {$_.I
 
 $collectionWithPlotJobs= New-Object System.Collections.ArrayList
 
-Write-Host "PlotoSpawner @"(Get-Date)": Checking for available temp and out drives..." 
 
 if ($PlottableTempDrives)
     {
          foreach ($PlottableTempDrive in $PlottableTempDrives)
             {
-                Write-Host "PlotoSpawner @"(Get-Date)": Found available temp drive: "$PlottableTempDrive -ForegroundColor Green
 
-                #Choose most suitable OutDrive (assumed the one with most space)
                 $max = ($PlottableOutDrives | measure-object -Property FreeSpace -maximum).maximum
                 $OutDrive = $PlottableOutDrives | ? { $_.FreeSpace -eq $max}
                 $OutDriveLetter = $OutDrive.DriveLetter
 
-                Write-Host "PlotoSpawner @"(Get-Date)": Found most suitable Out Drive: "$OutDrive -ForegroundColor Green
-            
-                #Fire off chia
+                $ChiaBasePath = "$env:LOCALAPPDATA\chia-blockchain"
+                $ChiaVersion = ((Get-ChildItem $ChiaBasePath | ? {$_.Name -like "*app*"}).Name.Split("-"))[1]
+                $PathToChia = $ChiaBasePath+"\app-"+$ChiaVersion+"\resources\app.asar.unpacked\daemon\chia.exe" 
+                $PlotterBaseLogPath = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\plotter\"
+                $LogNameBasePath = "PlotoSpawnerLog_"+((Get-Date).Day.ToString())+"_"+(Get-Date).Month.ToString()+"_"+(Get-Date).Hour.ToString()+"_"+(Get-Date).Minute.ToString()+"_Tmp-"+(($PlottableTempDrive).DriveLetter.Split(":"))[0]+"_Out-"+($OutDriveLetter.Split(":"))[0]+".txt"
+                $LogPath = $PlotterBaseLogPath+$LogNameBasePath
+       
+
+                if ($EnableBitfield -eq $true -or $EnableBitfield -eq "yes")
+                    {
+                        $ArgumentList = "plots create -k 32 -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\"
+                    }
+
+                else
+                    {
+                        $ArgumentList = "plots create -k 32 -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\ -e"
+                    }
+
+
+                if ($ParallelAmount -eq "max" -and $PlottableTempDrive.AmountOfPlotsToTemp -gt 1)
+                    {
+                        $count = 0
+                        do
+                            {
+                                $max = ($PlottableOutDrives | measure-object -Property FreeSpace -maximum).maximum
+                                $OutDrive = $PlottableOutDrives | ? { $_.FreeSpace -eq $max}
+                                $OutDriveLetter = $OutDrive.DriveLetter
+
+                                if ($EnableBitfield -eq $true -or $EnableBitfield -eq "yes")
+                                    {
+                                        $ArgumentList = "plots create -k 32 -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\"
+                                    }
+
+                                else
+                                    {
+                                        $ArgumentList = "plots create -k 32 -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\ -e"
+                                    }
+
+                                try 
+                                    {
+                                        $chiaexe = Start-Process $PathToChia -ArgumentList $ArgumentList -RedirectStandardOutput $LogPath -PassThru
+                                    }
+                                catch
+                                    {
+                                        Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
+                                        Write-Host "PlotoSpawner @"(Get-Date)": ERROR! Could not launch chia.exe. Chia Version tried to launch: $ChiaVersion. Check chiapath and arguments (make sure there is only latest installed chia version folder, eg app-1.1.2). Arguments used:"$ArgumentList -ForegroundColor Red
+                                    }
+
+                                $count++
+                                Start-Sleep ($WaitTimeBetweenPlotOnSameDisk*60)
+                            }
+
+                        until ($count -eq $PlottableTempDrive.AmountOfPlotsToTemp)
+                        
+                    }
+
                 try 
                     {
-                        $PathToChia = "$env:LOCALAPPDATA\chia-blockchain\app-1.1.1\resources\app.asar.unpacked\daemon\chia.exe"                         
-                        $ArgumentList = "plots create -k 32 -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\ -e"
-
-                        Write-Host "PlotoSpawner @"(Get-Date)": Using the following Arguments for Chia.exe: "$ArgumentList 
-                        Write-Host "PlotoSpawner @"(Get-Date)": Starting plotting using the following Path to chia.exe: "$PathToChia
-
-                        Start-Process $PathToChia -ArgumentList $ArgumentList
+                        $chiaexe = Start-Process $PathToChia -ArgumentList $ArgumentList -RedirectStandardOutput $LogPath -PassThru
                     }
+
                 catch
                     {
                         Write-Host "PlotoSpawner @"(Get-Date)": ERROR! Could not launch chia.exe. Check chiapath and arguments (make sure version is set correctly!). Arguments used: "$ArgumentList -ForegroundColor Red
+                        Write-Host "PlotoSpawner @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
                     }
+
 
                 #Deduct 106GB from OutDrive Capacity in Var
                 $DeductionOutDrive = ($OutDrive.FreeSpace - 106)
@@ -209,23 +268,22 @@ if ($PlottableTempDrives)
 
                 #Getting Plot Object Ready
                 $PlotJob = [PSCustomObject]@{
+                ProcessID = $chiaexe.Id
                 OutDrive     =  $OutDriveLetter
                 TempDrive = $PlottableTempDrive.DriveLetter
+                ArgumentsList = $ArgumentList
+                ChiaVersionUsed = $ChiaVersion
+                LogPath = $LogPath
                 StartTime = (Get-Date)
                 }
 
                 $collectionWithPlotJobs.Add($PlotJob) | Out-Null
 
-                Write-Host "PlotoSpawner @"(Get-Date)": The following Job was initiated: "$PlotJob -ForegroundColor Green
-                Write-Host "--------------------------------------------------------------------"
-                Start-Sleep 900
+                Write-Host "PlotoSpawner @"(Get-Date)": Spawned the following plot Job:" -ForegroundColor Green
+                $PlotJob | Out-Host
 
+                Start-Sleep ($WaitTimeBetweenPlotOnSeparateDisks*60)
             }
-    
-    }
-else
-    {
-        Write-Host "PlotoSpawner @"(Get-Date)": No available Temp and or Out Disks found." -ForegroundColor Yellow
     }
 
    return $collectionWithPlotJobs
@@ -239,44 +297,31 @@ function Start-PlotoSpawns
 	[parameter(Mandatory=$true)]
 	$OutDriveDenom,
 	[parameter(Mandatory=$true)]
-	$TempDriveDenom,
+	$WaitTimeBetweenPlotOnSeparateDisks,
 	[parameter(Mandatory=$true)]
-	$SendSMSWhenJobDone,
-    $AccountSid,
-    $AuthToken,
-    $from,
-    $to
-)
+	$WaitTimeBetweenPlotOnSameDisk,
+	[parameter(Mandatory=$true)]
+	$TempDriveDenom,
+    $EnableBitfield,
+    $ParallelAmount
+    )
 
     $SpawnedCount = 0
 
     Do
     {
-        Write-Host "PlotoManager @"(Get-Date)": Initiating PlotoManager..."
-        $hostname = hostname
-        $SpawnedPlots = Invoke-PlotoJob -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom
+        $SpawnedPlots = Invoke-PlotoJob -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -ParallelAmount $ParallelAmount -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk
+        
 
         if ($SpawnedPlots)
             {
-                Write-Host "PlotoManager @"(Get-Date)": Amount of spawned Plots in this iteration: " $SpawnedPlots.Count
-                Write-Host "PlotoManager @"(Get-Date)": Spawned the following plots using Ploto Spawner: "$SpawnedPlots -ForegroundColor Green
-                if ($SendSMSWhenJobDone -eq $true) 
-                    {
-                        $TwilioMessage = "Hei, a plot is spawned! See details: "+$SpawnedPlots
-                        $JobDoneNotification = Send-SMS -AccountSid $AccountSid -AuthToken $AuthToken -Message $TwilioMessage -from $from -to $to
-                    }
-            }
-        else
-            {
-                Write-Host "PlotoManager @"(Get-Date)": No plots spawned in this cycle, as no temp disks available" -ForegroundColor Yellow
+                $SpawnedCount = $SpawnedCount + (@($SpawnedPlots) | Measure-Object).count
+                Write-Host "PlotoManager @"(Get-Date)": Amount of spawned Plots in this iteration:"(@($SpawnedPlots) | Measure-Object).count
+                Write-Host "PlotoManager @"(Get-Date)": Overall spawned Plots since start of script:"$SpawnedCount
+                Write-Host "________________________________________________________________________________________"
             }
 
-        $SpawnedCount = $SpawnedCount + $SpawnedPlots.Count 
-       
-        Write-Host "PlotoManager @"(Get-Date)": Overall spawned Plots since start of script: "$SpawnedCount
-        Write-Host "PlotoManager @"(Get-Date)": Entering Sleep for 900, then checking again for available temp and out drives"
-        Write-Host "----------------------------------------------------------------------------------------------------------------------"
-        Start-Sleep 900
+        Start-Sleep 300
     }
     
     Until ($SpawnedCount -eq $InputAmountToSpawn)
@@ -355,11 +400,8 @@ function Move-PlotoPlots
 		$DestinationDrive,
 		[parameter(Mandatory=$true)]
 		$OutDriveDenom,
-	    $SendSMSNotification,
-        $AccountSid,
-        $AuthToken,
-        $from,
-        $to
+		[parameter(Mandatory=$true)]
+		$TransferMethod
 		)
 
 
@@ -377,48 +419,80 @@ if ($PlotsToMove)
 
         foreach ($plot in $PlotsToMove)
         {
-            #Check if BITS Transfer already in progress:
-            $HasBITSinProgress = Get-BitsTransfer | ? {$_.FileList.RemoteName -eq $plot.Filepath} 
-
-            if ($HasBITSinProgress)
+            If ($TransferMethod -eq "BITS")
                 {
-                    Write-Host "PlotoMover @"(Get-Date)": WARN:" $plot.FilePath "has already a BITS transfer in progress"
-                }
+                    #Check if BITS Transfer already in progress:
+                    $HasBITSinProgress = Get-BitsTransfer | ? {$_.FileList.RemoteName -eq $plot.Filepath} 
+
+                    if ($HasBITSinProgress)
+                        {
+                            Write-Host "PlotoMover @"(Get-Date)": WARN:" $plot.FilePath "has already a BITS transfer in progress"
+                        }
+
+                    else
+                        {
+                             try 
+                                {
+                                    Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestinationDrive "using BITS"
+                                    $source = $plot.FilePath
+                                    $BITSOut = Start-BitsTransfer -Source $source -Destination $DestinationDrive -Description "Moving Plot" -DisplayName "Moving Plot"
+                            
+                                    while ((Get-BitsTransfer | ? { $_.JobState -eq "Transferring" }).Count -gt 0) {     
+                                        $totalbytes=0;    
+                                        $bytestransferred=0; 
+                                        $timeTaken = 0;    
+                                        foreach ($job in (Get-BitsTransfer | ? { $_.JobState -eq "Transferring" } | Sort-Object CreationTime)) {         
+                                            $totalbytes += $job.BytesTotal;         
+                                            $bytestransferred += $job.bytestransferred     
+                                            if ($timeTaken -eq 0) { 
+                                                #Get the time of the oldest transfer aka the one that started first
+                                                $timeTaken = ((Get-Date) - $job.CreationTime).TotalMinutes 
+                                            }
+                                        }    
+                                        #TimeRemaining = (TotalFileSize - BytesDownloaded) * TimeElapsed/BytesDownloaded
+                                        if ($totalbytes -gt 0) {        
+                                            [int]$timeLeft = ($totalBytes - $bytestransferred) * ($timeTaken / $bytestransferred)
+                                            [int]$pctComplete = $(($bytestransferred*100)/$totalbytes);     
+                                            Write-Progress -Status "Transferring $bytestransferred of $totalbytes ($pctComplete%). $timeLeft minutes remaining." -Activity "Dowloading files" -PercentComplete $pctComplete  
+                                        }
+                                    }
+                                }
+
+                            catch
+                                {
+                                    Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
+                                }        
+                        }
+                    }
 
             else
                 {
-                     try 
+                    #Check local destination drive space
+                    $DestSpaceCheck = get-WmiObject win32_logicaldisk | ? {$_.DeviceID -like "*$DestinationDrive*"}
+                    $FreeSpaceDestDrive = [math]::Round($destspaceCheck.FreeSpace  / 1073741824, 2)
+
+                    if ($FreeSpaceDestDrive -gt 107)
                         {
-                            Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestinationDrive
-                            $source = $plot.FilePath
-                            $BITSOut = Start-BitsTransfer -Source $source -Destination $DestinationDrive -Description "Moving Plot" -DisplayName "Moving Plot"
-                            
-                            while ((Get-BitsTransfer | ? { $_.JobState -eq "Transferring" }).Count -gt 0) {     
-                                $totalbytes=0;    
-                                $bytestransferred=0; 
-                                $timeTaken = 0;    
-                                foreach ($job in (Get-BitsTransfer | ? { $_.JobState -eq "Transferring" } | Sort-Object CreationTime)) {         
-                                    $totalbytes += $job.BytesTotal;         
-                                    $bytestransferred += $job.bytestransferred     
-                                    if ($timeTaken -eq 0) { 
-                                        #Get the time of the oldest transfer aka the one that started first
-                                        $timeTaken = ((Get-Date) - $job.CreationTime).TotalMinutes 
-                                    }
-                                }    
-                                #TimeRemaining = (TotalFileSize - BytesDownloaded) * TimeElapsed/BytesDownloaded
-                                if ($totalbytes -gt 0) {        
-                                    [int]$timeLeft = ($totalBytes - $bytestransferred) * ($timeTaken / $bytestransferred)
-                                    [int]$pctComplete = $(($bytestransferred*100)/$totalbytes);     
-                                    Write-Progress -Status "Transferring $bytestransferred of $totalbytes ($pctComplete%). $timeLeft minutes remaining." -Activity "Dowloading files" -PercentComplete $pctComplete  
+                            Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestinationDrive "using Move-Item."
+
+                            try 
+                                {
+                                    Move-Item -Path $plot.FilePath -Destination $DestinationDrive
                                 }
-                            }
+                            catch
+                                {
+                                    Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
+                                }
+                            
+                        }
+                    else
+                        {
+                            Write-Host "PlotoMover @"(Get-Date)": Local Destination Drive does not have enough disk space. Cant move." -ForegroundColor Red
                         }
 
-                    catch
-                        {
-                            Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
-                        }        
+                   
                 }
+
         }
     }
 
@@ -436,121 +510,32 @@ function Start-PlotoMove
 		$DestinationDrive,
 		[parameter(Mandatory=$true)]
 		$OutDriveDenom,
-	    $SendSMSNotification,
-        $AccountSid,
-        $AuthToken,
-        $from,
-        $to
+        $TransferMethod
 		)
 
     $count = 0
     $endlessCount = 1000
 
-    Write-Host "Start-PlotoMove: Using destination drive: "$DestinationDrive
-
     Do
         {
-            Move-PlotoPlots -DestinationDrive $DestinationDrive -OutDriveDenom $OutDriveDenom
+            Move-PlotoPlots -DestinationDrive $DestinationDrive -OutDriveDenom $OutDriveDenom -TransferMethod $TransferMethod
             Start-Sleep 900
         }
 
     Until ($count -eq $endlessCount)
 }
 
-function Install-PlotoModule
+function Get-PlotoJobs
 {
-    
-    $PlotoModule = Get-Module | ? {$_.Name -eq "Ploto"}
-
-    if ($PlotoModule)
-        {
-           Write-Host "PlotoBooter @"(Get-Date)": Ploto Module is present. Ready to roll. Or plot." -ForegroundColor Green
-           $ModuleOK = $true 
-        }
-
-    else
-        {
-            Write-Host "PlotoBooter @"(Get-Date)": Ploto Module not present. Trying to Import." -ForegroundColor yellow
-            try
-            {
-                Import-Module Ploto -ErrorAction Stop
-                $ModuleOK = $true 
-            }
-
-            catch
-            {
-                Write-Host "PlotoBooter @"(Get-Date)": Could not import due to Error:"$_.Exception.Message -ForegroundColor red
-
-                if ($_.Exception.Message -eq "The specified module 'Ploto' was not loaded because no valid module file was found in any module directory.")
-                    {
-                        Write-Host "PlotoBooter @"(Get-Date)": The error is known. Starting Module download from Github now. Using URL: https://github.com/tydeno/Ploto/archive/refs/heads/main.zip "
-                        $repo = "https://github.com/tydeno/Ploto/archive/refs/heads/main.zip"
-                    
-                        $ZipPath = $env:TEMP+"\ploto"+(Get-Date).TimeOfDay.Seconds
-                        Write-Host "PlotoBooter @"(Get-Date)": Storing local .ZIP in "$ZipPath
-                        $Zip = $ZipPath+".zip"
-
-                        New-Item $Zip -ItemType File -Force | Out-Null
-                        Invoke-RestMethod -Uri $repo -OutFile $Zip | Out-Null
-
-                        Write-Host "PlotoBooter @"(Get-Date)": Downloaded Ploto Module from Github Repo. Extracting now."
-                        Expand-Archive -Path $Zip -DestinationPath $ZipPath | Out-Null
-
-
-                        Write-Host "PlotoBooter @"(Get-Date)": Module extracting, cleaning up Downloaded file and starting import."
-                        Remove-Item -Path $Zip -Force 
-
-                        $PathToModule = $ZipPath+"\Ploto-main\Ploto.psm1"
-                        Copy-Item -Path $PathToModule -Destination "C:\Windows\System32\WindowsPowerShell\v1.0\Modules"
-                        Import-Module $PathToModule
-
-                        Write-Host "PlotoBooter @"(Get-Date)": Module installed successfully. Ready to roll. Or plot." -ForegroundColor Green
-                        $ModuleOK = $true
-                    }
-
-                else
-                    {
-                        Write-Host "PlotoBooter @"(Get-Date)": The error" $_.Exception.Message " is unknown." -ForegroundColor Red
-                        $ModuleOK = $false
-                
-                    }
-            }
-         }
-    return $ModuleOK
-}
-
-function Start-Ploto
-{
-	Param(
-		[parameter(Mandatory=$true)]
-		$DestinationDrive,
-		[parameter(Mandatory=$true)]
-		$OutDriveDenom,
-		[parameter(Mandatory=$true)]
-		$TempDriveDenom,
+    Param(
         [parameter(Mandatory=$true)]
-	    $SendSMSNotification,
-        [parameter(Mandatory=$true)]
-	    $InputAmountToSpawn,
-        $AccountSid,
-        $AuthToken,
-        $from,
-        $to
-		)
+	    $LogPath
+        )
 
-    Write-Host $DestinationDrive
-    Write-Host $Inp
 
-    $ModuleUp = Install-PlotoModule
-    if ($ModuleUp -eq $true)
-        {
-          $Mover = Start-Job -ScriptBlock {Start-PlotoMove -DestinationDrive "\\Desktop-v32b75u\d" -OutDriveDenom "out"} -verbose
-          $Spawner = Start-Job -ScriptBlock {Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -SendSMSWhenJobDone $false } -Verbose
-          Write-Host "PlotoBooter @"(Get-Date)": Launched Spawner and Mover. Use Get-Job / Retrieve-Job to see details."
-        }
+$LogJob = Start-Job -ScriptBlock {
+        Get-Content $input -Tail 1 -Wait 
+    } -InputObject $LogPath -Name PlotoLogGrabber
 
-    else
-        {
-            Write-Host "ERROR! Modules arent up!" -ForegroundColor Red
-        }
+$LogStat = Receive-Job -Job $LogJob
 }
