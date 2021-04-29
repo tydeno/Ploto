@@ -9,7 +9,7 @@ Basically spawns and moves Plots around.
 * [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#invoke-plotojob)
 * [Start-PlotoSpawns](https://github.com/tydeno/Ploto/blob/main/README.md#start-plotospawns)
 
-### PlotoMove
+### PlotoMove - WIP!
 
 * [Get-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotoplots)
 * [Move-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/README.md#move-plotoplots)
@@ -217,84 +217,46 @@ Yep. The individual Chia Plot Jobs wont be affected by that.
 
 
 
+
+
 # PlotoMove
 Heavy WORK IN PROGRESS HERE!
 It continously searches for final Plots on your OutDrives and moves them to your desired location. I do this for transferring plots from my plotting machine to my farming machine.
 
 ## Get-PlotoPlots
-Searches specified Outdrives for final .PLOT files and returns an array of objects with all final plots found, their names and Path.
-A final plot is solely determined by a file on a OutDrive with the file extension .PLOT (Actual item property, not file name)
 
 #### Example:
-
 ```powershell
-Get-PlotoPlots -OutDriveDenom "out"
 ```
 
 #### Output:
-
-```
--------------------------------------------------------------
-Iterating trough Drive:  @{DriveLetter=D:; ChiaDriveType=Out; VolumeName=ChiaOut2; FreeSpace=363.12; IsPlottable=True; AmountOfPlotsToHold=3}
-Checking if any item in that drive contains .PLOT as file ending...
-Found a Final plot:  plot-k32-2021-04-23-14-31-674b9f72e0df0a35c6918afd4fd3eb2780915a7a4f776b803328a40972c99db6.plot
--------------------------------------------------------------
-Iterating trough Drive:  @{DriveLetter=K:; ChiaDriveType=Out; VolumeName=ChiaOut3; FreeSpace=364.24; IsPlottable=True; AmountOfPlotsToHold=3}
-Checking if any item in that drive contains .PLOT as file ending...
-Found a Final plot:  plot-k32-2021-04-24-06-52-a1dfce79910040323cab0d10baafe24f25cc0cef592978984e91603acdb3434a.plot
---------------------------------------------------------------------------------------------------
-
-FilePath                                                                                           Name                                                                 
---------                                                                                           ----                                                                 
-D:\plot-k32-2021-04-23-14-31-674b9f72e0df0a35c6918afd4fd3eb2780915a7a4f776b803328a40972c99db6.plot plot-k32-2021-04-23-14-31-674b9f72e0df0a35c6918afd4fd3eb2780915a7a...
-K:\plot-k32-2021-04-24-06-52-a1dfce79910040323cab0d10baafe24f25cc0cef592978984e91603acdb3434a.plot plot-k32-2021-04-24-06-52-a1dfce79910040323cab0d10baafe24f25cc0cef...
+```powershell
 ```
 
-#### Parameters
-See Parameters Section of Get-PlotoOutDrives.
+#### Parameters:
+| Name          | Required | Type   | Description                                                                                                                              |
+|---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
+| |    | | 
+
 
 
 ## Move-PlotoPlots
-Gets all final Plot files and moves them to a destination drive. Can also use UNC Paths, as the transfer method is BITS (Background Intelligence Transfer Service).
-Calls Get-PlotoPlots to get all final plots and moves one by one to the destination drive.
 
 #### Example:
 
 ```powershell
-Move-PlotoPlots -DestinationDrive "\\DESKTOP-XXXX\d" -OutDriveDenom "out" 
 ```
-
-#### Parameters
-```powershell
--DestinationDrive
-```
-Defines the destination drive the final plot is moved to. Can be a drive or UNC Path.
-See Parameters Section of Get-PlotoOutDrives.
 
 #### Output:
+```powershell
+```
+#### Parameters:
+| Name          | Required | Type   | Description                                                                                                                              |
+|---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
+| |    | | 
 
-```
-Iterating trough Drive:  @{DriveLetter=D:; ChiaDriveType=Out; VolumeName=ChiaOut2; FreeSpace=261.79; IsPlottable=True; AmountOfPlotsToHold=2}
-Checking if any item in that drive contains .PLOT as file ending...
-Found a Final plot:  plot-k32-2021-04-23-14-31-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1.plot
-Found a Final plot:  plot-k32-2021-04-24-17-35-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2.plot
-Iterating trough Drive:  @{DriveLetter=K:; ChiaDriveType=Out; VolumeName=ChiaOut3; FreeSpace=60.18; IsPlottable=False; AmountOfPlotsToHold=0}
-Checking if any item in that drive contains .PLOT as file ending...
-Found a Final plot:  plot-k32-2021-04-24-06-52-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3.plot
-Found a Final plot:  plot-k32-2021-04-24-17-20-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx4.plot
-Found a Final plot:  plot-k32-2021-04-24-23-10-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5.plot
-Found a Final plot:  plot-k32-2021-04-25-00-40-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx6.plot
---------------------------------------------------------------------------------------------------
-PlotoMover @ 4/25/2021 12:09:17 PM : There are Plots found to be moved: 
-D:\plot-k32-2021-04-23-14-31-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1.plot
-D:\plot-k32-2021-04-24-17-35-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2.plot
-K:\plot-k32-2021-04-24-06-52-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3.plot
-K:\plot-k32-2021-04-24-17-20-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx4.plot
-K:\plot-k32-2021-04-24-23-10-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5.plot
-K:\plot-k32-2021-04-25-00-40-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx6.plot
-PlotoMover @ 4/25/2021 12:09:17 PM : A total of  6  plot have been found.
-PlotoMover @ 4/25/2021 12:09:17 PM : Moving plot:  D:\plot-k32-2021-04-23-14-31-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1.plot to \\Desktop-XXXXX\d
-```
+
+
 
 
 
