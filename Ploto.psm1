@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0
+Version: 1.0.1
 Author: Tydeno
 
 
@@ -112,8 +112,7 @@ foreach ($tmpDrive in $tmpDrives)
                             {
                                 $IsPlottable = $false
                             }
-                        
-                        
+
                     }
                 else
                     {
@@ -194,13 +193,20 @@ if ($PlottableTempDrives)
                 $OutDrive = $PlottableOutDrives | ? { $_.FreeSpace -eq $max}
                 $OutDriveLetter = $OutDrive.DriveLetter
 
+                $PlotoSpawnerJobId = ([guid]::NewGuid()).Guid
                 $ChiaBasePath = "$env:LOCALAPPDATA\chia-blockchain"
                 $ChiaVersion = ((Get-ChildItem $ChiaBasePath | ? {$_.Name -like "*app*"}).Name.Split("-"))[1]
                 $PathToChia = $ChiaBasePath+"\app-"+$ChiaVersion+"\resources\app.asar.unpacked\daemon\chia.exe" 
                 $PlotterBaseLogPath = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\plotter\"
-                $LogNameBasePath = "PlotoSpawnerLog_"+((Get-Date).Day.ToString())+"_"+(Get-Date).Month.ToString()+"_"+(Get-Date).Hour.ToString()+"_"+(Get-Date).Minute.ToString()+"_Tmp-"+(($PlottableTempDrive).DriveLetter.Split(":"))[0]+"_Out-"+($OutDriveLetter.Split(":"))[0]+".txt"
-                $LogPath = $PlotterBaseLogPath+$LogNameBasePath
-       
+                $LogNameBasePath = "PlotoSpawnerLog_"+((Get-Date).Day.ToString())+"_"+(Get-Date).Month.ToString()+"_"+(Get-Date).Hour.ToString()+"_"+(Get-Date).Minute.ToString()+"_"+$PlotoSpawnerJobId+"_Tmp-"+(($PlottableTempDrive).DriveLetter.Split(":"))[0]+"_Out-"+($OutDriveLetter.Split(":"))[0]+".txt"
+                $LogPath= $PlotterBaseLogPath+$LogNameBasePath
+
+                $logstatName = "PlotoSpawnerLog_"+((Get-Date).Day.ToString())+"_"+(Get-Date).Month.ToString()+"_"+(Get-Date).Hour.ToString()+"_"+(Get-Date).Minute.ToString()+"_"+$PlotoSpawnerJobId+"_Tmp-"+(($PlottableTempDrive).DriveLetter.Split(":"))[0]+"_Out-"+($OutDriveLetter.Split(":"))[0]+"@Stat.txt"
+
+                $logPath1 = (New-Item -Path $PlotterBaseLogPath -Name $logstatName).FullName
+                Add-Content -Path $LogPath1 -Value "PlotoSpawnerJobId: $PlotoSpawnerJobId"
+                Add-Content -Path $LogPath1 -Value "OutDrive: $OutDrive"
+                Add-Content -Path $LogPath1 -Value "TempDrive: $PlottableTempDrive"
 
                 if ($EnableBitfield -eq $true -or $EnableBitfield -eq "yes")
                     {
@@ -234,7 +240,9 @@ if ($PlottableTempDrives)
 
                                 try 
                                     {
-                                        $chiaexe = Start-Process $PathToChia -ArgumentList $ArgumentList -RedirectStandardOutput $LogPath -PassThru
+                                        $chiaexe = Start-Process $PathToChia -ArgumentList $ArgumentList -RedirectStandardOutput $logPath -PassThru
+                                        $pid = $chiaexe.Id
+                                        Add-Content -Path $LogPath1 -Value "PID: $pid" -Force
                                     }
                                 catch
                                     {
@@ -253,6 +261,8 @@ if ($PlottableTempDrives)
                 try 
                     {
                         $chiaexe = Start-Process $PathToChia -ArgumentList $ArgumentList -RedirectStandardOutput $LogPath -PassThru
+                        $pid = $chiaexe.Id
+                        Add-Content -Path $LogPath1 -Value "PID: $pid" -Force
                     }
 
                 catch
@@ -268,6 +278,7 @@ if ($PlottableTempDrives)
 
                 #Getting Plot Object Ready
                 $PlotJob = [PSCustomObject]@{
+                PlotoSpawnerJobId = $PlotoSpawnerJobId
                 ProcessID = $chiaexe.Id
                 OutDrive     =  $OutDriveLetter
                 TempDrive = $PlottableTempDrive.DriveLetter
@@ -527,15 +538,126 @@ function Start-PlotoMove
 
 function Get-PlotoJobs
 {
-    Param(
-        [parameter(Mandatory=$true)]
-	    $LogPath
-        )
+$PlotterBaseLogPath = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\plotter\"
+$logs = Get-ChildItem $PlotterBaseLogPath | ? {$_.Name -notlike "*@Stat*"}
+$pattern = @("OutDrive", "TempDrive", "Starting plotting progress into temporary dirs:", "ID", "F1 complete, time","Starting phase 1/4", "Computing table 1","Computing table 2", "Computing table 3","Computing table 4","Computing table 5","Computing table 6","Computing table 7", "Starting phase 2/4", "Time for phase 1","Backpropagating on table 7", "Backpropagating on table 6", "Backpropagating on table 5", "Backpropagating on table 4", "Backpropagating on table 3", "Backpropagating on table 2", "Starting phase 3/4", "Compressing tables 1 and 2", "Compressing tables 2 and 3", "Compressing tables 3 and 4", "Compressing tables 4 and 5", "Compressing tables 5 and 6", "Compressing tables 6 and 7")
+
+$collectionWithPlotJobsOut = New-Object System.Collections.ArrayList
+
+foreach ($log in $logs)
+    {        
+        $status = get-content ($PlotterBaseLogPath+"\"+$log.name) | Select-String -Pattern $pattern
+        $CurrentStatus = $status[($status.count-1)]
+        $ErrorActionPreference = "SilentlyContinue"
+
+        $PlotId = ($status -match "ID:").line.split(" ")[1]
+
+        switch -Wildcard ($CurrentStatus)
+            {
+                "Starting plotting progress into temporary dirs:*" {$StatusReturn = "Initializing"}
+                "Starting phase 1/4*" {$StatusReturn = "1:0"}
+                "F1 complete, time*" {$StatusReturn = "1:1"}
+                "Computing table 1" {$StatusReturn = "1:1"}
+                "Computing table 2" {$StatusReturn = "1:1"}
+                "Computing table 3" {$StatusReturn = "1:2"}
+                "Computing table 4" {$StatusReturn = "1:3"}
+                "Computing table 5" {$StatusReturn = "1:4"}
+                "Computing table 6" {$StatusReturn = "1:5"}
+                "Computing table 7" {$StatusReturn = "1:6"}
+                "Starting phase 2/4*" {$StatusReturn = "2:0"}
+                "Backpropagating on table 7" {$StatusReturn = "2:1"}
+                "Backpropagating on table 6" {$StatusReturn = "2:2"}
+                "Backpropagating on table 5" {$StatusReturn = "2:3"}
+                "Backpropagating on table 4" {$StatusReturn = "2:4"}
+                "Backpropagating on table 3" {$StatusReturn = "2:5"}
+                "Backpropagating on table 2" {$StatusReturn = "2:6"}
+                "Starting phase 3/4*" {$StatusReturn = "3:0"}
+                "Compressing tables 1 and 2" {$StatusReturn = "3:1"}
+                "Compressing tables 2 and 3" {$StatusReturn = "3:2"}
+                "Compressing tables 3 and 4" {$StatusReturn = "3:3"}
+                "Compressing tables 4 and 5" {$StatusReturn = "3:4"}
+                "Compressing tables 5 and 6" {$StatusReturn = "3:5"}
+                "Compressing tables 6 and 7" {$StatusReturn = "3:6"}
+                default {$StatusReturn = "Could not fetch Status"}
+            }
 
 
-$LogJob = Start-Job -ScriptBlock {
-        Get-Content $input -Tail 1 -Wait 
-    } -InputObject $LogPath -Name PlotoLogGrabber
+            $Logstatfiles = Get-ChildItem $PlotterBaseLogPath | ? {$_.Name -like "*@Stat*"}
 
-$LogStat = Receive-Job -Job $LogJob
+            foreach ($logger in $Logstatfiles)
+                {
+                    $SearchStat = ($logger.name).split("@")[0]
+                    $SearchChia = ($log.name).split(".")[0]
+
+                    if ($SearchStat -eq $SearchChia)
+                        {
+                           $pattern2 = @("OutDrive", "TempDrive", "PID","PlotoSpawnerJobId")
+                           $loggerRead = Get-Content ($PlotterBaseLogPath+"\"+$logger.Name) | Select-String -Pattern $pattern2
+                           $OutDrive = ($loggerRead -match "OutDrive").line.Split("=").split(";")[1]
+                           $tempDrive = ($loggerRead -match "TempDrive").line.Split("=").split(";")[1]
+                           $Pid = ($loggerRead -match "PID").line.Split(" ")[1]
+                           $PlotoSpawnerJobId = ($loggerRead -match "PlotoSpawnerJobId").line.Split(" ")[1]
+                        }
+                }
+                
+            #Getting Plot Object Ready
+            $PlotJobOut = [PSCustomObject]@{
+            PlotoSpawnerJobId = $PlotoSpawnerJobId
+            PlotId = $plotId
+            PID = $Pid
+            PlotJobStatus = $StatusReturn
+            TempDrive = $tempDrive
+            OutDrive = $OutDrive
+            LogPath = $log.name
+            }
+
+        $collectionWithPlotJobsOut.Add($PlotJobOut) | Out-Null
+        $plotId = $null
+        $StatusReturn = $null
+        $tempDrive = $null
+        $OutDrive = $null
+    }
+
+$ErrorActionPreference = "Continue"
+
+return $collectionWithPlotJobsOut
+
+}
+
+function Stop-PlotoJob
+{
+	Param(
+		[parameter(Mandatory=$true)]
+		$PlotoSpawnerJobId
+		)
+
+        $Job = Get-PlotoJobs | ? {$_.PlotoSpawnerJobId -eq $PlotoSpawnerJobId}
+
+        try 
+            {
+                Stop-Process -id $job.PID
+            }
+
+        catch
+            {
+                Write-Host "PlotoStopJob @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red        
+            }   
+
+        $PlotoIdToScramble = $job.PlotId
+        #Scramble temp dir for .tmp files
+
+        $FileArrToDel = Get-ChildItem $job.TempDrive | ? {$_.Name -like "*$PlotoIdToScramble*" -and $_.Extension -eq ".tmp"} 
+
+        if ($FileArrToDel)
+            {
+                try 
+                    {
+                         $FileArrToDel | Remove-Item -Force
+                    }
+
+                catch
+                    {
+                        Write-Host "PlotoStopJob @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red   
+                    }               
+            }        
 }
