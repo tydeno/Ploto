@@ -11,8 +11,8 @@ Way dumber than plotman. Still does what it should for all those Windows Farmers
 * [Start-PlotoSpawns](https://github.com/tydeno/Ploto/blob/main/README.md#start-plotospawns)
 
 ### PlotoManage
-* [Get-PlotoJobs](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotooutdrives)
-* [Stop-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#get-plototempdrives)
+* [Get-PlotoJobs](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotojobs)
+* [Stop-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#stop-plotojob)
 
 ### PlotoMove - Work in progress
 * [Get-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotoplots)
@@ -34,7 +34,6 @@ PlotoSpawner identifies your drives for temping and storing plots by a common de
 For reference heres my setup:
 * CPU: i9-9900k
 * RAM: 32 GB DDR4
-* GPU: RTX 3080 (refernecing cause its worth to note that I mine eth next to plotting on that machine)
 * TempDrives:
 
 | Name          | DriveLetter | Type   | Size      |
