@@ -296,7 +296,7 @@ Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
 ```
 4. Launch PlotoSpawner
 ```powershell
-Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $true -ParallelAmount min -WaitTimeBetweenPlotOnSeparateDisks 30 -WaitTimeBetweenPlotOnSameDisk 60
+Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $false -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 30 -WaitTimeBetweenPlotOnSameDisk 60
 ```
 ```
 PlotoSpawner @ 4/30/2021 3:19:13 AM : Spawned the following plot Job:
@@ -343,7 +343,34 @@ ad917660-9de9-4810-8977-6ace317d7ddb xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 cfff29b8-fdee-4988-ae89-9db035d809bc xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 11176 1.6          Q:        K:       C:\Users\me\.chia...
 ```
 
+or without formatting:
 
+```powershell
+Get-PlotoJobs
+```
+```
+PlotoSpawnerJobId : 2b8596cd-3369-4e8c-a04f-26c85acdfd82
+PlotId            : 4dfb8e10aeafe69c54e811550bc4ac0395e9ec210c65ef974423d51863fc6b2f
+PID               : 9752
+PlotJobPhase      : 2.1
+TempDrive         : Q:
+OutDrive          : K:
+LogPath           : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_3_54_2b8596cd-3369-4e8c-a04f-26c85acdfd82_Tmp-Q_Out-K.txt
+StatLogPath       : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_3_54_2b8596cd-3369-4e8c-a04f-26c85acdfd82_Tmp-Q_Out-K@Stat.txt
+cpuUsagePercent   :
+memUsageMB        : 4442
+
+PlotoSpawnerJobId : cfff29b8-fdee-4988-ae89-9db035d809bc
+PlotId            : fd4a5457c762dcae5631fc0f66a0d7737e415e8f07531ea7d55b38438dbe35a2
+PID               : 11176
+PlotJobPhase      : 1.6
+TempDrive         : Q:
+OutDrive          : K:
+LogPath           : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_4_29_cfff29b8-fdee-4988-ae89-9db035d809bc_Tmp-Q_Out-K.txt
+StatLogPath       : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_4_29_cfff29b8-fdee-4988-ae89-9db035d809bc_Tmp-Q_Out-K@Stat.txt
+cpuUsagePercent   :
+memUsageMB        : 2448
+```
 
 # FAQ
 > Can I shut down the script when I dont want Ploto to spawn more Plots?
