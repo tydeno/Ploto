@@ -267,8 +267,8 @@ Analyzes the plotter logs (standard chia.exe output redirected, enriched with ad
 
 See below for a definition of what phase coe is associated with which chia.exe log output.
 ```powershell
- "Starting plotting progress into temporary dirs:*" {$StatusReturn = "Initializing"}
- "Starting phase 1/4*" {$StatusReturn = "1.0"}
+"Starting plotting progress into temporary dirs:*" {$StatusReturn = "Initializing"}
+"Starting phase 1/4*" {$StatusReturn = "1.0"}
 "Computing table 1" {$StatusReturn = "1.1"}
 "F1 complete, time*" {$StatusReturn = "1.1"}
 "Computing table 2" {$StatusReturn = "1.1"}
