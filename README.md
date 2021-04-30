@@ -306,20 +306,18 @@ OutDrive          : K:
 TempDrive         : Q:
 ArgumentsList     : plots create -k 32 -t Q:\ -d K:\ -e
 ChiaVersionUsed   : 1.1.2
-LogPath           : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_3_19_ad917660-9de9-4810-8977-6ace317d7ddb
-                    _Tmp-Q_Out-K.txt
+LogPath           : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_3_19_ad917660-9de9-4810-8977-6ace317d7ddb_Tmp-Q_Out-K.txt
 StartTime         : 4/30/2021 3:19:13 AM
-```
-
 
 PlotoManager @ 4/30/2021 3:49:13 AM : Amount of spawned Plots in this iteration: 6
 PlotoManager @ 4/30/2021 3:49:13 AM : Overall spawned Plots since start of script: 6
-
+```
 
 
 5. Leave the PowerShell Session open (can be minimized)
-## Get and stop Jobs
 
+
+## Get Jobs
 1. Open another PowerShell session 
 2. Import-Module "Ploto" 
 ```powershell
@@ -343,33 +341,13 @@ ad917660-9de9-4810-8977-6ace317d7ddb xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 cfff29b8-fdee-4988-ae89-9db035d809bc xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 11176 1.6          Q:        K:       C:\Users\me\.chia...
 ```
 
-or without formatting:
+## Stop Jobs
+1. Open a PowerShell session and import Module "Ploto" or use an existing one.
+2. Get PlotJobSpawnerId of Job you want to stop by calling "Get-PlotJobs"
+3. Stop the process:
 
 ```powershell
-Get-PlotoJobs
-```
-```
-PlotoSpawnerJobId : 2b8596cd-3369-4e8c-a04f-26c85acdfd82
-PlotId            : 4dfb8e10aeafe69c54e811550bc4ac0395e9ec210c65ef974423d51863fc6b2f
-PID               : 9752
-PlotJobPhase      : 2.1
-TempDrive         : Q:
-OutDrive          : K:
-LogPath           : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_3_54_2b8596cd-3369-4e8c-a04f-26c85acdfd82_Tmp-Q_Out-K.txt
-StatLogPath       : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_3_54_2b8596cd-3369-4e8c-a04f-26c85acdfd82_Tmp-Q_Out-K@Stat.txt
-cpuUsagePercent   :
-memUsageMB        : 4442
-
-PlotoSpawnerJobId : cfff29b8-fdee-4988-ae89-9db035d809bc
-PlotId            : fd4a5457c762dcae5631fc0f66a0d7737e415e8f07531ea7d55b38438dbe35a2
-PID               : 11176
-PlotJobPhase      : 1.6
-TempDrive         : Q:
-OutDrive          : K:
-LogPath           : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_4_29_cfff29b8-fdee-4988-ae89-9db035d809bc_Tmp-Q_Out-K.txt
-StatLogPath       : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_4_29_cfff29b8-fdee-4988-ae89-9db035d809bc_Tmp-Q_Out-K@Stat.txt
-cpuUsagePercent   :
-memUsageMB        : 2448
+Stop-PlotoJob -PlotSpawnerId cfff29b8-fdee-4988-ae89-9db035d809bc
 ```
 
 # FAQ
