@@ -257,26 +257,6 @@ PlotoManager @ 4/29/2021 1:45:38 PM : Overall spawned Plots since start of scrip
 |EnableBitfield | No | bool | See Parameters Section of [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-2)
 |ParallelAmount | No | String | See Parameters Section of [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-2)
 
-
-
-# How to use
-If you want to use PlotoSpawner follow along:
-
-1. Download Ploto as .ZIP from [here](https://github.com/tydeno/Ploto/archive/refs/heads/main.zip)
-3. Import-Module "Ploto" 
-```powershell
-Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
-```
-5. Launch PlotoSpawner
-```powershell
-Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $true -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 30 -WaitTimeBetweenPlotOnSameDisk 60
-```
-
-# FAQ
-> Can I shut down the script when I dont want Ploto to spawn more Plots?
-
-Yep. The individual Chia Plot Jobs wont be affected by that.
-
 # PlotoManage
 Allows you to check status of your current plot jobs aswell as stopping them and cleaning the temp drives.
 
@@ -303,6 +283,74 @@ StatLogPath       : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_0_49_
 cpuUsagePercent   : 11.38
 memUsageMB        : 164
 ```
+
+# How to:
+If you want to use PlotoSpawner follow along:
+
+## Spawn Plots
+1. Make sure your Out and TempDrives are named accordingly
+2. Download Ploto as .ZIP from [here](https://github.com/tydeno/Ploto/archive/refs/heads/main.zip)
+3. Import-Module "Ploto" 
+```powershell
+Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
+```
+4. Launch PlotoSpawner
+```powershell
+Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $true -ParallelAmount min -WaitTimeBetweenPlotOnSeparateDisks 30 -WaitTimeBetweenPlotOnSameDisk 60
+```
+```
+PlotoSpawner @ 4/30/2021 3:19:13 AM : Spawned the following plot Job:
+PlotoSpawnerJobId : ad917660-9de9-4810-8977-6ace317d7ddb
+ProcessID         : 13192
+OutDrive          : K:
+TempDrive         : Q:
+ArgumentsList     : plots create -k 32 -t Q:\ -d K:\ -e
+ChiaVersionUsed   : 1.1.2
+LogPath           : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_3_19_ad917660-9de9-4810-8977-6ace317d7ddb
+                    _Tmp-Q_Out-K.txt
+StartTime         : 4/30/2021 3:19:13 AM
+```
+
+
+PlotoManager @ 4/30/2021 3:49:13 AM : Amount of spawned Plots in this iteration: 6
+PlotoManager @ 4/30/2021 3:49:13 AM : Overall spawned Plots since start of script: 6
+
+
+
+5. Leave the PowerShell Session open (can be minimized)
+## Get and stop Jobs
+
+1. Open another PowerShell session 
+2. Import-Module "Ploto" 
+```powershell
+Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
+```
+4. Launch Get-PlotoJobs and format Output
+```powershell
+Get-PlotoJobs | ft
+```
+
+```
+PlotoSpawnerJobId                    PlotId                                                           PID   PlotJobPhase TempDrive OutDrive LogPath
+-----------------                    ------                                                           ---   ------------ --------- -------- -------
+49ab3c48-532b-4f17-855d-3c5b4981528b xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 11856 3.6          E:        K:       C:\Users\me\.chia...
+8a0cc01e-37e7-4507-ad6e-cad9401c1381 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 9184  3.6          F:        K:       C:\Users\me\.chia...
+95c7cd61-bd88-45a3-a6a2-c243338de480 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 1604  3.5          H:        D:       C:\Users\me\.chia...
+465355ef-7da6-4691-8137-3eeba98976d5 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 16280 3.4          I:        K:       C:\Users\me\.chia...
+2120b771-2376-49f5-8d47-99a411865ec9 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 14228 3.3          J:        D:       C:\Users\ne\.chia...
+ad917660-9de9-4810-8977-6ace317d7ddb xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 13192 2.2          Q:        K:       C:\Users\me\.chia...
+2b8596cd-3369-4e8c-a04f-26c85acdfd82 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 9752  2.1          Q:        K:       C:\Users\me\.chia...
+cfff29b8-fdee-4988-ae89-9db035d809bc xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 11176 1.6          Q:        K:       C:\Users\me\.chia...
+```
+
+
+
+# FAQ
+> Can I shut down the script when I dont want Ploto to spawn more Plots?
+
+Yep. The individual Chia Plot Jobs wont be affected by that.
+
+
 
 #### Parameters:
 | Name          | Required | Type   | Description                                                                                                                              |
