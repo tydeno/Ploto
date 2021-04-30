@@ -263,6 +263,43 @@ Allows you to check status of your current plot jobs aswell as stopping them and
 ## Get-PlotoJobs
 Analyzes the plotter logs (standard chia.exe output redirected, enriched with additional data) and shows the status, pid and drives in use. The function only pick up data of plot logs that have been spawned using PlotoSpawner (as it deploys initial data like PID of process and drives use). The additional logs are stored in the same location as the standrad logs. If you delete those, this function wont be able to read certain properties anymore. 
 
+## Status Codes and their meaning
+
+See below for a definition of what phase coe is associated with which chia.exe log output.
+```powershell
+ "Starting plotting progress into temporary dirs:*" {$StatusReturn = "Initializing"}
+ "Starting phase 1/4*" {$StatusReturn = "1.0"}
+"Computing table 1" {$StatusReturn = "1.1"}
+"F1 complete, time*" {$StatusReturn = "1.1"}
+"Computing table 2" {$StatusReturn = "1.1"}
+"Computing table 3" {$StatusReturn = "1.2"}
+"Computing table 4" {$StatusReturn = "1.3"}
+"Computing table 5" {$StatusReturn = "1.4"}
+"Computing table 6" {$StatusReturn = "1.5"}
+"Computing table 7" {$StatusReturn = "1.6"}
+"Starting phase 2/4*" {$StatusReturn = "2.0"}
+"Backpropagating on table 7" {$StatusReturn = "2.1"}
+"Backpropagating on table 6" {$StatusReturn = "2.2"}
+"Backpropagating on table 5" {$StatusReturn = "2.3"}
+"Backpropagating on table 4" {$StatusReturn = "2.4"}
+"Backpropagating on table 3" {$StatusReturn = "2.5"}
+"Backpropagating on table 2" {$StatusReturn = "2.6"}
+"Starting phase 3/4*" {$StatusReturn = "3.0"}
+"Compressing tables 1 and 2" {$StatusReturn = "3.1"}
+"Compressing tables 2 and 3" {$StatusReturn = "3.2"}
+"Compressing tables 3 and 4" {$StatusReturn = "3.3"}
+"Compressing tables 4 and 5" {$StatusReturn = "3.4"}
+"Compressing tables 5 and 6" {$StatusReturn = "3.5"}
+"Compressing tables 6 and 7" {$StatusReturn = "3.6"}
+"First computation pass time*" {$StatusReturn = "3.7"}
+"Second computation pass time*" {$StatusReturn = "3.8"}
+"Starting phase 4/4*" {$StatusReturn = "4.0"}
+"Writing C2 table*" {$StatusReturn = "4.1"}
+"Time for phase 4*" {$StatusReturn = "4.2"}
+"Renamed final file*" {$StatusReturn = "4.3"}
+```
+
+
 #### Example:
 ```powershell
 Get-PlotoJobs
