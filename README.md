@@ -78,10 +78,11 @@ WWARNING: This may overcommit your plotter by far! Pay attention when using it, 
 When a job is done and a temp drive becomes available again, PlotoSpawner will spawn the next jobs, until it has spawned the amount you specified as -InputAmountToSpawn
 
 PlotoSpawner redirects the output of chia.exe to to the following path: 
-* C:\Users\me\.chia\mainnet\plotter
+* C:\Users\me\.chia\mainnet\plotter\
 
-And creates a log for each job with the following notation:
-* PlotoSpawnerLog_29_4_15_26_Tmp-H_Out-D.txt
+And creates two log files for each job with the following notation:
+* PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b_Tmp-E_Out-K.txt (chia.exe output)
+* PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b_Tmp-E_Out-K@Stat.txt (additional info for job)
 
 
 # Prereqs
