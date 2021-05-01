@@ -404,6 +404,70 @@ The Error below is known and only says that the process is already closed. This 
 PlotoStopJob @ 5/1/2021 6:42:26 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
 ```
 
+# PlotoMove
+Continously searches for final Plots on your OutDrives and moves them to your desired location. I do this for transferring plots from my plotting machine to my farming machine.
+
+## Get-PlotoPlots
+Searches defined Outdrives for Final Plots (file that end upon .plot) and returns an array with final plots.
+
+#### Example:
+```powershell
+Get-PlotoPlots -OutDriveDenom "out"
+```
+
+#### Output:
+```
+Iterating trough Drive:  @{DriveLetter=D:; ChiaDriveType=Out; VolumeName=ChiaOut2; FreeSpace=59.04; TotalSpace=0; IsPlottable=False; AmountOfPlotsToHold=0}
+Checking if any item in that drive contains .PLOT as file ending...
+Found a Final plot:  plot-k32-2021-04-30-18-52-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
+Found a Final plot:  plot-k32-2021-04-30-19-02-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
+Found a Final plot:  plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
+Found a Final plot:  plot-k32-2021-04-30-19-42-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
+Iterating trough Drive:  @{DriveLetter=K:; ChiaDriveType=Out; VolumeName=ChiaOut3; FreeSpace=262.86; TotalSpace=0; IsPlottable=True; AmountOfPlotsToHold=2}
+Checking if any item in that drive contains .PLOT as file ending...
+Found a Final plot:  plot-k32-2021-04-30-18-57-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
+Found a Final plot:  plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
+--------------------------------------------------------------------------------------------------
+
+FilePath                                                                                           Name
+--------                                                                                           ----
+D:\plot-k32-2021-04-30-18-52-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
+D:\plot-k32-2021-04-30-19-02-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
+D:\plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
+D:\plot-k32-2021-04-30-19-42-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
+K:\plot-k32-2021-04-30-18-57-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
+K:\plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
+```
+
+#### Parameters:
+| Name          | Required | Type   | Description                                                                                                                              |
+|---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
+| OutDriveDenom | Yes      | String | See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters) 
+
+
+## Move-PlotoPlots
+Grabs the found plots from Get-PlotoPlots and moves them to either a local/external drive using Move-Item cmdlet or to a UNC path using Background Intelligence TRansfer Service (Bits). You can define the OutDrives to search for Plots, TransferMethod and Destination.
+
+Make sure TrasnferMethod and Destination match. 
+
+#### Example:
+
+```powershell
+Move-PlotoPlots -DestinationDrive "\\Desktop-xxxxx\d" -OutDriveDenom "out" -TransferMethod BITS
+```
+
+#### Output:
+```
+PlotoMover @ 5/1/2021 7:08:09 PM : Moving plot:  D:\plot-k32-2021-04-30-18-52-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot to \\Desktop-xxxxx\d using BITS
+```
+#### Parameters:
+| Name          | Required | Type   | Description                                                                                                                              |
+|---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
+| DestinationDrive| Yes    | String | The destination drive you want the plot to be moved to. Accpets UNC Paths aswell as DriveLetters (eg E:)
+| OutDriveDenim | Yes | String | See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters) 
+| TransferMethod | Yes | String | Defines TransferMethod to be used. If local drive use "Move-Item". If UNC path use "BITS".
+
+
 # How to:
 If you want to use PlotoSpawner follow along:
 
@@ -510,6 +574,37 @@ or if you want to Stop all Jobs that are aborted:
 Remove-AbortedPlotoJobs
 ```
 
+## Move Plots
+As you may have noticed in my ref setup: I have little OutDrive storage capacity (1TTB roughly).
+This is only possible as I continously move the final Plots to my farming machine with lots of big drives. 
+
+I do this by moving plots to a external drive and plug that into my farmer, and sometimes I also transfer plots across my network (not the fatest, thats why I kind of have to do  the running around approach)
+
+PlotoMover helps to automate this process.
+
+If you want to move your plots to a local/external drive just once:
+1. Launch a PowerShell session and Import Ploto Module
+2. Launch Move-PlotoPLots
+   ```powershell
+Move-PlotoPlots -DestinationDrive "P:" -OutDriveDenom "out" -TransferMethod Move-Item
+```
+
+If you want to move your plots to a UNC path just once:
+1. Launch a PowerShell session and Import Ploto Module
+2. Launch Move-PlotoPLots
+   ```powershell
+Move-PlotoPlots -DestinationDrive "\\Desktop-xxxxx\d" -OutDriveDenom "out" -TransferMethod Move-Item
+```
+Please be aware that if you use UNC paths as Destination, PlotoMover cannot grab the free space there and just fires off.
+
+## But I want it do it continously!
+Sure, just use Start-PlotoMove with your needed params:
+
+```powershell
+Move-PlotoPlots -DestinationDrive "\\Desktop-xxxxx\d" -OutDriveDenom "out" -TransferMethod Move-Item
+```
+Please be aware that if you use UNC paths as Destination, PlotoMover cannot grab the free space there and just fires off.
+
 # FAQ
 > Can I shut down the script when I dont want Ploto to spawn more Plots?
 
@@ -524,71 +619,10 @@ These are known:
 * Only works when Drives are dedicated to plotting (dont hold any other files)
 * Can only display and stop PlotJobs that have been spawned using PlotoSpawner
 * Using the -PerfCounter param on Get-PlotoJobs takes a while to load
+* PlotoMover is very limited right now, may break copy jobs at times (Bits)
 
 Please be aware that Ploto was built for my specific setup. I try to generalize it as much as possible, but thats not easy-breezy.
 So what works for me, may not ultimately work for you. 
 Please also bear in mind that unexpoected beahviour and or bugs are possible.
 
 
-# PlotoMove
-Continously searches for final Plots on your OutDrives and moves them to your desired location. I do this for transferring plots from my plotting machine to my farming machine.
-
-## Get-PlotoPlots
-Searches defined Outdrives for Final Plots (file that end upon .plot) and returns an array with final plots.
-
-#### Example:
-```powershell
-Get-PlotoPlots -OutDriveDenom "out"
-```
-
-#### Output:
-```
-Iterating trough Drive:  @{DriveLetter=D:; ChiaDriveType=Out; VolumeName=ChiaOut2; FreeSpace=59.04; TotalSpace=0; IsPlottable=False; AmountOfPlotsToHold=0}
-Checking if any item in that drive contains .PLOT as file ending...
-Found a Final plot:  plot-k32-2021-04-30-18-52-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
-Found a Final plot:  plot-k32-2021-04-30-19-02-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
-Found a Final plot:  plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
-Found a Final plot:  plot-k32-2021-04-30-19-42-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
-Iterating trough Drive:  @{DriveLetter=K:; ChiaDriveType=Out; VolumeName=ChiaOut3; FreeSpace=262.86; TotalSpace=0; IsPlottable=True; AmountOfPlotsToHold=2}
-Checking if any item in that drive contains .PLOT as file ending...
-Found a Final plot:  plot-k32-2021-04-30-18-57-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
-Found a Final plot:  plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
---------------------------------------------------------------------------------------------------
-
-FilePath                                                                                           Name
---------                                                                                           ----
-D:\plot-k32-2021-04-30-18-52-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
-D:\plot-k32-2021-04-30-19-02-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
-D:\plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
-D:\plot-k32-2021-04-30-19-42-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
-K:\plot-k32-2021-04-30-18-57-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
-K:\plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
-```
-
-#### Parameters:
-| Name          | Required | Type   | Description                                                                                                                              |
-|---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
-| OutDriveDenom | Yes      | String | See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters) 
-
-
-## Move-PlotoPlots
-Grabs the found plots from Get-PlotoPlots and moves them to either a local/external drive using Move-Item cmdlet or to a UNC path using Background Intelligence TRansfer Service (Bits). You can define the OutDrives to search for Plots, TransferMethod and Destination.
-
-Make sure TrasnferMethod and Destination match. 
-
-#### Example:
-
-```powershell
-Move-PlotoPlots -DestinationDrive "\\Desktop-xxxxx\d" -OutDriveDenom "out" -TransferMethod BITS
-```
-
-#### Output:
-```
-PlotoMover @ 5/1/2021 7:08:09 PM : Moving plot:  D:\plot-k32-2021-04-30-18-52-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot to \\Desktop-xxxxx\d using BITS
-```
-#### Parameters:
-| Name          | Required | Type   | Description                                                                                                                              |
-|---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
-| DestinationDrive| Yes    | String | The destination drive you want the plot to be moved to. Accpets UNC Paths aswell as DriveLetters (eg E:)
-| OutDriveDenim | Yes | String | See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters) 
-| TransferMethod | Yes | String | Defines TransferMethod to be used. If local drive use "Move-Item". If UNC path use "BITS".
