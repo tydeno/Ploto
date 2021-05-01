@@ -27,7 +27,8 @@ After that, Ploto checks if amount Spawned is equal as defined as input. If not,
 You can specify several vital parameters to control when and where plots are spawned, temped and stored. 
 PlotoSpawner identifies your drives for temping and storing plots by a common denominator you specify. 
 
-IMPORTANT: Ploto Assumes you Plot in the root of your Drives. So make sure you do that aswell.
+IMPORTANT: Ploto Assumes you Plot in the root of your Drives and that the Drives are dedicated to plotting. So make sure you do that aswell.
+It wont work when the drives contains other data.
 
 For reference heres my setup:
 * CPU: i9-9900k
@@ -441,6 +442,7 @@ Ploto has its bugs and limitations here and there.
 
 These are known:
 * Only works when plotting in root of drives
+* Only works when Drives are dedicated to plotting (dont hold any other files)
 * Can only display PlotJobs that have been spawned using PlotoSpawner
 * Using the -PerfCounter param on Get-PlotoJobs takes a while to load
 
