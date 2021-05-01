@@ -468,9 +468,9 @@ PID                   : 6648
 PlotJobPhase          : 3.6
 TempDrive             : Q:
 OutDrive              : D:
-LogPath               : C:\Users\Yanik\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_19_12_10e6deb5-6a13-4a0d-9c77-8c65d71
+LogPath               : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_19_12_10e6deb5-6a13-4a0d-9c77-8c65d71
                         7bf6b_Tmp-Q_Out-D.txt
-StatLogPath           : C:\Users\Yanik\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_19_12_10e6deb5-6a13-4a0d-9c77-8c65d71
+StatLogPath           : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_19_12_10e6deb5-6a13-4a0d-9c77-8c65d71
                         7bf6b_Tmp-Q_Out-D@Stat.txt
 PlotSizeOnDisk        : 48.03 GB
 cpuUsagePercent       : 0.49
