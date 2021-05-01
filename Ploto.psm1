@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.2
+Version: 1.0.3
 Author: Tydeno
 
 
@@ -142,17 +142,13 @@ function Invoke-PlotoJob
         $MaxParallelJobsOnSameDisk,
         $EnableBitfield
 		)
-Write-Host "in da spawner"
 
 $PlottableTempDrives = Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom | ? {$_.IsPlottable -eq $true}   
 $PlottableOutDrives = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom | ? {$_.IsPlottable -eq $true}
 
-Write-Host $PlottableTempDrives "are temps"
-Write-Host $PlottableOutDrives "are outs"
 
 if ($PlottableOutDrives -eq $null)
     {
-        Write-Host "no drives"
         Throw "Error: No outdrives found"
     } 
 
@@ -161,21 +157,19 @@ $collectionWithPlotJobs= New-Object System.Collections.ArrayList
 
 if ($PlottableTempDrives)
     {
-         Write-Host "found some tempdrives"
          foreach ($PlottableTempDrive in $PlottableTempDrives)
             {
                 #Check amount of Jobs ongoin
-                $JobCountAll = (Get-PlotoJobs).Count
-                $JobCountOnSameDisk = (Get-PlotoJobs | ? {$_.TempDrive -eq $PlottableTempDrive.DriveLetter}).Count
+                $JobCountAll = (Get-PlotoJobs | ? {$_.PlotJobPhase -ne "Completed"}).Count
+                $JobCountOnSameDisk = (Get-PlotoJobs | ? {$_.PlotJobPhase -ne "Completed"} | ? {$_.TempDrive -eq $PlottableTempDrive.DriveLetter}).Count
 
                 if ($JobCountAll -ge $MaxParallelJobsOnAllDisks -or $JobCountOnSameDisk -ge $MaxParallelJobsOnSameDisk)
                     {
-                        Write-Host "Job count gt"
+
                     }
 
                 else
                     {
-                        Write-Host "all goog lets move says spanwers esle"
                         $max = ($PlottableOutDrives | measure-object -Property FreeSpace -maximum).maximum
                         $OutDrive = $PlottableOutDrives | ? { $_.FreeSpace -eq $max}
                         $OutDriveLetter = $OutDrive.DriveLetter
@@ -315,7 +309,7 @@ if ($PlottableTempDrives)
     }
 else
     {
-        Write-Host "No temp available"
+
     }
    return $collectionWithPlotJobs
 }
@@ -367,7 +361,7 @@ function Get-PlotoJobs
 
 $PlotterBaseLogPath = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\plotter\"
 $logs = Get-ChildItem $PlotterBaseLogPath | ? {$_.Name -notlike "*@Stat*"}
-$pattern = @("OutDrive", "TempDrive", "Starting plotting progress into temporary dirs:", "ID", "F1 complete, time","Starting phase 1/4", "Computing table 1","Computing table 2", "Computing table 3","Computing table 4","Computing table 5","Computing table 6","Computing table 7", "Starting phase 2/4", "Time for phase 1","Backpropagating on table 7", "Backpropagating on table 6", "Backpropagating on table 5", "Backpropagating on table 4", "Backpropagating on table 3", "Backpropagating on table 2", "Starting phase 3/4", "Compressing tables 1 and 2", "Compressing tables 2 and 3", "Compressing tables 3 and 4", "Compressing tables 4 and 5", "Compressing tables 5 and 6", "Compressing tables 6 and 7", "First computation pass time:", "Second computation pass time:", "Starting phase 4/4", "Writing C2 table", "Time for phase 4", "Renamed final file", "Total time")
+$pattern = @("OutDrive", "TempDrive", "Starting plotting progress into temporary dirs:", "ID", "F1 complete, time","Starting phase 1/4", "Computing table 1","Computing table 2", "Computing table 3","Computing table 4","Computing table 5","Computing table 6","Computing table 7", "Starting phase 2/4", "Time for phase 1","Backpropagating on table 7", "Backpropagating on table 6", "Backpropagating on table 5", "Backpropagating on table 4", "Backpropagating on table 3", "Backpropagating on table 2", "Starting phase 3/4", "Compressing tables 1 and 2", "Compressing tables 2 and 3", "Compressing tables 3 and 4", "Compressing tables 4 and 5", "Compressing tables 5 and 6", "Compressing tables 6 and 7", "Starting phase 4/4", "Writing C2 table", "Time for phase 4", "Renamed final file", "Total time")
 
 $collectionWithPlotJobsOut = New-Object System.Collections.ArrayList
 
@@ -384,13 +378,12 @@ foreach ($log in $logs)
                 "Starting plotting progress into temporary dirs:*" {$StatusReturn = "Initializing"}
                 "Starting phase 1/4*" {$StatusReturn = "1.0"}
                 "Computing table 1" {$StatusReturn = "1.1"}
-                "F1 complete, time*" {$StatusReturn = "1.1"}
-                "Computing table 2" {$StatusReturn = "1.1"}
-                "Computing table 3" {$StatusReturn = "1.2"}
-                "Computing table 4" {$StatusReturn = "1.3"}
-                "Computing table 5" {$StatusReturn = "1.4"}
-                "Computing table 6" {$StatusReturn = "1.5"}
-                "Computing table 7" {$StatusReturn = "1.6"}
+                "F1 complete, time*" {$StatusReturn = "1.2"}
+                "Computing table 2" {$StatusReturn = "1.3"}
+                "Computing table 3" {$StatusReturn = "1.4"}
+                "Computing table 4" {$StatusReturn = "1.5"}
+                "Computing table 6" {$StatusReturn = "1.7"}
+                "Computing table 7" {$StatusReturn = "1.8"}
                 "Starting phase 2/4*" {$StatusReturn = "2.0"}
                 "Backpropagating on table 7" {$StatusReturn = "2.1"}
                 "Backpropagating on table 6" {$StatusReturn = "2.2"}
@@ -405,8 +398,6 @@ foreach ($log in $logs)
                 "Compressing tables 4 and 5" {$StatusReturn = "3.4"}
                 "Compressing tables 5 and 6" {$StatusReturn = "3.5"}
                 "Compressing tables 6 and 7" {$StatusReturn = "3.6"}
-                "First computation pass time*" {$StatusReturn = "3.7"}
-                "Second computation pass time*" {$StatusReturn = "3.8"}
                 "Starting phase 4/4*" {$StatusReturn = "4.0"}
                 "Writing C2 table*" {$StatusReturn = "4.1"}
                 "Time for phase 4*" {$StatusReturn = "4.2"}
@@ -417,12 +408,14 @@ foreach ($log in $logs)
 
             if ($StatusReturn -eq "4.3")
                 {
-                    $CompletionTime = ($status -match "Total time").line.Split(" ")[1]
+                    $TimeToComplete = ($status -match "Total time").line.Split("=").Split(" ")[4]
+                    $TimeToCompleteCalcInh = ($TimeToComplete / 60) / 60
+
                     $StatusReturn =  "Completed"
                 }
             else
                 {
-                    $CompletionTime = "Still in progress"
+                    $TimeToCompleteCalcInh = "Still in progress"
                 }
 
 
@@ -482,7 +475,7 @@ foreach ($log in $logs)
             PlotSizeOnDisk = $SizeOnDisk
             cpuUsagePercent = $cpuUsage
             memUsageMB = $MemUsage
-            CompletionTime = $CompletionTime
+            CompletionTimeInHours = $TimeToCompleteCalcInh
             }
 
         $collectionWithPlotJobsOut.Add($PlotJobOut) | Out-Null
