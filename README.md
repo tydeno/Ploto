@@ -55,7 +55,7 @@ So my denominators for my TempDrives its "plot" and for my destination drives it
 
 By default, Ploto spawns only 1x Plot Job on each Disk in parallel. So when I launch Ploto with default amount to spawn:
 ```powershell
-Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $false -ParallelAmount default -WaitTimeBetweenPlotOnSeparateDisks 30 -WaitTimeBetweenPlotOnSameDisk 60
+Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 0.1 -MaxParallelJobsOnAllDisks 2 -EnableBitfield $false -Verbose
 ```
 
 the following will happen:
@@ -69,7 +69,7 @@ Using "-MaxParallelJobsOnSameDisks" you can define how many PlotsJobs there shou
 
 If I launch PlotoSpawner with these params like this:
 ```powershell
-Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $false -WaitTimeBetweenPlotOnSeparateDisks 15 -WaitTimeBetweenPlotOnSameDisk 30 -MaxParallelJobsOnAllDisks 8 -MaxParallelJobsOnSameDisk 3
+Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 0.1 -MaxParallelJobsOnAllDisks 2 -MaxParallelJobsOnSameDisk 1 -EnableBitfield $false
 ```
 
 PlotoSpawner will max out the available temp drives. This means for my temp drive setup the following:
@@ -152,52 +152,83 @@ It wraps all the needed information of the volume like DriveLetter, ChiaDriveTyp
 #### Output:
 
 ```
-DriveLetter             : J:
-ChiaDriveType           : Temp
-VolumeName              : ChiaPlot 5 NVME 980 Pro
-FreeSpace               : 361.62
-TotalSpace              : 465.75
-IsPlottable             : False
-AmountOfPlotsToTempMax  : 0
-HasPlotInProgress       : True
-AmountOfPlotsInProgress : 1
-PlotInProgressName      : {plot-k32-2021-04-xx-0x-37-xxxxxx}
-
-DriveLetter             : Q:
-ChiaDriveType           : Temp
-VolumeName              : ChiaPlot 4 2TB SSD
-FreeSpace               : 678.18
-TotalSpace              : 1863
-IsPlottable             : False
-AmountOfPlotsToTempMax  : -2
-HasPlotInProgress       : True
-AmountOfPlotsInProgress : 4
-PlotInProgressName      : {plot-k32-2021-04-xx-0x-37-xxxxxx,
-                          plot-k32-2021-04-xx-0x-37-xxxxxx,
-                          plot-k32-2021-04-xx-0x-37-xxxxxx,
-                          plot-k32-2021-04-xx-0x-37-xxxxxx}
-                          
 DriveLetter             : E:
 ChiaDriveType           : Temp
 VolumeName              : ChiaPlot 3 Evo 860 512GB
-FreeSpace               : 238.99
+FreeSpace               : 437.28
 TotalSpace              : 465.76
-IsPlottable             : False
-AmountOfPlotsToTempMax  : 0
-HasPlotInProgress       : True
-AmountOfPlotsInProgress :
-PlotInProgressName      :
+hasFolder               : False
+IsPlottable             : True
+HasPlotInProgress       : False
+AmountOfPlotsInProgress : 0
+AmountOfPlotsToTempMax  : 1
+AvailableAmountToPlot   : 1
+PlotInProgressID        :
 
 DriveLetter             : F:
 ChiaDriveType           : Temp
 VolumeName              : ChiaPlot4 NVME FullDisk 1
-FreeSpace               : 246.88
+FreeSpace               : 446.76
 TotalSpace              : 465.75
-IsPlottable             : False
-AmountOfPlotsToTempMax  : 0
-HasPlotInProgress       : True
-AmountOfPlotsInProgress :
-PlotInProgressName      :
+hasFolder               : False
+IsPlottable             : True
+HasPlotInProgress       : False
+AmountOfPlotsInProgress : 0
+AmountOfPlotsToTempMax  : 1
+AvailableAmountToPlot   : 1
+PlotInProgressID        :
+
+DriveLetter             : H:
+ChiaDriveType           : Temp
+VolumeName              : ChiaPlot 2 Crucial CT 512 GB 2
+FreeSpace               : 450.99
+TotalSpace              : 476.94
+hasFolder               : False
+IsPlottable             : True
+HasPlotInProgress       : False
+AmountOfPlotsInProgress : 0
+AmountOfPlotsToTempMax  : 1
+AvailableAmountToPlot   : 1
+PlotInProgressID        :
+
+DriveLetter             : I:
+ChiaDriveType           : Temp
+VolumeName              : ChiaPlot 1 Crucial CT 512GB
+FreeSpace               : 451
+TotalSpace              : 476.94
+hasFolder               : False
+IsPlottable             : True
+HasPlotInProgress       : False
+AmountOfPlotsInProgress : 0
+AmountOfPlotsToTempMax  : 1
+AvailableAmountToPlot   : 1
+PlotInProgressID        :
+
+DriveLetter             : J:
+ChiaDriveType           : Temp
+VolumeName              : ChiaPlot 5 NVME 980 Pro
+FreeSpace               : 463.04
+TotalSpace              : 465.75
+hasFolder               : False
+IsPlottable             : True
+HasPlotInProgress       : False
+AmountOfPlotsInProgress : 0
+AmountOfPlotsToTempMax  : 1
+AvailableAmountToPlot   : 1
+PlotInProgressID        :
+
+DriveLetter             : Q:
+ChiaDriveType           : Temp
+VolumeName              : ChiaPlot 4 2TB SSD
+FreeSpace               : 1441.41
+TotalSpace              : 1863
+hasFolder               : True
+IsPlottable             : True
+HasPlotInProgress       : False
+AmountOfPlotsInProgress : 0
+AmountOfPlotsToTempMax  : 4
+AvailableAmountToPlot   : 4
+PlotInProgressID        :
 ```
 
 #### Parameters:
@@ -212,7 +243,7 @@ Calls Get-PlotoTempDrives to get all Temp drives that are plottable. For each te
 #### Example:
 
 ```powershell
-Invoke-PlotoJob -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $true -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 60
+Invoke-PlotoJob -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 0.1 -MaxParallelJobsOnAllDisks 2 -MaxParallelJobsOnSameDisk 1 -EnableBitfield $false -Verbose
 ```
 #### Output:
 
@@ -244,14 +275,14 @@ Continously calls Invoke-PlotoJob and states progress and other information. It 
 #### Example:
 
 ```powershell
-Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $true -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 60
+Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 0.1 -MaxParallelJobsOnAllDisks 2 -MaxParallelJobsOnSameDisk 1 -EnableBitfield $false -Verbose
 ```
 
 #### Output:
 
 ```
-PlotoManager @ 4/29/2021 1:45:38 PM : Amount of spawned Plots in this iteration: 1
-PlotoManager @ 4/29/2021 1:45:38 PM : Overall spawned Plots since start of script: 1
+PlotoManager @ 4/29/2021 1:45:38 PM : Amount of spawned Plots in this iteration: 2
+PlotoManager @ 4/29/2021 1:45:38 PM : Overall spawned Plots since start of script: 2
 ```
 
 #### Parameters:
@@ -299,8 +330,6 @@ See below for a definition of what phase coe is associated with which chia.exe l
 "Compressing tables 4 and 5" {$StatusReturn = "3.4"}
 "Compressing tables 5 and 6" {$StatusReturn = "3.5"}
 "Compressing tables 6 and 7" {$StatusReturn = "3.6"}
-"First computation pass time*" {$StatusReturn = "3.7"}
-"Second computation pass time*" {$StatusReturn = "3.8"}
 "Starting phase 4/4*" {$StatusReturn = "4.0"}
 "Writing C2 table*" {$StatusReturn = "4.1"}
 "Time for phase 4*" {$StatusReturn = "4.2"}
@@ -310,23 +339,21 @@ See below for a definition of what phase coe is associated with which chia.exe l
 
 #### Example:
 ```powershell
-Get-PlotoJobs
+Get-PlotoJobs | ft 
 ```
 
 #### Output:
 ```
-PlotoSpawnerJobId : 49ab3c48-532b-4f17-855d-3c5b4981528b
-PlotId            : xxxx176xxxx2f01fxxxxb3d2f338xxxxxxxxxxxxx
-PID               : 11856
-PlotJobPhase      : 1.1
-TempDrive         : E:
-OutDrive          : K:
-LogPath           : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b
-                    _Tmp-E_Out-K.txt
-StatLogPath       : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b
-                    _Tmp-E_Out-K@Stat.txt
-cpuUsagePercent   : 11.38
-memUsageMB        : 164
+PlotoSpawnerJobId                    PlotId                                                           PID  PlotJobPhase TempDrive OutDrive LogPath
+-----------------                    ------                                                           ---  ------------ --------- -------- -------
+2e39e295-ccd9-4abf-94e9-01a854cbfa24 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    E:        K:       C:\Users\...
+ed2133b0-018c-44db-81e7-61befbda8031 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    F:        D:       C:\Users\...
+bc3b44b1-b290-4487-a552-c4dda2e11366 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    H:        K:       C:\Users\...
+10e6deb5-6a13-4a0d-9c77-8c65d717bf6b xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    Q:        D:       C:\Users\...
+f865e425-ada4-44f0-8537-23a033aef302 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    Q:        D:       C:\Users\...
+b19eaef4-f9b3-4807-8870-a959e5aa3a21 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    I:        D:       C:\Users\...
+278615e9-8e4d-4af4-bfcc-4665412aae89 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    Q:        K:       C:\Users\...
+
 ```
 
 
@@ -341,9 +368,34 @@ Remove-AbortedJobs
 
 #### Output:
 ```
-PlotoRemoveAbortedJobs @ 5/1/2021 6:04:04 PM : Found aborted Jobs to be deleted:
-PlotoRemoveAbortedJobs @ 5/1/2021 6:04:04 PM : Cleaning up...
-PlotoRemoveAbortedJobs @ 5/1/2021 6:04:04 PM : Removed Amount of aborted Jobs: 0
+PlotoRemoveAbortedJobs @ 5/1/2021 6:42:24 PM : Found aborted Jobs to be deleted: 6cfb4e4a-cb71-4f2a-9387-17a8049ce625 85b08573-054d-46f0-b7e3-755f9ce021bc cbab519c-2f26-41c9-b3fa-8bcb0ba36d3a 2b0ab204-3b0e-4e8c-b04c-a884859ae637 f639cb35-23a8-4010-a1db-ab6186bd117c
+PlotoRemoveAbortedJobs @ 5/1/2021 6:42:24 PM : Cleaning up...
+PlotoStopJob @ 5/1/2021 6:42:24 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
+PlotoStopJob @ 5/1/2021 6:42:24 PM : Found .tmp files for this job to be deleted. Continue with deletion.
+PlotoStopJob @ 5/1/2021 6:42:24 PM : Removed temp files on F:
+PlotoStopJob @ 5/1/2021 6:42:24 PM : Removed log files for this job.
+PlotoStopJob @ 5/1/2021 6:42:25 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
+PlotoStopJob @ 5/1/2021 6:42:25 PM : Found .tmp files for this job to be deleted. Continue with deletion.
+PlotoStopJob @ 5/1/2021 6:42:25 PM : Removed temp files on H:
+PlotoStopJob @ 5/1/2021 6:42:25 PM : Removed log files for this job.
+PlotoStopJob @ 5/1/2021 6:42:25 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
+PlotoStopJob @ 5/1/2021 6:42:25 PM : Found .tmp files for this job to be deleted. Continue with deletion.
+PlotoStopJob @ 5/1/2021 6:42:25 PM : Removed temp files on E:
+PlotoStopJob @ 5/1/2021 6:42:25 PM : Removed log files for this job.
+PlotoStopJob @ 5/1/2021 6:42:26 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
+PlotoStopJob @ 5/1/2021 6:42:26 PM : Found .tmp files for this job to be deleted. Continue with deletion.
+PlotoStopJob @ 5/1/2021 6:42:26 PM : Removed temp files on J:
+PlotoStopJob @ 5/1/2021 6:42:26 PM : Removed log files for this job.
+PlotoStopJob @ 5/1/2021 6:42:26 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
+PlotoStopJob @ 5/1/2021 6:42:26 PM : Found .tmp files for this job to be deleted. Continue with deletion.
+PlotoStopJob @ 5/1/2021 6:42:26 PM : Removed temp files on I:
+PlotoStopJob @ 5/1/2021 6:42:26 PM : Removed log files for this job.
+PlotoRemoveAbortedJobs @ 5/1/2021 6:42:26 PM : Removed Amount of aborted Jobs: 5
+```
+The Error below is known and only says that the process is already closed. This is expected. In the future this error may be surpressed.
+
+```
+PlotoStopJob @ 5/1/2021 6:42:26 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
 ```
 
 # How to:
