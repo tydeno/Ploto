@@ -13,7 +13,7 @@ Way dumber than plotman. Still does what it should for all those Windows Farmers
 ### PlotoManage
 * [Get-PlotoJobs](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotojobs)
 * [Stop-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#stop-plotojob)
-* [Remove-AbortedJobs]
+* [Remove-AbortedJobs](https://github.com/tydeno/Ploto/blob/main/README.md#remove-abortedjobs)
 
 # PlotoSpawn
 TLDR: It plots 1x plot on each TempDrive (if you have 6x TempDrives = 6x parallel Plot Jobs) as long as you want it to and as long as you have OutDrive space.
@@ -447,6 +447,10 @@ PID  PlotJobPhase TempDrive OutDrive cpuUsagePercent memUsageMB PlotSizeOnDisk
 ```powershell
 Stop-PlotoJob -PlotSpawnerId cfff29b8-fdee-4988-ae89-9db035d809bc
 ```
+or if you want to Stop all Jobs that are aborted:
+```powershell
+Remove-AbortedPlotoJobs
+```
 
 # FAQ
 > Can I shut down the script when I dont want Ploto to spawn more Plots?
@@ -460,7 +464,7 @@ Ploto has its bugs and limitations here and there.
 These are known:
 * Only works when plotting in root of drives
 * Only works when Drives are dedicated to plotting (dont hold any other files)
-* Can only display PlotJobs that have been spawned using PlotoSpawner
+* Can only display and stop PlotJobs that have been spawned using PlotoSpawner
 * Using the -PerfCounter param on Get-PlotoJobs takes a while to load
 
 
