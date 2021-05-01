@@ -441,7 +441,7 @@ Ploto has its bugs and limitations here and there.
 
 These are known:
 * Only works when plotting in root of drives
-* Can only display PLotJobs that have been spawned using PlotoSpawner
+* Can only display PlotJobs that have been spawned using PlotoSpawner
 * Using the -PerfCounter param on Get-PlotoJobs takes a while to load
 
 
