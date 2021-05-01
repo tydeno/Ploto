@@ -163,6 +163,11 @@ function Invoke-PlotoJob
    $oldverbose = $VerbosePreference
    $VerbosePreference = "continue" }
 
+if ($MaxParallelJobsOnSameDisk -eq $null)
+    {
+        $MaxParallelJobsOnSameDisk = 1
+    }
+
 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Invoking PlotoJobs started.")
 
 $PlottableTempDrives = Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom | ? {$_.IsPlottable -eq $true}   
@@ -865,3 +870,6 @@ function Start-PlotoMove
 
     Until ($count -eq $endlessCount)
 }
+
+
+
