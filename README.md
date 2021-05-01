@@ -13,6 +13,7 @@ Way dumber than plotman. Still does what it should for all those Windows Farmers
 ### PlotoManage
 * [Get-PlotoJobs](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotojobs)
 * [Stop-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#stop-plotojob)
+* [Remove-AbortedJobs]
 
 # PlotoSpawn
 TLDR: It plots 1x plot on each TempDrive (if you have 6x TempDrives = 6x parallel Plot Jobs) as long as you want it to and as long as you have OutDrive space.
@@ -211,7 +212,7 @@ Calls Get-PlotoTempDrives to get all Temp drives that are plottable. For each te
 #### Example:
 
 ```powershell
-Invoke-PlotoJob -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $true -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 60
+Invoke-PlotoJob -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $true -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 60
 ```
 #### Output:
 
@@ -263,7 +264,6 @@ PlotoManager @ 4/29/2021 1:45:38 PM : Overall spawned Plots since start of scrip
 |WaitTimeBetweenPlotOnSeparateDisks | Yes | Int | See Parameters Section of [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-2)
 |WaitTimeBetweenPlotOnSameDisk | Yes | Int | See Parameters Section of [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-2)
 |EnableBitfield | No | bool | See Parameters Section of [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-2)
-|ParallelAmount | No | String | See Parameters Section of [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-2)
 
 # PlotoManage
 Allows you to check status of your current plot jobs aswell as stopping them and cleaning the temp drives.
@@ -327,6 +327,23 @@ StatLogPath       : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_0_49_
                     _Tmp-E_Out-K@Stat.txt
 cpuUsagePercent   : 11.38
 memUsageMB        : 164
+```
+
+
+## Remove-AbortedJobs
+Gets all Jobs from Get-PlotoJobs that are aborted (where no process runs to PID) and foreach call Stop-PlotoJob
+
+#### Example:
+
+```powershell
+Remove-AbortedJobs
+```
+
+#### Output:
+```
+PlotoRemoveAbortedJobs @ 5/1/2021 6:04:04 PM : Found aborted Jobs to be deleted:
+PlotoRemoveAbortedJobs @ 5/1/2021 6:04:04 PM : Cleaning up...
+PlotoRemoveAbortedJobs @ 5/1/2021 6:04:04 PM : Removed Amount of aborted Jobs: 0
 ```
 
 # How to:
@@ -410,7 +427,7 @@ CompletionTimeInHours : Still in progress
 
 To get a better Overview, select the Proprties you want to see and use Format-Table:
 ```powershell
-Get-PlotoJobs -PerfCounter $true | ? {$_.PLotJobPhase -ne "Completed"} | select PID, PlotJobPhase, TempDrive, OutDrive, cpuUsagePercent, memUsageMB, PlotSizeOnDisk | ft
+Get-PlotoJobs -PerfCounter | ? {$_.PLotJobPhase -ne "Completed"} | select PID, PlotJobPhase, TempDrive, OutDrive, cpuUsagePercent, memUsageMB, PlotSizeOnDisk | ft
 ```
 
 ```
