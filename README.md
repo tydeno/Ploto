@@ -8,12 +8,17 @@ Way dumber than plotman. Still does what it should for all those Windows Farmers
 * [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotooutdrives)
 * [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#get-plototempdrives)
 * [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#invoke-plotojob)
-* [Start-PlotoSpawns](https://github.com/tydeno/Ploto/blob/main/README.md#start-plotospawns)
+* [Start-PlotoSpawn](https://github.com/tydeno/Ploto/blob/main/README.md#start-plotospawns)
 
 ### PlotoManage
 * [Get-PlotoJobs](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotojobs)
 * [Stop-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#stop-plotojob)
 * [Remove-AbortedJobs](https://github.com/tydeno/Ploto/blob/main/README.md#remove-abortedjobs)
+
+### PlotoMove
+* Get-PlotoPlots
+* Move-PlotoPlots
+* Start-PlotoMove
 
 # PlotoSpawn
 TLDR: It plots 1x plot on each TempDrive (if you have 6x TempDrives = 6x parallel Plot Jobs) as long as you want it to and as long as you have OutDrive space.
@@ -525,52 +530,65 @@ So what works for me, may not ultimately work for you.
 Please also bear in mind that unexpoected beahviour and or bugs are possible.
 
 
-#### Parameters:
-| Name          | Required | Type   | Description                                                                                                                              |
-|---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
-| |    | | 
-
-
-
 # PlotoMove
 Continously searches for final Plots on your OutDrives and moves them to your desired location. I do this for transferring plots from my plotting machine to my farming machine.
 
 ## Get-PlotoPlots
+Searches defined Outdrives for Final Plots (file that end upon .plot) and returns an array with final plots.
 
 #### Example:
 ```powershell
+Get-PlotoPlots -OutDriveDenom "out"
 ```
 
 #### Output:
-```powershell
+```
+Iterating trough Drive:  @{DriveLetter=D:; ChiaDriveType=Out; VolumeName=ChiaOut2; FreeSpace=59.04; TotalSpace=0; IsPlottable=False; AmountOfPlotsToHold=0}
+Checking if any item in that drive contains .PLOT as file ending...
+Found a Final plot:  plot-k32-2021-04-30-18-52-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
+Found a Final plot:  plot-k32-2021-04-30-19-02-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
+Found a Final plot:  plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
+Found a Final plot:  plot-k32-2021-04-30-19-42-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
+Iterating trough Drive:  @{DriveLetter=K:; ChiaDriveType=Out; VolumeName=ChiaOut3; FreeSpace=262.86; TotalSpace=0; IsPlottable=True; AmountOfPlotsToHold=2}
+Checking if any item in that drive contains .PLOT as file ending...
+Found a Final plot:  plot-k32-2021-04-30-18-57-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
+Found a Final plot:  plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
+--------------------------------------------------------------------------------------------------
+
+FilePath                                                                                           Name
+--------                                                                                           ----
+D:\plot-k32-2021-04-30-18-52-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
+D:\plot-k32-2021-04-30-19-02-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
+D:\plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
+D:\plot-k32-2021-04-30-19-42-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
+K:\plot-k32-2021-04-30-18-57-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
+K:\plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
 ```
 
 #### Parameters:
 | Name          | Required | Type   | Description                                                                                                                              |
 |---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
-| |    | | 
-
+| OutDriveDenom | Yes      | String | See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters) 
 
 
 ## Move-PlotoPlots
+Grabs the found plots from Get-PlotoPlots and moves them to either a local/external drive using Move-Item cmdlet or to a UNC path using Background Intelligence TRansfer Service (Bits). You can define the OutDrives to search for Plots, TransferMethod and Destination.
+
+Make sure TrasnferMethod and Destination match. 
 
 #### Example:
 
 ```powershell
+Move-PlotoPlots -DestinationDrive "\\Desktop-xxxxx\d" -OutDriveDenom "out" -TransferMethod BITS
 ```
 
 #### Output:
-```powershell
+```
+PlotoMover @ 5/1/2021 7:08:09 PM : Moving plot:  D:\plot-k32-2021-04-30-18-52-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot to \\Desktop-xxxxx\d using BITS
 ```
 #### Parameters:
 | Name          | Required | Type   | Description                                                                                                                              |
 |---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
-| |    | | 
-
-
-
-
-
-
-
-
+| DestinationDrive| Yes    | String | The destination drive you want the plot to be moved to. Accpets UNC Paths aswell as DriveLetters (eg E:)
+| OutDriveDenim | Yes | String | See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters) 
+| TransferMethod | Yes | String | Defines TransferMethod to be used. If local drive use "Move-Item". If UNC path use "BITS".
