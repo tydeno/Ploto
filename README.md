@@ -55,11 +55,17 @@ Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "p
 ```
 
 the following will happen:
-If there is enough free space on the temp and out drive, Ploto spawns 1x job on each disk with the specified wait time between jobs. For each job, it calculates the mot suitable out drive anew, being aware of the plot jobs in progress on that disk. So it should not allow over commiting of temp and or out drives.
+If there is enough free space on the temp and out drive, Ploto spawns 1x job on each disk with the specified wait time between jobs. For each job, it calculates the mot suitable out drive anew, being aware of the plot jobs in progress on that disk.
 
-If I launch PlotoSpawner with max Parallel Amount param like this:
+### I need more parallelization
+
+Using the Parameter "-MaxParallelJobsOnAllDisks", you can define how many Plots Jobs overall there should be. So this will be your hard cap. If there are as many jobs as you defined as max, PlotoSpawner wont spawn further Jobs. This keeps your system from overcommiting.
+
+Using "-MaxParallelJobsOnSameDisks" you can define how many PlotsJobs there should be in parallel on a single disk. This param affects all Disks that can host more than 1 Plot. Still Ploto checks if the drive has enough SPace to temp that many plots.
+
+If I launch PlotoSpawner with these params like this:
 ```powershell
-Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $false -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 30 -WaitTimeBetweenPlotOnSameDisk 60
+Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $false -WaitTimeBetweenPlotOnSeparateDisks 15 -WaitTimeBetweenPlotOnSameDisk 30 -MaxParallelJobsOnAllDisks 8 -MaxParallelJobsOnSameDisk 3
 ```
 
 PlotoSpawner will max out the available temp drives. This means for my temp drive setup the following:
@@ -68,14 +74,13 @@ PlotoSpawner will max out the available temp drives. This means for my temp driv
 |ChiaPlot 1 | I:\ | SATA SSD | 465 GB | 1
 |ChiaPlot 2 | H:\ | SATA SSD | 465 GB | 1
 |ChiaPlot 3 | E:\ | SATA SSD | 465 GB | 1
-|ChiaPlot 4 | Q:\ | SATA SSD | 1810 GB | 5
+|ChiaPlot 4 | Q:\ | SATA SSD | 1810 GB | 3
 |ChiaPlot 5 | J:\ | NVME SSD PCI 16x | 465 GB | 1
 
-So there will be 9x Plot jobs running in parallel with defined wait time in minutes betwen jobs on each disk.
+So there will be 8x Plot jobs running in parallel with defined wait time in minutes betwen jobs on each disk and the same Disk. 
+Drive J:\ will never see more than 3x Plots in parallel as defined by -MaxParallelJobsOnSameDisk 3
 
-WWARNING: This may overcommit your plotter by far! Pay attention when using it, because maxing really means maxing all available drive space, not taking RAM/CPU etc. in condieration).
-
-When a job is done and a temp drive becomes available again, PlotoSpawner will spawn the next jobs, until it has spawned the amount you specified as -InputAmountToSpawn
+When a job is done and a temp drive becommes available again, PlotoSpawner will spawn the next jobs, until it has spawned the amount you specified as -InputAmountToSpawn or it reaches it max cap.
 
 PlotoSpawner redirects the output of chia.exe to to the following path: 
 * C:\Users\me\.chia\mainnet\plotter\
@@ -377,6 +382,42 @@ ad917660-9de9-4810-8977-6ace317d7ddb xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 2b8596cd-3369-4e8c-a04f-26c85acdfd82 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 9752  2.1          Q:        K:       C:\Users\me\.chia...
 cfff29b8-fdee-4988-ae89-9db035d809bc xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 11176 1.6          Q:        K:       C:\Users\me\.chia...
 ```
+
+Check Jobs With PerformanceCounters:
+```powershell
+Get-PlotoJobs -PerfCounter $true
+```
+
+```
+PlotoSpawnerJobId     : 10e6deb5-6a13-4a0d-9c77-8c65d717bf6b
+PlotId                : 332f93247b707d3bcf977889edff9bcbc9f0c3d3e30bfd941328bd7bf424f03a
+PID                   : 6648
+PlotJobPhase          : 3.6
+TempDrive             : Q:
+OutDrive              : D:
+LogPath               : C:\Users\Yanik\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_19_12_10e6deb5-6a13-4a0d-9c77-8c65d71
+                        7bf6b_Tmp-Q_Out-D.txt
+StatLogPath           : C:\Users\Yanik\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_19_12_10e6deb5-6a13-4a0d-9c77-8c65d71
+                        7bf6b_Tmp-Q_Out-D@Stat.txt
+PlotSizeOnDisk        : 48.03 GB
+cpuUsagePercent       : 0.49
+memUsageMB            : 2676
+CompletionTimeInHours : Still in progress
+```
+
+To get a better Overview, select the Proprties you want to see and use Format-Table:
+```powershell
+Get-PlotoJobs -PerfCounter $true | ? {$_.PLotJobPhase -ne "Completed"} | select PID, PlotJobPhase, TempDrive, OutDrive, cpuUsagePercent, memUsageMB, PlotSizeOnDisk | ft
+```
+
+```
+PID  PlotJobPhase TempDrive OutDrive cpuUsagePercent memUsageMB PlotSizeOnDisk
+---  ------------ --------- -------- --------------- ---------- --------------
+8144 3.5          Q:        K:                  0.58       2130 89.46 GB
+6648 3.6          Q:        D:                  6.24       2676 48.03 GB
+5444 3.6          Q:        D:                  3.29       2676 48.03 GB
+```
+
 
 ## Stop Jobs
 1. Open a PowerShell session and import Module "Ploto" or use an existing one.
