@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.4
+Version: 1.0.5
 Author: Tydeno
 
 
@@ -672,7 +672,6 @@ function Remove-AbortedPlotoJobs
 
 }
 
-
 function Get-PlotoPlots
 {
 	Param(
@@ -747,9 +746,9 @@ function Move-PlotoPlots
 		[parameter(Mandatory=$true)]
 		$OutDriveDenom,
 		[parameter(Mandatory=$true)]
+        [ValidateSet("BITS", "Move-Item", IgnoreCase = $true)]
 		$TransferMethod
 		)
-
 
 $PlotsToMove = Get-PlotoPlots -OutDriveDenom $OutDriveDenom
 
@@ -835,10 +834,7 @@ if ($PlotsToMove)
                         {
                             Write-Host "PlotoMover @"(Get-Date)": Local Destination Drive does not have enough disk space. Cant move." -ForegroundColor Red
                         }
-
-                   
                 }
-
         }
     }
 
@@ -856,6 +852,7 @@ function Start-PlotoMove
 		$DestinationDrive,
 		[parameter(Mandatory=$true)]
 		$OutDriveDenom,
+        [ValidateSet("BITS", "Move-Item", IgnoreCase = $true)]
         $TransferMethod
 		)
 
