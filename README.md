@@ -16,9 +16,9 @@ Way dumber than plotman. Still does what it should for all those Windows Farmers
 * [Remove-AbortedJobs](https://github.com/tydeno/Ploto/blob/main/README.md#remove-abortedjobs)
 
 ### PlotoMove
-* Get-PlotoPlots
-* Move-PlotoPlots
-* Start-PlotoMove
+* [Get-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotoplots)
+* [Move-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/README.md#move-plotoplots)
+* [Start-PlotoMove](https://github.com/tydeno/Ploto/blob/main/README.md#start-plotomove)
 
 # PlotoSpawn
 TLDR: It plots 1x plot on each TempDrive (if you have 6x TempDrives = 6x parallel Plot Jobs) as long as you want it to and as long as you have OutDrive space.
