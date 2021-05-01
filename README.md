@@ -27,6 +27,8 @@ After that, Ploto checks if amount Spawned is equal as defined as input. If not,
 You can specify several vital parameters to control when and where plots are spawned, temped and stored. 
 PlotoSpawner identifies your drives for temping and storing plots by a common denominator you specify. 
 
+IMPORTANT: Ploto Assumes you Plot in the root of your Drives. So make sure you do that aswell.
+
 For reference heres my setup:
 * CPU: i9-9900k
 * RAM: 32 GB DDR4
@@ -48,7 +50,6 @@ For reference heres my setup:
 |ChiaOut 2 | D:\ | SATA HDD | 465 GB
 
 So my denominators for my TempDrives its "plot" and for my destination drives its "out".
-IMPORTANT: Ploto Assumes you Plot in the root of your Drives. So make sure you do that aswell.
 
 By default, Ploto spawns only 1x Plot Job on each Disk in parallel. So when I launch Ploto with default amount to spawn:
 ```powershell
@@ -433,6 +434,15 @@ Stop-PlotoJob -PlotSpawnerId cfff29b8-fdee-4988-ae89-9db035d809bc
 > Can I shut down the script when I dont want Ploto to spawn more Plots?
 
 Yep. The individual Chia Plot Jobs wont be affected by that.
+
+
+# Knowns Bugs and Limitations
+Ploto has its bugs and limitations here and there.
+
+These are known:
+* Only works when plotting in root of drives
+* Can only display PLotJobs that have been spawned using PlotoSpawner
+* Using the -PerfCounter param on Get-PlotoJobs takes a while to load
 
 
 
