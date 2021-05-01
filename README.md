@@ -458,7 +458,7 @@ cfff29b8-fdee-4988-ae89-9db035d809bc xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 Check Jobs With PerformanceCounters:
 ```powershell
-Get-PlotoJobs -PerfCounter $true
+Get-PlotoJobs -PerfCounter 
 ```
 
 ```
