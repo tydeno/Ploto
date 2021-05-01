@@ -616,7 +616,9 @@ Yep. The individual Chia Plot Jobs wont be affected by that.
 
 
 # Knowns Bugs and Limitations
-Ploto has its bugs and limitations here and there.
+Please be aware that Ploto was built for my specific setup. I try to generalize it as much as possible, but thats not easy-breezy.
+So what works for me, may not ultimately work for you. 
+Please also bear in mind that unexpoected beahviour and or bugs are possible.
 
 These are known:
 * Only works when plotting in root of drives
@@ -624,9 +626,8 @@ These are known:
 * Can only display and stop PlotJobs that have been spawned using PlotoSpawner
 * Using the -PerfCounter param on Get-PlotoJobs takes a while to load
 * PlotoMover is very limited right now, may break copy jobs at times (Bits)
+* PlotoMover does not check for available free space on network drives as its unaware of it (only does for local drives)
 
-Please be aware that Ploto was built for my specific setup. I try to generalize it as much as possible, but thats not easy-breezy.
-So what works for me, may not ultimately work for you. 
-Please also bear in mind that unexpoected beahviour and or bugs are possible.
+
 
 
