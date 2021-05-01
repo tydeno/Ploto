@@ -594,15 +594,16 @@ If you want to move your plots to a UNC path just once:
 1. Launch a PowerShell session and Import Ploto Module
 2. Launch Move-PlotoPLots
 
-powershell
+```powershell
 Move-PlotoPlots -DestinationDrive "\\Desktop-xxxxx\d" -OutDriveDenom "out" -TransferMethod Move-Item
 ```
+
 Please be aware that if you use UNC paths as Destination, PlotoMover cannot grab the free space there and just fires off.
 
 ## But I want it do it continously!
 Sure, just use Start-PlotoMove with your needed params:
 
-```
+```powershell
 Move-PlotoPlots -DestinationDrive "\\Desktop-xxxxx\d" -OutDriveDenom "out" -TransferMethod Move-Item
 ```
 
