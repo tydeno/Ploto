@@ -29,7 +29,8 @@ You can specify several vital parameters to control when and where plots are spa
 PlotoSpawner identifies your drives for temping and storing plots by a common denominator you specify. 
 
 IMPORTANT: Ploto Assumes you Plot in the root of your Drives and that the Drives are dedicated to plotting. So make sure you do that aswell.
-It wont work when the drives contains other data.
+It may work when the drives contains other data but, but Ploto was designed for empty, plot-only drives.
+EDIT: I noticed I have a folder in my Q:\ drive with some data. So it seems to work. 
 
 For reference heres my setup:
 * CPU: i9-9900k
@@ -519,6 +520,9 @@ These are known:
 * Can only display and stop PlotJobs that have been spawned using PlotoSpawner
 * Using the -PerfCounter param on Get-PlotoJobs takes a while to load
 
+Please be aware that Ploto was built for my specific setup. I try to generalize it as much as possible, but thats not easy-breezy.
+So what works for me, may not ultimately work for you. 
+Please also bear in mind that unexpoected beahviour and or bugs are possible.
 
 
 #### Parameters:
