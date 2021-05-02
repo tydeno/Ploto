@@ -154,7 +154,7 @@ And creates two log files for each job with the following notation:
 
 # Prereqs
 The following prereqs need to be met in order for Ploto to function properly:
-* chia.exe is installed 
+* chia.exe is installed (version is determined automatically) 
 * You may need to change PowerShell Execution Policy to allow the script to be imported.
 
 You can do it by using Set-ExecutionPolicy like this:
@@ -679,3 +679,5 @@ These are known:
 * Using the -PerfCounter param on Get-PlotoJobs takes a while to load
 * PlotoMover is very limited right now, may break copy jobs at times (Bits)
 * PlotoMover does not check for available free space on network drives as its unaware of it (only does for local drives)
+* If you have more than 1x version of chia within your C:\Users\Me\AppData\Local\chia-blockchain folder, Ploto wont be able to determine the version and will fail.
+  Make sure theres only one available folder with chia.exe (eg. app-1.1.3)
