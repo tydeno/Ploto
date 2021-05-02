@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.5
+Version: 1.0.5.1
 Author: Tydeno
 
 
@@ -513,7 +513,9 @@ foreach ($log in $logs)
                            $tempDrive = ($loggerRead -match "TempDrive").line.Split("=").split(";")[1]
                            $chiaPid = ($loggerRead -match "PID").line.Split(" ")[1]
                            $PlotoSpawnerJobId = ($loggerRead -match "PlotoSpawnerJobId").line.Split(" ")[1]
-                           $StartTime = ($loggerRead -match "StartTime").line.Split(":")[1]
+                           $StartTimeSplitted = ($loggerRead -match "StartTime").line.Split(":")
+                           $StartTime = $StartTimeSplitted[1]+":" + $StartTimeSplitted[2]+":" + $StartTimeSplitted[3]
+                           
                            $StatLogPath = $logger.FullName
 
                                   
