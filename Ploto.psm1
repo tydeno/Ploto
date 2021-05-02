@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.5.1
+Version: 1.0.5.2
 Author: Tydeno
 
 
@@ -475,6 +475,7 @@ foreach ($log in $logs)
                 "Computing table 2" {$StatusReturn = "1.3"}
                 "Computing table 3" {$StatusReturn = "1.4"}
                 "Computing table 4" {$StatusReturn = "1.5"}
+                "Computing table 5" {$StatusReturn = "1.6"}
                 "Computing table 6" {$StatusReturn = "1.7"}
                 "Computing table 7" {$StatusReturn = "1.8"}
                 "Starting phase 2/4*" {$StatusReturn = "2.0"}
