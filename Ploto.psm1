@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.5.3
+Version: 1.0.5.4
 Author: Tydeno
 
 
@@ -393,13 +393,15 @@ function Start-PlotoSpawns
 	$InputAmountToSpawn,
 	[parameter(Mandatory=$true)]
 	$OutDriveDenom,
-	[parameter(Mandatory=$true)]
+	[parameter(Mandatory=$false)]
 	$WaitTimeBetweenPlotOnSeparateDisks,
 	[parameter(Mandatory=$true)]
 	$WaitTimeBetweenPlotOnSameDisk,
 	[parameter(Mandatory=$true)]
 	$TempDriveDenom,
+    [parameter(Mandatory=$true)]
     $MaxParallelJobsOnAllDisks,
+    [parameter(Mandatory=$false)]
     $MaxParallelJobsOnSameDisk,
     $EnableBitfield
     )
@@ -874,3 +876,6 @@ function Start-PlotoMove
 
     Until ($count -eq $endlessCount)
 }
+
+
+
