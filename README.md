@@ -692,3 +692,4 @@ These are known:
   PlotoStopJob @ 5/2/2021 4:40:00 PM : ERROR:  The process cannot access the file 'F:\plot-k32-2021-05-02-15-19-     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.plot.2.tmp' because it is being used by another process.
   PlotoStopJob @ 5/2/2021 4:40:00 PM : ERROR:  The process cannot access the file 'C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_2_5_15_19_57d207db-ee3e-4d03-b38d- a0eb20711bbd_Tmp-F_Out-D.txt' because it is being used by another process.
   ```
+  This is due to the fact that when chia.exe was closed by Stop-PlotoJob, theres still 
