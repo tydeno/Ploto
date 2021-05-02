@@ -1,9 +1,6 @@
 # Ploto
 A basic Windows PowerShell based Chia Plotting Manager. Cause I was tired of spawning them myself.
-Basically spawns Plots. 
-
-Way dumber than plotman. Still does what it should for all those Windows Farmers out there.
-
+Consists of a PowerShell Module that allows to spawn, manage and move plots.
 
 # At a glance
 
