@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.5.2
+Version: 1.0.5.3
 Author: Tydeno
 
 
@@ -148,7 +148,7 @@ function Invoke-PlotoJob
 		$TempDriveDenom,
 	    [parameter(Mandatory=$true)]
 	    $WaitTimeBetweenPlotOnSeparateDisks,
-	    [parameter(Mandatory=$true)]
+	    [parameter(Mandatory=$false)]
 	    $WaitTimeBetweenPlotOnSameDisk,
         [Parameter(Mandatory=$true)]
         $MaxParallelJobsOnAllDisks,
@@ -166,6 +166,10 @@ function Invoke-PlotoJob
 if ($MaxParallelJobsOnSameDisk -eq $null)
     {
         $MaxParallelJobsOnSameDisk = 1
+    }
+if ($WaitTimeBetweenPlotOnSameDisk -eq $null)
+    {
+        $WaitTimeBetweenPlotOnSameDisk = 0.1
     }
 
 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Invoking PlotoJobs started.")
@@ -870,6 +874,3 @@ function Start-PlotoMove
 
     Until ($count -eq $endlessCount)
 }
-
-
-
