@@ -681,3 +681,14 @@ These are known:
 * PlotoMover does not check for available free space on network drives as its unaware of it (only does for local drives)
 * If you have more than 1x version of chia within your C:\Users\Me\AppData\Local\chia-blockchain folder, Ploto wont be able to determine the version and will fail.
   Make sure theres only one available folder with chia.exe (eg. app-1.1.3)
+* If you stop a PlotJob using "Stop-PlotoJob" you may receive the following error:
+  ```powershell
+  Stop-PlotoJob -JobId 57d207db-ee3e-4d03-b38d-a0eb20711bbd
+  ```
+
+  ```
+  PlotoStopJob @ 5/2/2021 4:40:00 PM : Stopped chia.exe with PID: 5336
+  PlotoStopJob @ 5/2/2021 4:40:00 PM : Found .tmp files for this job to be deleted. Continue with deletion.
+  PlotoStopJob @ 5/2/2021 4:40:00 PM : ERROR:  The process cannot access the file 'F:\plot-k32-2021-05-02-15-19-     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.plot.2.tmp' because it is being used by another process.
+  PlotoStopJob @ 5/2/2021 4:40:00 PM : ERROR:  The process cannot access the file 'C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_2_5_15_19_57d207db-ee3e-4d03-b38d- a0eb20711bbd_Tmp-F_Out-D.txt' because it is being used by another process.
+  ```
