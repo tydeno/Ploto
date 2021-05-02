@@ -10,7 +10,7 @@ Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "p
 ```
 ```
 PlotoSpawner @ 4/30/2021 3:19:13 AM : Spawned the following plot Job:
-PlotoSpawnerJobId : ad917660-9de9-4810-8977-6ace317d7ddb
+JobId             : ad917660-9de9-4810-8977-6ace317d7ddb
 ProcessID         : 13192
 OutDrive          : K:
 TempDrive         : Q:
@@ -28,7 +28,7 @@ Get-PlotoJobs | ft
 ```
 
 ```
-PlotoSpawnerJobId                    PlotId                                                           PID   PlotJobPhase TempDrive OutDrive LogPath
+JobId                                PlotId                                                           PID   Status      TempDrive OutDrive LogPath
 -----------------                    ------                                                           ---   ------------ --------- -------- -------
 49ab3c48-532b-4f17-855d-3c5b4981528b xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 11856 3.6          E:        K:       C:\Users\me\.chia...
 8a0cc01e-37e7-4507-ad6e-cad9401c1381 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 9184  3.6          F:        K:       C:\Users\me\.chia...
@@ -37,7 +37,10 @@ PlotoSpawnerJobId                    PlotId                                     
 2120b771-2376-49f5-8d47-99a411865ec9 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 14228 3.3          J:        D:       C:\Users\ne\.chia...
 ad917660-9de9-4810-8977-6ace317d7ddb xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 13192 2.2          Q:        K:       C:\Users\me\.chia...
 2b8596cd-3369-4e8c-a04f-26c85acdfd82 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 9752  2.1          Q:        K:       C:\Users\me\.chia...
-cfff29b8-fdee-4988-ae89-9db035d809bc xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 11176 1.6          Q:        K:       C:\Users\me\.chia...
+cfff29b8-fdee-4985-ae69-9db035d809bc xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 11176 Completed    Q:        K:       C:\Users\me\.chia...
+sfff29b8-fdee-4928-ae89-9db035d809bc xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 11176 Completed    Q:        K:       C:\Users\me\.chia..
+kfff3898-fdee-4908-ae89-9db035d809bc xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 11176 Error        Q:        K:       C:\Users\me\.chia..
+hfff29b8-fdee-4988-ae89-9db035d809bc xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 11176 Error        Q:        K:       C:\Users\me\.chia..
 ```
 
 ```powershell
@@ -333,7 +336,7 @@ Continously calls Invoke-PlotoJob and states progress and other information. It 
 #### Example:
 
 ```powershell
-Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 0.1 -MaxParallelJobsOnAllDisks 2 -MaxParallelJobsOnSameDisk 1 -EnableBitfield $false -Verbose
+Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 0.1 -MaxParallelJobsOnAllDisks 2 -MaxParallelJobsOnSameDisk 1 -EnableBitfield $false 
 ```
 
 #### Output:
@@ -402,7 +405,7 @@ Get-PlotoJobs | ft
 
 #### Output:
 ```
-PlotoSpawnerJobId                    PlotId                                                           PID  PlotJobPhase TempDrive OutDrive LogPath
+JobId                                PlotId                                                           PID  Status       TempDrive OutDrive LogPath
 -----------------                    ------                                                           ---  ------------ --------- -------- -------
 2e39e295-ccd9-4abf-94e9-01a854cbfa24 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    E:        K:       C:\Users\...
 ed2133b0-018c-44db-81e7-61befbda8031 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    F:        D:       C:\Users\...
@@ -536,7 +539,7 @@ Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "p
 ```
 ```
 PlotoSpawner @ 4/30/2021 3:19:13 AM : Spawned the following plot Job:
-PlotoSpawnerJobId : ad917660-9de9-4810-8977-6ace317d7ddb
+JobId :           ad917660-9de9-4810-8977-6ace317d7ddb
 ProcessID         : 13192
 OutDrive          : K:
 TempDrive         : Q:
@@ -565,7 +568,7 @@ Get-PlotoJobs | ft
 ```
 
 ```
-PlotoSpawnerJobId                    PlotId                                                           PID   PlotJobPhase TempDrive OutDrive LogPath
+JobId                                PlotId                                                           PID   Status       TempDrive OutDrive LogPath
 -----------------                    ------                                                           ---   ------------ --------- -------- -------
 49ab3c48-532b-4f17-855d-3c5b4981528b xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 11856 3.6          E:        K:       C:\Users\me\.chia...
 8a0cc01e-37e7-4507-ad6e-cad9401c1381 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 9184  3.6          F:        K:       C:\Users\me\.chia...
@@ -583,10 +586,10 @@ Get-PlotoJobs -PerfCounter
 ```
 
 ```
-PlotoSpawnerJobId     : 10e6deb5-6a13-4a0d-9c77-8c65d717bf6b
+JobId                 : 10e6deb5-6a13-4a0d-9c77-8c65d717bf6b
 PlotId                : 332f93247b707d3bcf977889edff9bcbc9f0c3d3e30bfd941328bd7bf424f03a
 PID                   : 6648
-PlotJobPhase          : 3.6
+Status                : 3.6
 TempDrive             : Q:
 OutDrive              : D:
 LogPath               : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_19_12_10e6deb5-6a13-4a0d-9c77-8c65d71
@@ -601,11 +604,11 @@ CompletionTimeInHours : Still in progress
 
 To get a better Overview, select the Proprties you want to see and use Format-Table:
 ```powershell
-Get-PlotoJobs -PerfCounter | ? {$_.PLotJobPhase -ne "Completed"} | select PID, PlotJobPhase, TempDrive, OutDrive, cpuUsagePercent, memUsageMB, PlotSizeOnDisk | ft
+Get-PlotoJobs -PerfCounter | ? {$_.Status -ne "Completed"} | select PID, Status, TempDrive, OutDrive, cpuUsage, memUsageMB, PlotSizeOnDisk | ft
 ```
 
 ```
-PID  PlotJobPhase TempDrive OutDrive cpuUsagePercent memUsageMB PlotSizeOnDisk
+PID  Status       TempDrive OutDrive cpuUsagePercent memUsageMB PlotSizeOnDisk
 ---  ------------ --------- -------- --------------- ---------- --------------
 8144 3.5          Q:        K:                  0.58       2130 89.46 GB
 6648 3.6          Q:        D:                  6.24       2676 48.03 GB
@@ -619,7 +622,7 @@ PID  PlotJobPhase TempDrive OutDrive cpuUsagePercent memUsageMB PlotSizeOnDisk
 3. Stop the process:
 
 ```powershell
-Stop-PlotoJob -PlotSpawnerId cfff29b8-fdee-4988-ae89-9db035d809bc
+Stop-PlotoJob -JobId cfff29b8-fdee-4988-ae89-9db035d809bc
 ```
 or if you want to Stop all Jobs that are aborted:
 ```powershell
@@ -681,15 +684,3 @@ These are known:
 * PlotoMover does not check for available free space on network drives as its unaware of it (only does for local drives)
 * If you have more than 1x version of chia within your C:\Users\Me\AppData\Local\chia-blockchain folder, Ploto wont be able to determine the version and will fail.
   Make sure theres only one available folder with chia.exe (eg. app-1.1.3)
-* If you stop a PlotJob using "Stop-PlotoJob" you may receive the following error:
-  ```powershell
-  Stop-PlotoJob -JobId 57d207db-ee3e-4d03-b38d-a0eb20711bbd
-  ```
-
-  ```
-  PlotoStopJob @ 5/2/2021 4:40:00 PM : Stopped chia.exe with PID: 5336
-  PlotoStopJob @ 5/2/2021 4:40:00 PM : Found .tmp files for this job to be deleted. Continue with deletion.
-  PlotoStopJob @ 5/2/2021 4:40:00 PM : ERROR:  The process cannot access the file 'F:\plot-k32-2021-05-02-15-19-     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.plot.2.tmp' because it is being used by another process.
-  PlotoStopJob @ 5/2/2021 4:40:00 PM : ERROR:  The process cannot access the file 'C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_2_5_15_19_57d207db-ee3e-4d03-b38d- a0eb20711bbd_Tmp-F_Out-D.txt' because it is being used by another process.
-  ```
-  This is due to the fact that when chia.exe was closed by Stop-PlotoJob, theres still 
