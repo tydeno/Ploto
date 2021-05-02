@@ -58,27 +58,30 @@ For reference heres my setup:
 |ChiaOut 2 | D:\ | SATA HDD | 465 GB
 
 So my denominators for my TempDrives its "plot" and for my destination drives its "out".
+If I'd want to use jost for example 2x drives as TempDrives, I'd rename those and adjust my denominator. For example to "plotThis"
 
 By default, Ploto spawns only 1x Plot Job on each Disk in parallel. So when I launch Ploto with default amount to spawn:
 ```powershell
-Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 0.1 -MaxParallelJobsOnAllDisks 2 -EnableBitfield $false -Verbose
+Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 15 EnableBitfield $false -MaxParallelJobsOnAllDisks 5
 ```
-
 the following will happen:
-If there is enough free space on the temp and out drive, Ploto spawns 1x job on each disk with the specified wait time between jobs. For each job, it calculates the mot suitable out drive anew, being aware of the plot jobs in progress on that disk.
+If there is enough free space on the temp and out drives, Ploto spawns 1x job on each disk with the specified wait time between jobs. For each job, it calculates the most suitable out drive anew, being aware of the plot jobs in progress on that disk. 
+
+Using the Parameter "-MaxParallelJobsOnAllDisks", you can define how many Plots Jobs overall there should be in parallel. So this will be your hard cap. If there are as many jobs as you defined as max, PlotoSpawner wont spawn further Jobs. This keeps your system from overcommiting.
+
+So in our example:
+* Ploto will pause spawning, when there are 5x jobs spawned, and continues when one job finishes. It keeps going until it has spawned 36 plots or the script is cancelled by the user/system.
+
 
 ### I need more parallelization
-
-Using the Parameter "-MaxParallelJobsOnAllDisks", you can define how many Plots Jobs overall there should be. So this will be your hard cap. If there are as many jobs as you defined as max, PlotoSpawner wont spawn further Jobs. This keeps your system from overcommiting.
-
-Using "-MaxParallelJobsOnSameDisks" you can define how many PlotsJobs there should be in parallel on a single disk. This param affects all Disks that can host more than 1 Plot. Still Ploto checks if the drive has enough SPace to temp that many plots.
+Using "-MaxParallelJobsOnSameDisks" you can define how many PlotsJobs there should be in parallel on a single disk. This param affects all Disks that can host more than 1 Plot. Ploto checks each disk for free space and determines the amount of plots it can hold as a tempDrive. Also being aware of the jobs in progress. It will spawn as many jobs as possible by the disk until it reached either the hard cap of -MaxParallelJobsOnAllDisks or -MaxParallelJobsOnSameDisk
 
 If I launch PlotoSpawner with these params like this:
 ```powershell
-Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 0.1 -MaxParallelJobsOnAllDisks 2 -MaxParallelJobsOnSameDisk 1 -EnableBitfield $false
+Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 15 -WaitTimeBetweenPlotOnSameDisk 60 -MaxParallelJobsOnAllDisks 7 -MaxParallelJobsOnSameDisk 3 -EnableBitfield $false
 ```
 
-PlotoSpawner will max out the available temp drives. This means for my temp drive setup the following:
+PlotoSpawner will at max spawn 7 parallel jobs, and max 3 Jobs in parallel on the same disk. This means for my temp drive setup the following:
 | Name          | DriveLetter | Type   | Size      | Total Plots in parallel |
 |---------------|----------|--------|--------------|-------------------------|
 |ChiaPlot 1 | I:\ | SATA SSD | 465 GB | 1
@@ -87,8 +90,8 @@ PlotoSpawner will max out the available temp drives. This means for my temp driv
 |ChiaPlot 4 | Q:\ | SATA SSD | 1810 GB | 3
 |ChiaPlot 5 | J:\ | NVME SSD PCI 16x | 465 GB | 1
 
-So there will be 8x Plot jobs running in parallel with defined wait time in minutes betwen jobs on each disk and the same Disk. 
-Drive J:\ will never see more than 3x Plots in parallel as defined by -MaxParallelJobsOnSameDisk 3
+So there will be 7x Plot jobs running in parallel with defined wait time in minutes betwen jobs on each disk and the same Disk. 
+Drive Q:\ will never see more than 3x Plots in parallel as defined by -MaxParallelJobsOnSameDisk 3
 
 When a job is done and a temp drive becommes available again, PlotoSpawner will spawn the next jobs, until it has spawned the amount you specified as -InputAmountToSpawn or it reaches it max cap.
 
@@ -480,7 +483,7 @@ Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
 ```
 4. Launch PlotoSpawner
 ```powershell
-Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -EnableBitfield $false -ParallelAmount max -WaitTimeBetweenPlotOnSeparateDisks 30 -WaitTimeBetweenPlotOnSameDisk 60
+Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 15 -WaitTimeBetweenPlotOnSameDisk 60 -MaxParallelJobsOnAllDisks 7 -MaxParallelJobsOnSameDisk 3 -EnableBitfield $false
 ```
 ```
 PlotoSpawner @ 4/30/2021 3:19:13 AM : Spawned the following plot Job:
@@ -627,7 +630,3 @@ These are known:
 * Using the -PerfCounter param on Get-PlotoJobs takes a while to load
 * PlotoMover is very limited right now, may break copy jobs at times (Bits)
 * PlotoMover does not check for available free space on network drives as its unaware of it (only does for local drives)
-
-
-
-
