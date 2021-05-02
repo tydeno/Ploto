@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.6
+Version: 1.0.6.1
 Author: Tydeno
 
 
@@ -601,8 +601,8 @@ foreach ($log in $logs)
                     #Getting Plot Object Ready
                     $PlotJobOut = [PSCustomObject]@{
                     JobId = $PlotoSpawnerJobId
-                    StartTime = $StartTime
                     Status = $StatusReturn
+                    StartTime = $StartTime
                     TempDrive = $tempDrive
                     OutDrive = $OutDrive
                     PID = $chiaPid
@@ -625,15 +625,15 @@ foreach ($log in $logs)
                     #Getting Plot Object Ready
                     $PlotJobOut = [PSCustomObject]@{
                     JobId = $PlotoSpawnerJobId
-                    PlotId = $plotId
-                    StartTime = $StartTime
                     Status = $StatusReturn
+                    StartTime = $StartTime
                     TempDrive = $tempDrive
                     OutDrive = $OutDrive
                     PID = $chiaPid
                     PlotSizeOnTempDisk = $SizeOnDisk
                     PlotSizeOnOutDisk = $SizeOnOutDisk
                     ArgumentList = $ArgumentList
+                    PlotId = $plotId
                     LogPath = $log.FullName
                     StatLogPath = $StatLogPath
                     CompletionTime = $TimeToCompleteCalcInh
@@ -643,7 +643,15 @@ foreach ($log in $logs)
       
 
 
-        $collectionWithPlotJobsOut.Add($PlotJobOut) | Out-Null
+        if ($PerfCounter -and $StatusReturn -eq "Completed")
+            {
+                
+            }
+        else
+            {
+                $collectionWithPlotJobsOut.Add($PlotJobOut) | Out-Null
+            }
+
         $pid= $null
         $StatusReturn = $null
         $tempDrive = $null
