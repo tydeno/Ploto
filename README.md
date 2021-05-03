@@ -615,6 +615,29 @@ Move-PlotoPlots -DestinationDrive "\\Desktop-xxxxx\d" -OutDriveDenom "out" -Tran
 
 Please be aware that if you use UNC paths as Destination, PlotoMover cannot grab the free space there and just fires off.
 
+## Check Farm Logs
+If you want to move your plots to a UNC path just once:
+1. Launch a PowerShell session and Import Ploto Module
+2. Launch Check-PlotoFarmLogs with your desired LogLevel. It accepts EligiblePlots, Error and Warning.
+```powershell
+Get-PlotoFarmLog -LogLevel error
+```
+
+```
+2021-05-03T23:34:45.532 full_node full_node_server        : ERROR    Exception:  <class 'concurrent.futures._base.CancelledError'>, closing connection {'host': '127.0.0.1', 'port': 8449}. Traceback (most recent call last):
+concurrent.futures._base.CancelledError
+2021-05-03T23:34:48.454 full_node full_node_server        : ERROR    Exception:  <class 'concurrent.futures._base.CancelledError'>, closing connection {'host': '127.0.0.1', 'port': 8449}. Traceback (most recent call last):
+concurrent.futures._base.CancelledError
+2021-05-03T23:34:52.548 full_node full_node_server        : ERROR    Exception:  <class 'concurrent.futures._base.CancelledError'>, closing connection {'host': '127.0.0.1', 'port': 8449}. Traceback (most recent call last):
+concurrent.futures._base.CancelledError
+2021-05-03T23:35:03.845 full_node full_node_server        : ERROR    Exception:  <class 'concurrent.futures._base.CancelledError'>, closing connection {'host': '127.0.0.1', 'port': 8449}. Traceback (most recent call last):
+concurrent.futures._base.CancelledError
+2021-05-03T23:35:08.720 full_node full_node_server        : ERROR    Exception:  <class 'concurrent.futures._base.CancelledError'>, closing connection {'host': '127.0.0.1', 'port': 8449}. Traceback (most recent call last):
+concurrent.futures._base.CancelledError
+2021-05-03T23:35:15.360 full_node full_node_server        : ERROR    Exception:  <class 'concurrent.futures._base.CancelledError'>, closing connection {'host': '127.0.0.1', 'port': 8449}. Traceback (most recent call last):
+concurrent.futures._base.CancelledError
+```
+
 # FAQ
 > Can I shut down the script when I dont want Ploto to spawn more Plots?
 
