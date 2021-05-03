@@ -616,7 +616,7 @@ Move-PlotoPlots -DestinationDrive "\\Desktop-xxxxx\d" -OutDriveDenom "out" -Tran
 Please be aware that if you use UNC paths as Destination, PlotoMover cannot grab the free space there and just fires off.
 
 ## Check Farm Logs
-If you want to move your plots to a UNC path just once:
+If you want to peek at your farm logs you can use Check-PLotoFarmLogs:
 1. Launch a PowerShell session and Import Ploto Module
 2. Launch Check-PlotoFarmLogs with your desired LogLevel. It accepts EligiblePlots, Error and Warning.
 ```powershell
