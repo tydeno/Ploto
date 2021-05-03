@@ -21,7 +21,7 @@ Consists of a PowerShell Module that allows to spawn, manage and move plots.
 * [Start-PlotoMove](https://github.com/tydeno/Ploto/blob/main/README.md#start-plotomove)
 
 ### PlotoFarmer
-Get-PlotoFarmLog
+* [Get-PlotoFarmLog](https://github.com/tydeno/Ploto/blob/main/README.md#check-farm-logs)
 
 # PlotoSpawn
 TLDR: It plots 1x plot on each TempDrive (if you have 6x TempDrives = 6x parallel Plot Jobs) as long as you want it to and as long as you have OutDrive space.
