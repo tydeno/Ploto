@@ -940,7 +940,27 @@ function Start-PlotoMove
 }
 
 
+function Get-PlotoFarmLog
+{
+	Param(
+		[parameter(Mandatory=$true)]
+        [ValidateSet("EligiblePlots", "Error", "Warning", IgnoreCase = $true)]
+		$LogLevel
+		)
 
-$pattern3 = "ArgumentList"
+        switch -Wildcard ($LogLevel)
+            {
+                "EligiblePlots" {$pattern = @("plots were eligible for farming")}
+                "Error" {$pattern = @("ERROR")}
+                "Warning" {$pattern = @("WARN")}
 
-$Read = Get-Content "C:\Users\Yanik\OneDrive\Desktop\read.txt" | Select-String -Pattern $pattern3
+                default {$patterm = "Error"}
+            }
+
+$PlotterBaseLogPath = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\log\"
+$LogPath= $PlotterBaseLogPath+"debug.log"
+
+$output = Get-content ($LogPath) | Select-String -Pattern $pattern
+
+return $output
+}
