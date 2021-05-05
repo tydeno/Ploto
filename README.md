@@ -116,364 +116,6 @@ You can do it by using Set-ExecutionPolicy like this:
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-
-## Get-PlotoOutDrives
-Gets all Windows Volumes that match the -OutDriveDenom parameter and checks if free space is greater than 107 GB (amount currently used by final chia plots).
-It wraps all the needed information of the volume like DriveLetter, ChiaDriveType, VolumeName, a bool IsPlootable, and the calculated amount of plots to hold into a object and returns the collection of objects as the result of that function.
-
-#### Example:
-
-```powershell
-Get-PlotoOutDrives -OutDriveDenom "out"
-```
-
-#### Output:
-
-```
-DriveLetter         : D:
-ChiaDriveType       : Out
-VolumeName          : ChiaOut2
-FreeSpace           : 363.12
-IsPlottable         : True
-AmountOfPlotsToHold : 3
-
-DriveLetter         : K:
-ChiaDriveType       : Out
-VolumeName          : ChiaOut3
-FreeSpace           : 364.24
-IsPlottable         : True
-AmountOfPlotsToHold : 3
-```
-
-#### Parameters:
-| Name          | Required | Type   | Description                                                                                                                              |
-|---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
-|OutDriveDenom  | Yes      | String | A common denominator for all your drives used as out drives. All drives with that denom in name will be used to store done plots.
-
-
-
-## Get-PlotoTempDrives
-Gets all Windows Volumes that match the -TempDriveDenom parameter and checks if free space is greater than 270 GB (amount currently used by chia plots as temp storage).
-It wraps all the needed information of the volume like DriveLetter, ChiaDriveType, VolumeName, a bool IsPlootable, and the calculated amount of plots to temp, whether it has a plot in porgress (determined by checking if the drive contains any file) into a object and returns the collection of objects as the result of that function.
-
-#### Example:
-
-```powershell
- Get-PlotoTempDrives -TempDriveDenom "plot"
-```
-#### Output:
-
-```
-DriveLetter             : E:
-ChiaDriveType           : Temp
-VolumeName              : ChiaPlot 3 Evo 860 512GB
-FreeSpace               : 437.28
-TotalSpace              : 465.76
-hasFolder               : False
-IsPlottable             : True
-HasPlotInProgress       : False
-AmountOfPlotsInProgress : 0
-AmountOfPlotsToTempMax  : 1
-AvailableAmountToPlot   : 1
-PlotInProgressID        :
-
-DriveLetter             : F:
-ChiaDriveType           : Temp
-VolumeName              : ChiaPlot4 NVME FullDisk 1
-FreeSpace               : 446.76
-TotalSpace              : 465.75
-hasFolder               : False
-IsPlottable             : True
-HasPlotInProgress       : False
-AmountOfPlotsInProgress : 0
-AmountOfPlotsToTempMax  : 1
-AvailableAmountToPlot   : 1
-PlotInProgressID        :
-
-DriveLetter             : H:
-ChiaDriveType           : Temp
-VolumeName              : ChiaPlot 2 Crucial CT 512 GB 2
-FreeSpace               : 450.99
-TotalSpace              : 476.94
-hasFolder               : False
-IsPlottable             : True
-HasPlotInProgress       : False
-AmountOfPlotsInProgress : 0
-AmountOfPlotsToTempMax  : 1
-AvailableAmountToPlot   : 1
-PlotInProgressID        :
-
-DriveLetter             : I:
-ChiaDriveType           : Temp
-VolumeName              : ChiaPlot 1 Crucial CT 512GB
-FreeSpace               : 451
-TotalSpace              : 476.94
-hasFolder               : False
-IsPlottable             : True
-HasPlotInProgress       : False
-AmountOfPlotsInProgress : 0
-AmountOfPlotsToTempMax  : 1
-AvailableAmountToPlot   : 1
-PlotInProgressID        :
-
-DriveLetter             : J:
-ChiaDriveType           : Temp
-VolumeName              : ChiaPlot 5 NVME 980 Pro
-FreeSpace               : 463.04
-TotalSpace              : 465.75
-hasFolder               : False
-IsPlottable             : True
-HasPlotInProgress       : False
-AmountOfPlotsInProgress : 0
-AmountOfPlotsToTempMax  : 1
-AvailableAmountToPlot   : 1
-PlotInProgressID        :
-
-DriveLetter             : Q:
-ChiaDriveType           : Temp
-VolumeName              : ChiaPlot 4 2TB SSD
-FreeSpace               : 1441.41
-TotalSpace              : 1863
-hasFolder               : True
-IsPlottable             : True
-HasPlotInProgress       : False
-AmountOfPlotsInProgress : 0
-AmountOfPlotsToTempMax  : 4
-AvailableAmountToPlot   : 4
-PlotInProgressID        :
-```
-
-#### Parameters:
-| Name          | Required | Type   | Description                                                                                                                              |
-|---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
-|TempDriveDenom  | Yes      | String | A common denominator for all your drives used as temp drives. All drives with that denom in name will be used to as temp drives for chia.
-
-
-## Invoke-PlotoJob
-Calls Get-PlotoTempDrives to get all Temp drives that are plottable. For each tempDrive it determines the most appropriate OutDrive (using Get-PlotoOutDrives function), stitches together the ArgumentList for chia and fires off the chia plot job using chia.exe. For each created PlotJob the function creates an Object and appends it to a collection of objects, which are returned upon the function call. 
-
-#### Example:
-
-```powershell
-Invoke-PlotoJob -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 0.1 -MaxParallelJobsOnAllDisks 2 -MaxParallelJobsOnSameDisk 1 -EnableBitfield $false -Verbose
-```
-#### Output:
-
-```
-PlotoSpawnerJobId : 49ab3c48-532b-4f17-855d-3c5b4981528b
-ProcessID       : 9024
-OutDrive        : D:
-TempDrive       : H:
-ArgumentsList   : plots create -k 32 -t H:\ -d D:\
-ChiaVersionUsed : 1.1.2
-LogPath           : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b_Tmp-E_Out-K.txt
-StartTime       : 4/29/2021 1:55:50 PM
-```
-
-#### Parameters:
-| Name          | Required | Type   | Description                                                                                                                              |
-|---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
-|OutDriveDenom  | Yes      | String | See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters)
-|TempDriveDenom | Yes      | String | See Parameters Section of [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-1)
-|WaitTimeBetweenPlotOnSeparateDisks | Yes | Int | Amount of minutes to be waited for spawning plots on separate disks.
-|WaitTimeBetweenPlotOnSameDisk | Yes | Int | Amount of minutes to be waited for spawning plots on the same disk.
-|EnableBitfield | No | bool | Enable or disable Bitfield for all jobs to be spawned. If not set, default is off.
-|ParallelAmount | No | String | Defines amount of Plot Jobs to be spawned on same disks at once (with delay). If set to "max" utilizes entire available temp disk space.
-
-## Start-PlotoSpawns
-Main function that nests all else.
-Continously calls Invoke-PlotoJob and states progress and other information. It runs until it created the amount of specified Plot by using the -InputAmountToSpawn param.
-
-#### Example:
-
-```powershell
-Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 0.1 -MaxParallelJobsOnAllDisks 2 -MaxParallelJobsOnSameDisk 1 -EnableBitfield $false 
-```
-
-#### Output:
-
-```
-PlotoManager @ 4/29/2021 1:45:38 PM : Amount of spawned Plots in this iteration: 2
-PlotoManager @ 4/29/2021 1:45:38 PM : Overall spawned Plots since start of script: 2
-```
-
-#### Parameters:
-
-| Name          | Required | Type   | Description                                                                                                                              |
-|---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
-|InputAmounttoSpawn| Yes | Int | Defines amount of plot to be spanwed overall. Ploto will stop when that amount is reached.
-|OutDriveDenom  | Yes      | String | See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters)
-|TempDriveDenom | Yes      | String | See Parameters Section of [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-1)
-|WaitTimeBetweenPlotOnSeparateDisks | Yes | Int | See Parameters Section of [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-2)
-|WaitTimeBetweenPlotOnSameDisk | Yes | Int | See Parameters Section of [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-2)
-|EnableBitfield | No | bool | See Parameters Section of [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/README.md#parameters-2)
-
-# PlotoManage
-Allows you to check status of your current plot jobs aswell as stopping them and cleaning the temp drives.
-
-## Get-PlotoJobs
-Analyzes the plotter logs (standard chia.exe output redirected, enriched with additional data) and shows the status, pid and drives in use. The function only pick up data of plot logs that have been spawned using PlotoSpawner (as it deploys initial data like PID of process and drives use). The additional logs are stored in the same location as the standrad logs. If you delete those, this function wont be able to read certain properties anymore. 
-
-## Status Codes and their meaning
-
-See below for a definition of what phase coe is associated with which chia.exe log output.
-```powershell
-"Starting plotting progress into temporary dirs:*" {$StatusReturn = "Initializing"}
-"Starting phase 1/4*" {$StatusReturn = "1.0"}
-"Computing table 1" {$StatusReturn = "1.1"}
-"F1 complete, time*" {$StatusReturn = "1.1"}
-"Computing table 2" {$StatusReturn = "1.1"}
-"Computing table 3" {$StatusReturn = "1.2"}
-"Computing table 4" {$StatusReturn = "1.3"}
-"Computing table 5" {$StatusReturn = "1.4"}
-"Computing table 6" {$StatusReturn = "1.5"}
-"Computing table 7" {$StatusReturn = "1.6"}
-"Starting phase 2/4*" {$StatusReturn = "2.0"}
-"Backpropagating on table 7" {$StatusReturn = "2.1"}
-"Backpropagating on table 6" {$StatusReturn = "2.2"}
-"Backpropagating on table 5" {$StatusReturn = "2.3"}
-"Backpropagating on table 4" {$StatusReturn = "2.4"}
-"Backpropagating on table 3" {$StatusReturn = "2.5"}
-"Backpropagating on table 2" {$StatusReturn = "2.6"}
-"Starting phase 3/4*" {$StatusReturn = "3.0"}
-"Compressing tables 1 and 2" {$StatusReturn = "3.1"}
-"Compressing tables 2 and 3" {$StatusReturn = "3.2"}
-"Compressing tables 3 and 4" {$StatusReturn = "3.3"}
-"Compressing tables 4 and 5" {$StatusReturn = "3.4"}
-"Compressing tables 5 and 6" {$StatusReturn = "3.5"}
-"Compressing tables 6 and 7" {$StatusReturn = "3.6"}
-"Starting phase 4/4*" {$StatusReturn = "4.0"}
-"Writing C2 table*" {$StatusReturn = "4.1"}
-"Time for phase 4*" {$StatusReturn = "4.2"}
-"Renamed final file*" {$StatusReturn = "4.3"}
-```
-
-
-#### Example:
-```powershell
-Get-PlotoJobs | ft 
-```
-
-#### Output:
-```
-JobId                                PlotId                                                           PID  Status       TempDrive OutDrive LogPath
------------------                    ------                                                           ---  ------------ --------- -------- -------
-2e39e295-ccd9-4abf-94e9-01a854cbfa24 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    E:        K:       C:\Users\...
-ed2133b0-018c-44db-81e7-61befbda8031 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    F:        D:       C:\Users\...
-bc3b44b1-b290-4487-a552-c4dda2e11366 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    H:        K:       C:\Users\...
-10e6deb5-6a13-4a0d-9c77-8c65d717bf6b xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    Q:        D:       C:\Users\...
-f865e425-ada4-44f0-8537-23a033aef302 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    Q:        D:       C:\Users\...
-b19eaef4-f9b3-4807-8870-a959e5aa3a21 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    I:        D:       C:\Users\...
-278615e9-8e4d-4af4-bfcc-4665412aae89 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    Q:        K:       C:\Users\...
-
-```
-
-
-## Remove-AbortedJobs
-Gets all Jobs from Get-PlotoJobs that are aborted (where no process runs to PID) and foreach call Stop-PlotoJob
-
-#### Example:
-
-```powershell
-Remove-AbortedJobs
-```
-
-#### Output:
-```
-PlotoRemoveAbortedJobs @ 5/1/2021 6:42:24 PM : Found aborted Jobs to be deleted: 6cfb4e4a-cb71-4f2a-9387-17a8049ce625 85b08573-054d-46f0-b7e3-755f9ce021bc cbab519c-2f26-41c9-b3fa-8bcb0ba36d3a 2b0ab204-3b0e-4e8c-b04c-a884859ae637 f639cb35-23a8-4010-a1db-ab6186bd117c
-PlotoRemoveAbortedJobs @ 5/1/2021 6:42:24 PM : Cleaning up...
-PlotoStopJob @ 5/1/2021 6:42:24 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
-PlotoStopJob @ 5/1/2021 6:42:24 PM : Found .tmp files for this job to be deleted. Continue with deletion.
-PlotoStopJob @ 5/1/2021 6:42:24 PM : Removed temp files on F:
-PlotoStopJob @ 5/1/2021 6:42:24 PM : Removed log files for this job.
-PlotoStopJob @ 5/1/2021 6:42:25 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
-PlotoStopJob @ 5/1/2021 6:42:25 PM : Found .tmp files for this job to be deleted. Continue with deletion.
-PlotoStopJob @ 5/1/2021 6:42:25 PM : Removed temp files on H:
-PlotoStopJob @ 5/1/2021 6:42:25 PM : Removed log files for this job.
-PlotoStopJob @ 5/1/2021 6:42:25 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
-PlotoStopJob @ 5/1/2021 6:42:25 PM : Found .tmp files for this job to be deleted. Continue with deletion.
-PlotoStopJob @ 5/1/2021 6:42:25 PM : Removed temp files on E:
-PlotoStopJob @ 5/1/2021 6:42:25 PM : Removed log files for this job.
-PlotoStopJob @ 5/1/2021 6:42:26 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
-PlotoStopJob @ 5/1/2021 6:42:26 PM : Found .tmp files for this job to be deleted. Continue with deletion.
-PlotoStopJob @ 5/1/2021 6:42:26 PM : Removed temp files on J:
-PlotoStopJob @ 5/1/2021 6:42:26 PM : Removed log files for this job.
-PlotoStopJob @ 5/1/2021 6:42:26 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
-PlotoStopJob @ 5/1/2021 6:42:26 PM : Found .tmp files for this job to be deleted. Continue with deletion.
-PlotoStopJob @ 5/1/2021 6:42:26 PM : Removed temp files on I:
-PlotoStopJob @ 5/1/2021 6:42:26 PM : Removed log files for this job.
-PlotoRemoveAbortedJobs @ 5/1/2021 6:42:26 PM : Removed Amount of aborted Jobs: 5
-```
-The Error below is known and only says that the process is already closed. This is expected. In the future this error may be surpressed.
-
-```
-PlotoStopJob @ 5/1/2021 6:42:26 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
-```
-
-# PlotoMove
-Continously searches for final Plots on your OutDrives and moves them to your desired location. I do this for transferring plots from my plotting machine to my farming machine.
-
-## Get-PlotoPlots
-Searches defined Outdrives for Final Plots (file that end upon .plot) and returns an array with final plots.
-
-#### Example:
-```powershell
-Get-PlotoPlots -OutDriveDenom "out"
-```
-
-#### Output:
-```
-Iterating trough Drive:  @{DriveLetter=D:; ChiaDriveType=Out; VolumeName=ChiaOut2; FreeSpace=59.04; TotalSpace=0; IsPlottable=False; AmountOfPlotsToHold=0}
-Checking if any item in that drive contains .PLOT as file ending...
-Found a Final plot:  plot-k32-2021-04-30-18-52-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
-Found a Final plot:  plot-k32-2021-04-30-19-02-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
-Found a Final plot:  plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
-Found a Final plot:  plot-k32-2021-04-30-19-42-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
-Iterating trough Drive:  @{DriveLetter=K:; ChiaDriveType=Out; VolumeName=ChiaOut3; FreeSpace=262.86; TotalSpace=0; IsPlottable=True; AmountOfPlotsToHold=2}
-Checking if any item in that drive contains .PLOT as file ending...
-Found a Final plot:  plot-k32-2021-04-30-18-57-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
-Found a Final plot:  plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
---------------------------------------------------------------------------------------------------
-
-FilePath                                                                                           Name
---------                                                                                           ----
-D:\plot-k32-2021-04-30-18-52-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
-D:\plot-k32-2021-04-30-19-02-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
-D:\plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
-D:\plot-k32-2021-04-30-19-42-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
-K:\plot-k32-2021-04-30-18-57-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
-K:\plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
-```
-
-#### Parameters:
-| Name          | Required | Type   | Description                                                                                                                              |
-|---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
-| OutDriveDenom | Yes      | String | See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters) 
-
-
-## Move-PlotoPlots
-Grabs the found plots from Get-PlotoPlots and moves them to either a local/external drive using Move-Item cmdlet or to a UNC path using Background Intelligence TRansfer Service (Bits). You can define the OutDrives to search for Plots, TransferMethod and Destination.
-
-Make sure TrasnferMethod and Destination match. 
-
-#### Example:
-
-```powershell
-Move-PlotoPlots -DestinationDrive "\\Desktop-xxxxx\d" -OutDriveDenom "out" -TransferMethod BITS
-```
-
-#### Output:
-```
-PlotoMover @ 5/1/2021 7:08:09 PM : Moving plot:  D:\plot-k32-2021-04-30-18-52-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot to \\Desktop-xxxxx\d using BITS
-```
-#### Parameters:
-| Name          | Required | Type   | Description                                                                                                                              |
-|---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
-| DestinationDrive| Yes    | String | The destination drive you want the plot to be moved to. Accpets UNC Paths aswell as DriveLetters (eg E:)
-| OutDriveDenim | Yes | String | See Parameters Section of [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#parameters) 
-| TransferMethod | Yes | String | Defines TransferMethod to be used. If local drive use "Move-Item". If UNC path use "BITS".
-
-
 # How to:
 If you want to use PlotoSpawner follow along:
 
@@ -658,3 +300,273 @@ These are known:
 * PlotoMover does not check for available free space on network drives as its unaware of it (only does for local drives)
 * If you have more than 1x version of chia within your C:\Users\Me\AppData\Local\chia-blockchain folder, Ploto wont be able to determine the version and will fail.
   Make sure theres only one available folder with chia.exe (eg. app-1.1.3)
+
+
+
+
+## Get-PlotoOutDrives
+Gets all Windows Volumes that match the -OutDriveDenom parameter and checks if free space is greater than 107 GB (amount currently used by final chia plots).
+It wraps all the needed information of the volume like DriveLetter, ChiaDriveType, VolumeName, a bool IsPlootable, and the calculated amount of plots to hold into a object and returns the collection of objects as the result of that function.
+
+#### Example:
+
+```powershell
+Get-PlotoOutDrives -OutDriveDenom "out"
+```
+
+#### Output:
+
+```
+DriveLetter         : D:
+ChiaDriveType       : Out
+VolumeName          : ChiaOut2
+FreeSpace           : 363.12
+IsPlottable         : True
+AmountOfPlotsToHold : 3
+
+DriveLetter         : K:
+ChiaDriveType       : Out
+VolumeName          : ChiaOut3
+FreeSpace           : 364.24
+IsPlottable         : True
+AmountOfPlotsToHold : 3
+```
+
+#### Parameters:
+| Name          | Required | Type   | Description                                                                                                                              |
+|---------------|----------|--------|------------------------------------------------------------------------------------------------------------------------------------------|
+|OutDriveDenom  | Yes      | String | A common denominator for all your drives used as out drives. All drives with that denom in name will be used to store done plots.
+
+
+
+## Get-PlotoTempDrives
+Gets all Windows Volumes that match the -TempDriveDenom parameter and checks if free space is greater than 270 GB (amount currently used by chia plots as temp storage).
+It wraps all the needed information of the volume like DriveLetter, ChiaDriveType, VolumeName, a bool IsPlootable, and the calculated amount of plots to temp, whether it has a plot in porgress (determined by checking if the drive contains any file) into a object and returns the collection of objects as the result of that function.
+
+#### Example:
+
+```powershell
+ Get-PlotoTempDrives -TempDriveDenom "plot"
+```
+#### Output:
+
+```
+DriveLetter             : E:
+ChiaDriveType           : Temp
+VolumeName              : ChiaPlot 3 Evo 860 512GB
+FreeSpace               : 437.28
+TotalSpace              : 465.76
+hasFolder               : False
+IsPlottable             : True
+HasPlotInProgress       : False
+AmountOfPlotsInProgress : 0
+AmountOfPlotsToTempMax  : 1
+AvailableAmountToPlot   : 1
+PlotInProgressID        :
+
+DriveLetter             : F:
+ChiaDriveType           : Temp
+VolumeName              : ChiaPlot4 NVME FullDisk 1
+FreeSpace               : 446.76
+TotalSpace              : 465.75
+hasFolder               : False
+IsPlottable             : True
+HasPlotInProgress       : False
+AmountOfPlotsInProgress : 0
+AmountOfPlotsToTempMax  : 1
+AvailableAmountToPlot   : 1
+PlotInProgressID        :
+
+
+## Invoke-PlotoJob
+Calls Get-PlotoTempDrives to get all Temp drives that are plottable. For each tempDrive it determines the most appropriate OutDrive (using Get-PlotoOutDrives function), stitches together the ArgumentList for chia and fires off the chia plot job using chia.exe. For each created PlotJob the function creates an Object and appends it to a collection of objects, which are returned upon the function call. 
+
+#### Example:
+
+```powershell
+Invoke-PlotoJob -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 0.1 -MaxParallelJobsOnAllDisks 2 -MaxParallelJobsOnSameDisk 1 -EnableBitfield $false -Verbose
+```
+#### Output:
+
+```
+PlotoSpawnerJobId : 49ab3c48-532b-4f17-855d-3c5b4981528b
+ProcessID       : 9024
+OutDrive        : D:
+TempDrive       : H:
+ArgumentsList   : plots create -k 32 -t H:\ -d D:\
+ChiaVersionUsed : 1.1.2
+LogPath           : C:\Users\me\.chia\mainnet\plotter\PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b_Tmp-E_Out-K.txt
+StartTime       : 4/29/2021 1:55:50 PM
+```
+
+## Start-PlotoSpawns
+Main function that nests all else.
+Continously calls Invoke-PlotoJob and states progress and other information. It runs until it created the amount of specified Plot by using the -InputAmountToSpawn param.
+
+#### Example:
+
+```powershell
+Start-PlotoSpawns -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 0.1 -WaitTimeBetweenPlotOnSameDisk 0.1 -MaxParallelJobsOnAllDisks 2 -MaxParallelJobsOnSameDisk 1 -EnableBitfield $false 
+```
+
+#### Output:
+
+```
+PlotoManager @ 4/29/2021 1:45:38 PM : Amount of spawned Plots in this iteration: 2
+PlotoManager @ 4/29/2021 1:45:38 PM : Overall spawned Plots since start of script: 2
+```
+
+
+# PlotoManage
+Allows you to check status of your current plot jobs aswell as stopping them and cleaning the temp drives.
+
+## Get-PlotoJobs
+Analyzes the plotter logs (standard chia.exe output redirected, enriched with additional data) and shows the status, pid and drives in use. The function only pick up data of plot logs that have been spawned using PlotoSpawner (as it deploys initial data like PID of process and drives use). The additional logs are stored in the same location as the standrad logs. If you delete those, this function wont be able to read certain properties anymore. 
+
+## Status Codes and their meaning
+
+See below for a definition of what phase coe is associated with which chia.exe log output.
+```powershell
+"Starting plotting progress into temporary dirs:*" {$StatusReturn = "Initializing"}
+"Starting phase 1/4*" {$StatusReturn = "1.0"}
+"Computing table 1" {$StatusReturn = "1.1"}
+"F1 complete, time*" {$StatusReturn = "1.1"}
+"Computing table 2" {$StatusReturn = "1.1"}
+"Computing table 3" {$StatusReturn = "1.2"}
+"Computing table 4" {$StatusReturn = "1.3"}
+"Computing table 5" {$StatusReturn = "1.4"}
+"Computing table 6" {$StatusReturn = "1.5"}
+"Computing table 7" {$StatusReturn = "1.6"}
+"Starting phase 2/4*" {$StatusReturn = "2.0"}
+"Backpropagating on table 7" {$StatusReturn = "2.1"}
+"Backpropagating on table 6" {$StatusReturn = "2.2"}
+"Backpropagating on table 5" {$StatusReturn = "2.3"}
+"Backpropagating on table 4" {$StatusReturn = "2.4"}
+"Backpropagating on table 3" {$StatusReturn = "2.5"}
+"Backpropagating on table 2" {$StatusReturn = "2.6"}
+"Starting phase 3/4*" {$StatusReturn = "3.0"}
+"Compressing tables 1 and 2" {$StatusReturn = "3.1"}
+"Compressing tables 2 and 3" {$StatusReturn = "3.2"}
+"Compressing tables 3 and 4" {$StatusReturn = "3.3"}
+"Compressing tables 4 and 5" {$StatusReturn = "3.4"}
+"Compressing tables 5 and 6" {$StatusReturn = "3.5"}
+"Compressing tables 6 and 7" {$StatusReturn = "3.6"}
+"Starting phase 4/4*" {$StatusReturn = "4.0"}
+"Writing C2 table*" {$StatusReturn = "4.1"}
+"Time for phase 4*" {$StatusReturn = "4.2"}
+"Renamed final file*" {$StatusReturn = "4.3"}
+```
+
+
+#### Example:
+```powershell
+Get-PlotoJobs | ft 
+```
+
+#### Output:
+```
+JobId                                PlotId                                                           PID  Status       TempDrive OutDrive LogPath
+-----------------                    ------                                                           ---  ------------ --------- -------- -------
+2e39e295-ccd9-4abf-94e9-01a854cbfa24 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    E:        K:       C:\Users\...
+ed2133b0-018c-44db-81e7-61befbda8031 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    F:        D:       C:\Users\...
+bc3b44b1-b290-4487-a552-c4dda2e11366 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    H:        K:       C:\Users\...
+10e6deb5-6a13-4a0d-9c77-8c65d717bf6b xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    Q:        D:       C:\Users\...
+f865e425-ada4-44f0-8537-23a033aef302 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    Q:        D:       C:\Users\...
+b19eaef4-f9b3-4807-8870-a959e5aa3a21 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    I:        D:       C:\Users\...
+278615e9-8e4d-4af4-bfcc-4665412aae89 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx None Completed    Q:        K:       C:\Users\...
+
+```
+
+
+## Remove-AbortedJobs
+Gets all Jobs from Get-PlotoJobs that are aborted (where no process runs to PID) and foreach call Stop-PlotoJob
+
+#### Example:
+
+```powershell
+Remove-AbortedJobs
+```
+
+#### Output:
+```
+PlotoRemoveAbortedJobs @ 5/1/2021 6:42:24 PM : Found aborted Jobs to be deleted: 6cfb4e4a-cb71-4f2a-9387-17a8049ce625 85b08573-054d-46f0-b7e3-755f9ce021bc cbab519c-2f26-41c9-b3fa-8bcb0ba36d3a 2b0ab204-3b0e-4e8c-b04c-a884859ae637 f639cb35-23a8-4010-a1db-ab6186bd117c
+PlotoRemoveAbortedJobs @ 5/1/2021 6:42:24 PM : Cleaning up...
+PlotoStopJob @ 5/1/2021 6:42:24 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
+PlotoStopJob @ 5/1/2021 6:42:24 PM : Found .tmp files for this job to be deleted. Continue with deletion.
+PlotoStopJob @ 5/1/2021 6:42:24 PM : Removed temp files on F:
+PlotoStopJob @ 5/1/2021 6:42:24 PM : Removed log files for this job.
+PlotoStopJob @ 5/1/2021 6:42:25 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
+PlotoStopJob @ 5/1/2021 6:42:25 PM : Found .tmp files for this job to be deleted. Continue with deletion.
+PlotoStopJob @ 5/1/2021 6:42:25 PM : Removed temp files on H:
+PlotoStopJob @ 5/1/2021 6:42:25 PM : Removed log files for this job.
+PlotoStopJob @ 5/1/2021 6:42:25 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
+PlotoStopJob @ 5/1/2021 6:42:25 PM : Found .tmp files for this job to be deleted. Continue with deletion.
+PlotoStopJob @ 5/1/2021 6:42:25 PM : Removed temp files on E:
+PlotoStopJob @ 5/1/2021 6:42:25 PM : Removed log files for this job.
+PlotoStopJob @ 5/1/2021 6:42:26 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
+PlotoStopJob @ 5/1/2021 6:42:26 PM : Found .tmp files for this job to be deleted. Continue with deletion.
+PlotoStopJob @ 5/1/2021 6:42:26 PM : Removed temp files on J:
+PlotoStopJob @ 5/1/2021 6:42:26 PM : Removed log files for this job.
+PlotoStopJob @ 5/1/2021 6:42:26 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
+PlotoStopJob @ 5/1/2021 6:42:26 PM : Found .tmp files for this job to be deleted. Continue with deletion.
+PlotoStopJob @ 5/1/2021 6:42:26 PM : Removed temp files on I:
+PlotoStopJob @ 5/1/2021 6:42:26 PM : Removed log files for this job.
+PlotoRemoveAbortedJobs @ 5/1/2021 6:42:26 PM : Removed Amount of aborted Jobs: 5
+```
+The Error below is known and only says that the process is already closed. This is expected. In the future this error may be surpressed.
+
+```
+PlotoStopJob @ 5/1/2021 6:42:26 PM : ERROR:  Cannot bind parameter 'Id'. Cannot convert value "None" to type "System.Int32". Error: "Input string was not in a correct format."
+```
+
+# PlotoMove
+Continously searches for final Plots on your OutDrives and moves them to your desired location. I do this for transferring plots from my plotting machine to my farming machine.
+
+## Get-PlotoPlots
+Searches defined Outdrives for Final Plots (file that end upon .plot) and returns an array with final plots.
+
+#### Example:
+```powershell
+Get-PlotoPlots -OutDriveDenom "out"
+```
+
+#### Output:
+```
+Iterating trough Drive:  @{DriveLetter=D:; ChiaDriveType=Out; VolumeName=ChiaOut2; FreeSpace=59.04; TotalSpace=0; IsPlottable=False; AmountOfPlotsToHold=0}
+Checking if any item in that drive contains .PLOT as file ending...
+Found a Final plot:  plot-k32-2021-04-30-18-52-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
+Found a Final plot:  plot-k32-2021-04-30-19-02-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
+Found a Final plot:  plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
+Found a Final plot:  plot-k32-2021-04-30-19-42-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
+Iterating trough Drive:  @{DriveLetter=K:; ChiaDriveType=Out; VolumeName=ChiaOut3; FreeSpace=262.86; TotalSpace=0; IsPlottable=True; AmountOfPlotsToHold=2}
+Checking if any item in that drive contains .PLOT as file ending...
+Found a Final plot:  plot-k32-2021-04-30-18-57-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
+Found a Final plot:  plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot
+--------------------------------------------------------------------------------------------------
+
+FilePath                                                                                           Name
+--------                                                                                           ----
+D:\plot-k32-2021-04-30-18-52-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
+D:\plot-k32-2021-04-30-19-02-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
+D:\plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
+D:\plot-k32-2021-04-30-19-42-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
+K:\plot-k32-2021-04-30-18-57-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
+K:\plot-k32-2021-04-30-19-12-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot plot-k32-2021-04-...
+```
+
+## Move-PlotoPlots
+Grabs the found plots from Get-PlotoPlots and moves them to either a local/external drive using Move-Item cmdlet or to a UNC path using Background Intelligence TRansfer Service (Bits). You can define the OutDrives to search for Plots, TransferMethod and Destination.
+
+Make sure TrasnferMethod and Destination match. 
+
+#### Example:
+
+```powershell
+Move-PlotoPlots -DestinationDrive "\\Desktop-xxxxx\d" -OutDriveDenom "out" -TransferMethod BITS
+```
+
+#### Output:
+```
+PlotoMover @ 5/1/2021 7:08:09 PM : Moving plot:  D:\plot-k32-2021-04-30-18-52-dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx00454fxxxxxxxxxxxxxxxxxxxxxxxxxx64.plot to \\Desktop-xxxxx\d using BITS
+```
+
