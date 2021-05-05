@@ -116,8 +116,8 @@ You can do it by using Set-ExecutionPolicy like this:
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-# How to:
-If you want to use PlotoSpawner follow along:
+# How to
+If you want to use Ploto follow along.
 
 ## Spawn Plots
 1. Make sure your Out and TempDrives are named accordingly
