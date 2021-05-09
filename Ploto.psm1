@@ -88,13 +88,24 @@ foreach ($tmpDrive in $tmpDrives)
                 $PlotInProgressName = $activeJobs.PlotId
                 $PlotInProgressCount = $activeJobs.count
 
-                $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / 290))
-
                 if ($PlotInProgressCount -eq $null)
                     {
                         $PlotInProgressCount = 1
                     }
-                $AvailableAmounToPlot = $AmountOfPlotsToTempMax - $PlotInProgressCount
+                
+                $RedundencyCheck = $DiskSize - ($FreeSpace + $PlotInProgressCount * 290)
+                #has addiontal data in the disk
+                if($RedundencyCheck -gt 0)
+                    {
+                        $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / 290))
+                        $AvailableAmounToPlot = $AmountOfPlotsToTempMax - $PlotInProgressCount
+                    }
+                else
+                    {
+                        $AmountOfPlotsinProgressOccupied = [math]::Floor(($PlotInProgressCount * 290))
+                        $AvailableAmounToPlot = [math]::Floor(($DiskSize - $AmountOfPlotsinProgressOccupied) / 290)
+                        $AmountOfPlotsToTempMax = $AvailableAmounToPlot + $PlotInProgressCount
+                    }
 
             }
 
