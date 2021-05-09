@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.6.2
+Version: 1.0.6.3
 Author: Tydeno
 
 
@@ -281,6 +281,9 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                         if ($PlottableTempDrive.AvailableAmountToPlot -gt 1 -and $MaxParallelJobsOnSameDisk -gt 1)
                             {
                                 Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Current drive has space to temp more than 1x Plot and -MaxParallelJobsOnSameDisk param allows it.")
+                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Starting to sleep for"+$WaitTimeBetweenPlotOnSameDisk)
+                                Start-Sleep ($WaitTimeBetweenPlotOnSameDisk*60)
+
                                 $count = 1
                                 do
                                     {
