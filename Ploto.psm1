@@ -157,7 +157,7 @@ function Invoke-PlotoJob
         [Parameter(Mandatory=$false)]
         $BufferSize=3390,
         $Thread=2,
-        $EnableBitfield
+        $EnableBitfield=$true
 		)
 
  if($verbose) {
@@ -409,7 +409,7 @@ function Start-PlotoSpawns
     $MaxParallelJobsOnSameDisk,
     $BufferSize = 3390,
     $Thread = 2,
-    $EnableBitfield
+    $EnableBitfield=$true
     )
 
     if($verbose) 
