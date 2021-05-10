@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.7
+Version: 1.0.7.1
 Author: Tydeno
 
 
@@ -277,6 +277,25 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                 Add-Content -Path $LogPath1 -Value "PID: $pid" -Force
                                 Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Added PID to LogStatFile.")
 
+                                #Getting Plot Object Ready
+                                $PlotJob = [PSCustomObject]@{
+                                JobId = $PlotoSpawnerJobId
+                                ProcessID = $chiaexe.Id
+                                OutDrive     =  $OutDriveLetter
+                                TempDrive = $PlottableTempDrive.DriveLetter
+                                ArgumentsList = $ArgumentList
+                                ChiaVersionUsed = $ChiaVersion
+                                LogPath = $LogPath
+                                StartTime = $StartTime
+                                }
+
+                                $collectionWithPlotJobs.Add($PlotJob) | Out-Null
+
+                                Write-Host "PlotoSpawner @"(Get-Date)": Spawned the following plot Job:" -ForegroundColor Green
+                                $PlotJob | Out-Host
+                                Write-Host "--------------------------------------------------------------------"
+
+
                                 #Deduct 106GB from OutDrive Capacity in Var
                                 $DeductionOutDrive = ($OutDrive.FreeSpace - 106)
                                 $OutDrive.FreeSpace="$DeductionOutDrive"
@@ -291,13 +310,13 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                         if ($PlottableTempDrive.AvailableAmountToPlot -gt 1 -and $MaxParallelJobsOnSameDisk -gt 1)
                             {
-                                Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Current drive has space to temp more than 1x Plot and -MaxParallelJobsOnSameDisk param allows it.")
-                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Starting to sleep for"+$WaitTimeBetweenPlotOnSameDisk)
-                                Start-Sleep ($WaitTimeBetweenPlotOnSameDisk*60)
-
+                                Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Current drive has space to temp more than 1x Plot and -MaxParallelJobsOnSameDisk param allows it.")               
                                 $count = 1
                                 do
                                     {
+                                        Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Starting to sleep for"+$WaitTimeBetweenPlotOnSameDisk+" Minutes, to comply with Param")
+                                        Start-Sleep ($WaitTimeBetweenPlotOnSameDisk*60)
+
                                         $JobCountAll2 = (Get-PlotoJobs | ? {$_.Status -ne "Completed"}).Count
                                         $JobCountOnSameDisk2 = (Get-PlotoJobs | ? {$_.Status -ne "Completed"} | ? {$_.TempDrive -eq $PlottableTempDrive.DriveLetter}).Count
                                         Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Checking if Disk has any active Jobs and if count is higher than what it is allowed to.")
@@ -325,8 +344,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                 Add-Content -Path $LogPath1 -Value "OutDrive: $OutDrive"
                                                 Add-Content -Path $LogPath1 -Value "TempDrive: $PlottableTempDrive"
                                                 Add-Content -Path $LogPath1 -Value "StartTime: $StartTime"
-                                                
-
+                  
 
                                                 $max = ($PlottableOutDrives | measure-object -Property FreeSpace -maximum).maximum
                                                 $OutDrive = $PlottableOutDrives | ? { $_.FreeSpace -eq $max}
@@ -362,37 +380,35 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                     }
 
 
+                                                #Getting Plot Object Ready
+                                                $PlotJob = [PSCustomObject]@{
+                                                JobId = $PlotoSpawnerJobId
+                                                ProcessID = $chiaexe.Id
+                                                OutDrive     =  $OutDriveLetter
+                                                TempDrive = $PlottableTempDrive.DriveLetter
+                                                ArgumentsList = $ArgumentList
+                                                ChiaVersionUsed = $ChiaVersion
+                                                LogPath = $LogPath
+                                                StartTime = $StartTime
+                                                }
+
+                                                $collectionWithPlotJobs.Add($PlotJob) | Out-Null
+
+                                                Write-Host "PlotoSpawner @"(Get-Date)": Spawned the following plot Job:" -ForegroundColor Green
+                                                $PlotJob | Out-Host
+                                                Write-Host "--------------------------------------------------------------------"
+
                                                 $count++
-                                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Starting to sleep for"+$WaitTimeBetweenPlotOnSameDisk)
-                                                Start-Sleep ($WaitTimeBetweenPlotOnSameDisk*60)
-                                            
                                             }
                                     }
 
                                 until ($count -eq $PlottableTempDrive.AvailableAmountToPlot -or $count -eq $MaxParallelJobsOnSameDisk)
                             }
 
-
-                        #Getting Plot Object Ready
-                        $PlotJob = [PSCustomObject]@{
-                        JobId = $PlotoSpawnerJobId
-                        ProcessID = $chiaexe.Id
-                        OutDrive     =  $OutDriveLetter
-                        TempDrive = $PlottableTempDrive.DriveLetter
-                        ArgumentsList = $ArgumentList
-                        ChiaVersionUsed = $ChiaVersion
-                        LogPath = $LogPath
-                        StartTime = $StartTime
-                        }
-
-                        $collectionWithPlotJobs.Add($PlotJob) | Out-Null
-
-                        Write-Host "PlotoSpawner @"(Get-Date)": Spawned the following plot Job:" -ForegroundColor Green
-                        $PlotJob | Out-Host
-
+                        Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Starting to sleep for"+$WaitTimeBetweenPlotOnSeparateDisks+" Minutes, to comply with Param.")
                         Start-Sleep ($WaitTimeBetweenPlotOnSeparateDisks*60)
+
                     }
-                Write-Verbose "--------------------------------------------------------------------"
             }
     }
 else
@@ -477,10 +493,8 @@ function Get-PlotoJobs
 
 $PlotterBaseLogPath = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\plotter\"
 $logs = Get-ChildItem $PlotterBaseLogPath | ? {$_.Name -notlike "*@Stat*"}
-$pattern = @("OutDrive", "TempDrive", "Starting plotting progress into temporary dirs:", "ID", "F1 complete, time","Starting phase 1/4", "Computing table 1","Computing table 2", "Computing table 3","Computing table 4","Computing table 5","Computing table 6","Computing table 7", "Starting phase 2/4", "Time for phase 1","Backpropagating on table 7", "Backpropagating on table 6", "Backpropagating on table 5", "Backpropagating on table 4", "Backpropagating on table 3", "Backpropagating on table 2", "Starting phase 3/4", "Compressing tables 1 and 2", "Compressing tables 2 and 3", "Compressing tables 3 and 4", "Compressing tables 4 and 5", "Compressing tables 5 and 6", "Compressing tables 6 and 7", "Starting phase 4/4", "Writing C2 table", "Time for phase 4", "Renamed final file", "Total time", "Could not copy")
+$pattern = @("OutDrive", "TempDrive", "Starting plotting progress into temporary dirs:", "ID", "F1 complete, time","Starting phase 1/4", "Computing table 1","Computing table 2", "Computing table 3","Computing table 4","Computing table 5","Computing table 6","Computing table 7", "Starting phase 2/4", "Time for phase 1","Backpropagating on table 7", "Backpropagating on table 6", "Backpropagating on table 5", "Backpropagating on table 4", "Backpropagating on table 3", "Backpropagating on table 2", "Starting phase 3/4", "Compressing tables 1 and 2", "Compressing tables 2 and 3", "Compressing tables 3 and 4", "Compressing tables 4 and 5", "Compressing tables 5 and 6", "Compressing tables 6 and 7", "Starting phase 4/4", "Writing C2 table", "Time for phase 4", "Renamed final file", "Total time", "Could not copy", "Time for phase 3", "Time for phase 2")
 
-Write-Verbose ("PlotoGetJobs@ "+(Get-Date)+": Using plotter base Log Path: "+$PlotterBaseLogPath)
-Write-Verbose ("PlotoGetJobs@ "+(Get-Date)+": Scrambling Logs and searching for Keywords to get status...")
 
 $collectionWithPlotJobsOut = New-Object System.Collections.ArrayList
 
@@ -489,6 +503,12 @@ foreach ($log in $logs)
         $status = get-content ($PlotterBaseLogPath+"\"+$log.name) | Select-String -Pattern $pattern
         $CurrentStatus = $status[($status.count-1)]
         $ErrorActionPreference = "SilentlyContinue"
+
+        $CompletionTimeP1 = (($status -match "Time for phase 1").line.Split("=")[1]).TrimStart(" ")
+        $CompletionTimeP2 = (($status -match "Time for phase 2").line.Split("=")[1]).TrimStart(" ")
+        $CompletionTimeP3 = (($status -match "Time for phase 3").line.Split("=")[1]).TrimStart(" ")
+        $CompletionTimeP4 = (($status -match "Time for phase 4").line.Split("=")[1]).TrimStart(" ")
+
 
         $plotId = ($status -match "ID").line.Split(" ")[1]
 
@@ -535,7 +555,7 @@ foreach ($log in $logs)
 
                     if ($SearchStat -eq $SearchChia)
                         {
-                           $pattern2 = @("OutDrive", "TempDrive", "PID","PlotoSpawnerJobId", "StartTime", "ArgumentList")
+                           $pattern2 = @("OutDrive", "TempDrive", "PID","PlotoSpawnerJobId", "StartTime", "ArgumentList", "Time for phase 1", "Time for phase 2", "Time for phase 3", "Time for phase 4" )
                            $loggerRead = Get-Content ($PlotterBaseLogPath+"\"+$logger.Name) | Select-String -Pattern $pattern2
                            $OutDrive = ($loggerRead -match "OutDrive").line.Split("=").split(";")[1]
                            $tempDrive = ($loggerRead -match "TempDrive").line.Split("=").split(";")[1]
@@ -544,7 +564,9 @@ foreach ($log in $logs)
                            $StartTimeSplitted = ($loggerRead -match "StartTime").line.Split(":")
                            $StartTime = ($StartTimeSplitted[1]+":" + $StartTimeSplitted[2]+":" + $StartTimeSplitted[3]).TrimStart(" ")
                            $ArgumentList = ($loggerRead -match "ArgumentList").line.TrimStart("ArgumentList: ")
-                           
+
+
+
                            $StatLogPath = $logger.FullName
 
                                   
@@ -633,6 +655,10 @@ foreach ($log in $logs)
                     LogPath = $log.FullName
                     StatLogPath = $StatLogPath
                     CompletionTime = $TimeToCompleteCalcInh
+                    CompletionTimeP1 = $CompletionTimeP1
+                    CompletionTimeP2 = $CompletionTimeP2
+                    CompletionTimeP3 = $CompletionTimeP3
+                    CompletionTimeP4 = $CompletionTimeP4
                     }
                 
                 }
@@ -655,6 +681,10 @@ foreach ($log in $logs)
                     LogPath = $log.FullName
                     StatLogPath = $StatLogPath
                     CompletionTime = $TimeToCompleteCalcInh
+                    CompletionTimeP1 = $CompletionTimeP1
+                    CompletionTimeP2 = $CompletionTimeP2
+                    CompletionTimeP3 = $CompletionTimeP3
+                    CompletionTimeP4 = $CompletionTimeP4
                     }
 
                 }
