@@ -61,7 +61,6 @@ For reference heres my setup:
 |ChiaOut 2 | D:\ | SATA HDD | 465 GB
 
 So my denominators for my TempDrives its "plot" and for my destination drives its "out".
-If I'd want to use jost for example 2x drives as TempDrives, I'd rename those and adjust my denominator. For example to "plotThis"
 
 By default, Ploto spawns only 1x Plot Job on each Disk in parallel. So when I launch Ploto with default amount to spawn:
 ```powershell
