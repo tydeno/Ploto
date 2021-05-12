@@ -4,6 +4,18 @@ Cause I was tired of spawning them myself.
 
 Consists of a PowerShell Module that allows to spawn, manage and move plots.
 
+## How you can support this project
+There are several things you can do:
+* Use Ploto and provide feedback about what work, what not, and what features you'd like to see
+* Spread the word, so that more people use and test it 
+* If you can and want to you're of course also invited to contribute your pieces of PowerShell to the module by submitting pull requests
+
+In case you'd like to to support the development of Ploto in a monetary way, you may donate using the adresses below.
+
+* XCH Adress: I dont know right now, need to check wallet address when I'm home.
+* BTC Adress: 1HAhnWKABayn5tHi5dyDAQVLJtavtXpGHM
+* ETH Adress: 0x0098d6cab9c10ae8648340c0b9d86beb417194a5
+
 ### PlotoSpawn
 * [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotooutdrives)
 * [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#get-plototempdrives)
@@ -145,7 +157,6 @@ StartTime         : 4/30/2021 3:19:13 AM
 PlotoManager @ 4/30/2021 3:49:13 AM : Amount of spawned Plots in this iteration: 6
 PlotoManager @ 4/30/2021 3:49:13 AM : Overall spawned Plots since start of script: 6
 ```
-
 
 5. Leave the PowerShell Session open (can be minimized)
 
