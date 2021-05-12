@@ -12,7 +12,7 @@ There are several things you can do:
 
 In case you'd like to to support the development of Ploto in a monetary way, you may donate using the adresses below.
 
-* XCH Adress: I dont know right now, need to check wallet address when I'm home.
+* XCH Adress: xch1rz7auuuuykntmkp35xr95mhyx6tqdzr20q8gwmnxdg2ylx5j3r5qxl3mv8
 * BTC Adress: 1HAhnWKABayn5tHi5dyDAQVLJtavtXpGHM
 * ETH Adress: 0x0098d6cab9c10ae8648340c0b9d86beb417194a5
 
