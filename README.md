@@ -6,7 +6,7 @@ Consists of a PowerShell Module that allows to spawn, manage and move plots.
 
 ## How you can support this project
 There are several things you can do:
-* Use Ploto and provide feedback about what work, what not, and what features you'd like to see
+* Use Ploto and provide feedback about what works, what not, and what features you'd like to see
 * Spread the word, so that more people use and test it 
 * If you can and want to you're of course also invited to contribute your pieces of PowerShell to the module by submitting pull requests
 
