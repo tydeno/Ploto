@@ -134,8 +134,10 @@ If you want to use Ploto follow along.
 
 ## Spawn Plots
 1. Make sure your Out and TempDrives are named accordingly
-2. Download Ploto as .ZIP from [here](https://github.com/tydeno/Ploto/archive/refs/heads/main.zip)
-3. Import-Module "Ploto" 
+2. If you start to use Ploto and you have Logs created by GUI or any other manager in C:\Users\me.chia\mainnet\plotter\, Get-PlotoPlots wont the able to read the status.
+Make sure you delete/move all existing Logs in said path. 
+3. Download Ploto as .ZIP from [here](https://github.com/tydeno/Ploto/archive/refs/heads/main.zip)
+4. Import-Module "Ploto" 
 ```powershell
 Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
 ```
@@ -294,7 +296,6 @@ concurrent.futures._base.CancelledError
 
 # FAQ
 > Can I shut down the script when I dont want Ploto to spawn more Plots?
-
 Yep. The individual Chia Plot Jobs wont be affected by that.
 
 
@@ -306,6 +307,8 @@ Please also bear in mind that unexpoected beahviour and or bugs are possible.
 These are known:
 * Only works when plotting in root of drives
 * Only works when Drives are dedicated to plotting (dont hold any other files)
+* If you start to use Ploto and you have Logs created by GUI or any other manager in C:\Users\me.chia\mainnet\plotter\, Get-PlotoPlots wont the able to read the status.
+Make sure you delete/move all existing Logs in said path. 
 * Can only display and stop PlotJobs that have been spawned using PlotoSpawner
 * Using the -PerfCounter param on Get-PlotoJobs takes a while to load
 * PlotoMover is very limited right now, may break copy jobs at times (Bits)
