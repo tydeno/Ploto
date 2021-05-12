@@ -4,23 +4,7 @@ Cause I was tired of spawning them myself.
 
 Consists of a PowerShell Module that allows to spawn, manage and move plots.
 
-### PlotoSpawn
-* [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/Functions.md#get-plotooutdrives)
-* [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/Functions.md#get-plototempdrives)
-* [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/Functions.md#invoke-plotojob)
-* [Start-PlotoSpawn](https://github.com/tydeno/Ploto/blob/main/Functions.md#start-plotospawns)
 
-### PlotoManage
-* [Get-PlotoJobs](https://github.com/tydeno/Ploto/blob/main/Functions.md#get-plotojobs)
-* [Stop-PlotoJob](https://github.com/tydeno/Ploto/blob/main/Functions.md#stop-plotojob)
-* [Remove-AbortedJobs](https://github.com/tydeno/Ploto/blob/main/Functions.md#remove-abortedjobs)
-
-### PlotoMove
-* [Get-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/Functions.md#get-plotoplots)
-* [Move-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/Functions.md#move-plotoplots)
-* [Start-PlotoMove](https://github.com/tydeno/Ploto/blob/main/Functions.md#start-plotomove)
-### PlotoFarmer
-* [Get-PlotoFarmLog](https://github.com/tydeno/Ploto/blob/main/README.md#check-farm-logs)
 
 # PlotoSpawn
 TLDR: It plots 1x plot on each TempDrive (if you have 6x TempDrives = 6x parallel Plot Jobs) as long as you want it to and as long as you have OutDrive space.
@@ -318,13 +302,15 @@ concurrent.futures._base.CancelledError
 
 # FAQ
 > Can I shut down the script when I dont want Ploto to spawn more Plots?
+
 Yep. The individual Chia Plot Jobs wont be affected by that.
+
 
 
 # Knowns Bugs and Limitations
 Please be aware that Ploto was built for my specific setup. I try to generalize it as much as possible, but thats not easy-breezy.
 So what works for me, may not ultimately work for you. 
-Please also bear in mind that unexpoected beahviour and or bugs are possible.
+Please also bear in mind that unexpected beahviour and or bugs are possible.
 
 These are known:
 * Only works when plotting in root of drives
@@ -347,4 +333,23 @@ There are several things you can do:
 In case you'd like to to support the development of Ploto in a monetary way, you may donate in the currency we all are farming for:
 * XCH Adress: xch1rz7auuuuykntmkp35xr95mhyx6tqdzr20q8gwmnxdg2ylx5j3r5qxl3mv8
 
-For a detailed documentation of functions, their in/outputs and expected params, see Functions.md
+## Function details
+For a detailled documentation of all available functions, their params in- and outputs see the links below, or 
+[here](https://github.com/tydeno/Ploto/blob/main/Functions.md)
+### PlotoSpawn
+* [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/Functions.md#get-plotooutdrives)
+* [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/Functions.md#get-plototempdrives)
+* [Invoke-PlotoJob](https://github.com/tydeno/Ploto/blob/main/Functions.md#invoke-plotojob)
+* [Start-PlotoSpawn](https://github.com/tydeno/Ploto/blob/main/Functions.md#start-plotospawns)
+
+### PlotoManage
+* [Get-PlotoJobs](https://github.com/tydeno/Ploto/blob/main/Functions.md#get-plotojobs)
+* [Stop-PlotoJob](https://github.com/tydeno/Ploto/blob/main/Functions.md#stop-plotojob)
+* [Remove-AbortedJobs](https://github.com/tydeno/Ploto/blob/main/Functions.md#remove-abortedjobs)
+
+### PlotoMove
+* [Get-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/Functions.md#get-plotoplots)
+* [Move-PlotoPlots](https://github.com/tydeno/Ploto/blob/main/Functions.md#move-plotoplots)
+* [Start-PlotoMove](https://github.com/tydeno/Ploto/blob/main/Functions.md#start-plotomove)
+### PlotoFarmer
+* [Get-PlotoFarmLog](https://github.com/tydeno/Ploto/blob/main/README.md#check-farm-logs)
