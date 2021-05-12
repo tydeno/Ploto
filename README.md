@@ -4,15 +4,6 @@ Cause I was tired of spawning them myself.
 
 Consists of a PowerShell Module that allows to spawn, manage and move plots.
 
-## How you can support this project
-There are several things you can do:
-* Use Ploto and provide feedback about what works, what not, and what features you'd like to see
-* Spread the word, so that more people use and test it 
-* If you can and want to you're of course also invited to contribute your pieces of PowerShell to the module by submitting pull requests
-
-In case you'd like to to support the development of Ploto in a monetary way, you may donate in the currency we all are farming for:
-* XCH Adress: xch1rz7auuuuykntmkp35xr95mhyx6tqdzr20q8gwmnxdg2ylx5j3r5qxl3mv8
-
 ### PlotoSpawn
 * [Get-PlotoOutDrives](https://github.com/tydeno/Ploto/blob/main/README.md#get-plotooutdrives)
 * [Get-PlotoTempDrives](https://github.com/tydeno/Ploto/blob/main/README.md#get-plototempdrives)
@@ -312,6 +303,15 @@ Make sure you delete/move all existing Logs in said path.
 * PlotoMover does not check for available free space on network drives as its unaware of it (only does for local drives)
 * If you have more than 1x version of chia within your C:\Users\Me\AppData\Local\chia-blockchain folder, Ploto wont be able to determine the version and will fail.
   Make sure theres only one available folder with chia.exe (eg. app-1.1.3)
+
+## How you can support this project
+There are several things you can do:
+* Use Ploto and provide feedback about what works, what not, and what features you'd like to see
+* Spread the word, so that more people use and test it 
+* If you can and want to you're of course also invited to contribute your pieces of PowerShell to the module by submitting pull requests
+
+In case you'd like to to support the development of Ploto in a monetary way, you may donate in the currency we all are farming for:
+* XCH Adress: xch1rz7auuuuykntmkp35xr95mhyx6tqdzr20q8gwmnxdg2ylx5j3r5qxl3mv8
 
 
 
