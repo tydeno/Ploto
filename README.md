@@ -134,10 +134,10 @@ If you want to use Ploto follow along.
 
 ## Spawn Plots
 1. Make sure your Out and TempDrives are named accordingly
-2. If you start to use Ploto and you have Logs created by GUI or any other manager in C:\Users\me.chia\mainnet\plotter\, Get-PlotoPlots wont the able to read the status.
+2. If you start to use Ploto and you have Logs created by GUI or any other manager in C:\Users\me.chia\mainnet\plotter\, Get-PlotoJobs wont the able to read the status.
 Make sure you delete/move all existing Logs in said path. 
 3. Download Ploto as .ZIP from [here](https://github.com/tydeno/Ploto/archive/refs/heads/main.zip)
-4. Import-Module "Ploto" 
+4. Import-Module "Ploto" (make sure you change the path to Ploto.psm1 to reflect your situation)
 ```powershell
 Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
 ```
