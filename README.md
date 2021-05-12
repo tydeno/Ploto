@@ -10,8 +10,7 @@ There are several things you can do:
 * Spread the word, so that more people use and test it 
 * If you can and want to you're of course also invited to contribute your pieces of PowerShell to the module by submitting pull requests
 
-In case you'd like to to support the development of Ploto in a monetary way, you may donate using the adresses below.
-
+In case you'd like to to support the development of Ploto in a monetary way, you may donate in the currency we all are farming for:
 * XCH Adress: xch1rz7auuuuykntmkp35xr95mhyx6tqdzr20q8gwmnxdg2ylx5j3r5qxl3mv8
 
 ### PlotoSpawn
