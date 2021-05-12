@@ -285,7 +285,7 @@ Move-PlotoPlots -DestinationDrive "\\Desktop-xxxxx\d" -OutDriveDenom "out" -Tran
 
 Please be aware that if you use UNC paths as Destination, PlotoMover cannot grab the free space there and just fires off.
 
-## But I want it do it continously!
+## But I want to do it continously
 Sure, just use Start-PlotoMove with your needed params:
 
 ```powershell
@@ -347,8 +347,6 @@ There are several things you can do:
 
 In case you'd like to to support the development of Ploto in a monetary way, you may donate in the currency we all are farming for:
 * XCH Adress: xch1rz7auuuuykntmkp35xr95mhyx6tqdzr20q8gwmnxdg2ylx5j3r5qxl3mv8
-
-
 
 
 ## Get-PlotoOutDrives
