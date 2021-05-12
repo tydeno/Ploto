@@ -240,7 +240,7 @@ See below for a definition of what phase coe is associated with which chia.exe l
 "Starting phase 4/4*" {$StatusReturn = "4.0"}
 "Writing C2 table*" {$StatusReturn = "4.1"}
 "Time for phase 4*" {$StatusReturn = "4.2"}
-"Renamed final file*" {$StatusReturn = "4.3"}
+"Renamed final file*" {$StatusReturn = "Completed"}
 ```
 
 
