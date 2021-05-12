@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.7.1
+Version: 1.0.7.2
 Author: Tydeno
 
 
@@ -700,11 +700,19 @@ foreach ($log in $logs)
                 $collectionWithPlotJobsOut.Add($PlotJobOut) | Out-Null
             }
 
+
+        #Clear values from former iteration
         $pid= $null
         $StatusReturn = $null
         $tempDrive = $null
         $OutDrive = $null
         $AmountOfThreads = $null
+        $TimeToCompleteCalcInh = $null
+        $TimeToComplete = $null
+        $CompletionTimeP1 = $null
+        $CompletionTimeP2 = $null
+        $CompletionTimeP3 = $null
+        $CompletionTimeP4 = $null
     }
 
 
