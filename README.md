@@ -1,8 +1,11 @@
 # Ploto
 A basic Windows PowerShell based Chia Plotting Manager. 
-Cause I was tired of spawning them myself.
-
+Cause I was tired of spawning them myself. 
 Consists of a PowerShell Module that allows to spawn, manage and move plots.
+
+
+Now also informs you in Discord about spawned jobs. 
+![image](https://user-images.githubusercontent.com/83050419/118192418-662f0500-b446-11eb-9340-e919234d3d5f.png)
 
 
 
@@ -88,6 +91,37 @@ PlotoSpawner redirects the output of chia.exe to to the following path:
 And creates two log files for each job with the following notation:
 * PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b_Tmp-E_Out-K.txt (chia.exe output)
 * PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b_Tmp-E_Out-K'@'Stat.txt (Additional Info from PLotoSpawner)
+
+
+
+### Alright, I saw that Discord Bot picture, how do I use that?
+You can control whether you want to receive and what kind of alerts in a handy config file. It looks like this
+```
+{
+  "PlotterName": "SirPlotAlot",
+  "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "SpawnerAlerts": [
+    {
+      "WhenJobSpawned": "true",
+      "WhenNoOutDrivesAvailable": true,
+      "WhenJobCouldNotBeSpawned": "true"
+    }
+  ]
+}
+```
+This config file belongs in the following folder: C:\Users\YourUsserName\.chia\mainnet\config. Make sure you copy it there, as Ploto expects to find it at that location.
+Now change the WebhookUrl to match the URL of your Discord Servers Webhook and enable/disable alert notifications as you wish. [How to create a Discord Webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks). 
+
+Set the Name for your plotter, as it allows you to distinguish between alerts for each plotter. You may also use several Webhooks in different Discord Channels.
+
+When you Start Ploto, make sure you also specify the Parameter -EnableAlerts. If not specified, your Disocrd remains silent.
+
+```powershell
+Start-PlotoSpawns -BufferSize 3390 -Thread 2 -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 15 EnableBitfield $true -MaxParallelJobsOnAllDisks 5
+```
+
+
+
 
 
 # Prereqs
