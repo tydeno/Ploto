@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.7.2
+Version: 1.0.8
 Author: Tydeno
 
 
@@ -9,8 +9,6 @@ Author: Tydeno
 A basic Windows PowerShell based Chia Plotting Manager. Cause I was tired of spawning them myself. Basically spawns and moves Plots around.
 https://github.com/tydeno/Ploto
 #>
-
-
 
 function Get-PlotoOutDrives
 {
@@ -155,6 +153,8 @@ function Invoke-PlotoJob
 	Param(
 		[parameter(Mandatory=$true)]
 		$OutDriveDenom,
+	    [parameter(Mandatory=$true)]
+	    $InputAmountToSpawn,
 		[parameter(Mandatory=$true)]
 		$TempDriveDenom,
 	    [parameter(Mandatory=$true)]
@@ -168,7 +168,8 @@ function Invoke-PlotoJob
         [Parameter(Mandatory=$false)]
         $BufferSize=3390,
         $Thread=2,
-        $EnableBitfield=$true
+        $EnableBitfield=$true,
+        $EnableAlerts
 		)
 
  if($verbose) {
@@ -185,10 +186,24 @@ if ($WaitTimeBetweenPlotOnSameDisk -eq $null)
         $WaitTimeBetweenPlotOnSameDisk = 0.1
     }
 
+
+$PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoAlertConfig.json"
+
+try 
+    {
+        $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json
+        Write-Host "Loaded Alarmcoinfig successfully"
+    }
+catch
+    {
+         Throw $_.Exception.Message
+    } 
+
 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Invoking PlotoJobs started.")
 
 $PlottableTempDrives = Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom | ? {$_.IsPlottable -eq $true}   
 $PlottableOutDrives = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom | ? {$_.IsPlottable -eq $true}
+
 
 
 if ($PlottableOutDrives -eq $null)
@@ -197,7 +212,10 @@ if ($PlottableOutDrives -eq $null)
     } 
 
 $collectionWithPlotJobs= New-Object System.Collections.ArrayList
-$JobCountAll0 = (Get-PlotoJobs | ? {$_.Status -ne "Completed"}).Count
+$JobCountAll0 = ((Get-PlotoJobs | ? {$_.Status -ne "Completed"}) | Measure-Object).Count
+Write-Host "Current JobCountAll0: $JobCountAll0"
+
+$AmountOfJobsSpawned = 0
 
 if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
     {
@@ -207,10 +225,20 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
          foreach ($PlottableTempDrive in $PlottableTempDrives)
             {
-                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Iterating trough TempDrive: "+$PlottableTempDrive.DriveLetter)
                 #Check amount of Jobs ongoin
-                $JobCountAll = (Get-PlotoJobs | ? {$_.Status -ne "Completed"}).Count
-                $JobCountOnSameDisk = (Get-PlotoJobs | ? {$_.Status -ne "Completed"} | ? {$_.TempDrive -eq $PlottableTempDrive.DriveLetter}).Count
+                $JobCountAll = ((Get-PlotoJobs | ? {$_.Status -ne "Completed"}) | Measure-Object).Count
+                $JobCountOnSameDisk = ((Get-PlotoJobs | ? {$_.Status -ne "Completed"} | ? {$_.TempDrive -eq $PlottableTempDrive.DriveLetter}) | Measure-Object).Count
+
+                #Check JobCountagain
+                if ($JobCountAll -lt $MaxParallelJobsOnAllDisks)
+                {
+                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Iterating trough TempDrive: "+$PlottableTempDrive.DriveLetter)
+
+
+                if ($AmountOfJobsSpawned -ge $InputAmountToSpawn)
+                    {
+                        throw "We are done :) Reached Amount to spawn"
+                    }
 
                 if ($JobCountAll -ge $MaxParallelJobsOnAllDisks -or $JobCountOnSameDisk -ge $MaxParallelJobsOnSameDisk)
                     {
@@ -225,6 +253,45 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": -MaxParallelJobsOnAllDisks and or -MaxParallelJobsOnSameDisk allow spawning")
                         $max = ($PlottableOutDrives | measure-object -Property FreeSpace -maximum).maximum
                         $OutDrive = $PlottableOutDrives | ? { $_.FreeSpace -eq $max}
+
+                        if ($OutDrive -eq $null)
+                            {
+
+                                if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenNoOutDrivesAvailable -eq $true)
+                                    {
+                                        #Create embed builder object via the [DiscordEmbed] class
+                                        $embedBuilder = [DiscordEmbed]::New(
+                                                            'We cant move on. No Outdrives available. ',
+                                                            'I ran into trouble. I wanted to spawn a new plot, but it seems we either ran out of space on our OutDrives or I just cant find them. You sure you gave the right denominator for them? Please check your OutDrives, and if applicable, move some final plots away from it.'
+                                                        )
+
+                                        #Add purple color
+                                        $embedBuilder.WithColor(
+                                            [DiscordColor]::New(
+                                                'red'
+                                            )
+                                        )
+
+                                        $plotname = $config.PlotterName
+                                        $footie = "Ploto: "+$plotname
+                                        #Add a footer
+                                        $embedBuilder.AddFooter(
+                                            [DiscordFooter]::New(
+                                                $footie
+                                            )
+                                        )
+
+                                        $WebHookURL = $config.DiscordWebhookURL
+
+                                        Invoke-PsDsHook -CreateConfig $WebHookURL 
+                                        Invoke-PSDsHook $embedBuilder 
+                                    
+                                    }
+
+                                
+                                Throw "Error: No outdrives found"
+                            }
+
                         $OutDriveLetter = $OutDrive.DriveLetter
                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Best Outdrive most free space: "+$OutDriveLetter)
 
@@ -265,7 +332,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Bitfield is not used.")
                                 $ArgumentList = "plots create -k 32 -b "+$BufferSize+" -r "+$Thread+" -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\ -e"
                             }
-                        
+
 
                         try 
                             {
@@ -276,6 +343,8 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                 $pid = $chiaexe.Id
                                 Add-Content -Path $LogPath1 -Value "PID: $pid" -Force
                                 Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Added PID to LogStatFile.")
+                                $JobCountOut = $JobCountAll+1
+                                $JobCountSameOut = $JobCountOnSameDisk+1
 
                                 #Getting Plot Object Ready
                                 $PlotJob = [PSCustomObject]@{
@@ -289,12 +358,137 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                 StartTime = $StartTime
                                 }
 
+                                #Check amount of Jobs ongoin
+                                $AmountOfJobsSpawned = $AmountOfJobsSpawned+1
+
+                                $procid = $chiaexe.Id
                                 $collectionWithPlotJobs.Add($PlotJob) | Out-Null
 
                                 Write-Host "PlotoSpawner @"(Get-Date)": Spawned the following plot Job:" -ForegroundColor Green
                                 $PlotJob | Out-Host
                                 Write-Host "--------------------------------------------------------------------"
+                               
 
+                                if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenJobSpawned -eq "true")
+                                    {
+                                        Write-Host "Alerts enabled. In Param and config is there and says send, WhenJobCreated"
+
+                                        try 
+                                            {
+                                                #Create embed builder object via the [DiscordEmbed] class
+                                                $embedBuilder = [DiscordEmbed]::New(
+                                                                    'New Job Spawned',
+                                                                    'Hei its Ploto here. I spawned a new plot job for you.'
+                                                                )
+
+                                                #Create the field and then add it to the embed. The last value ($true) is if you want it to be in-line or not
+                                                $embedBuilder.AddField(
+                                                    [DiscordField]::New(
+                                                        'JobId', 
+                                                        $PlotoSpawnerJobId, 
+                                                        $true
+                                                    )
+                                                )
+
+                                                $embedBuilder.AddField(
+                                                    [DiscordField]::New(
+                                                        'StartTime',
+                                                        $StartTime, 
+                                                        $true
+                                                    )
+                                                )
+
+                                                $embedBuilder.AddField(
+                                                    [DiscordField]::New(
+                                                        'ProcessId',
+                                                        $procid, 
+                                                        $true
+                                                    )
+                                                )
+
+                                                $tempdriveoutp = $PlottableTempDrive.DriveLetter
+                                                $embedBuilder.AddField(
+                                                    [DiscordField]::New(
+                                                        'TempDrive',
+                                                        $tempdriveoutp, 
+                                                        $true
+                                                    )
+                                                )
+
+
+                                                $embedBuilder.AddField(
+                                                    [DiscordField]::New(
+                                                        'OutDrive',
+                                                        $OutDriveLetter, 
+                                                        $true
+                                                    )
+                                                )
+
+                                                $embedBuilder.AddField(
+                                                    [DiscordField]::New(
+                                                        'ArgumentList',
+                                                        $ArgumentList, 
+                                                        $true
+                                                    )
+                                                )
+
+
+                                                $embedBuilder.AddField(
+                                                    [DiscordField]::New(
+                                                        'Total Jobs in Progress',
+                                                        $JobCountOut, 
+                                                        $true
+                                                    )
+                                                )
+
+                                                $embedBuilder.AddField(
+                                                    [DiscordField]::New(
+                                                        'Jobs on this temp disk',
+                                                        $JobCountSameOut, 
+                                                        $true
+                                                    )
+                                                )
+
+                                                $embedBuilder.AddField(
+                                                    [DiscordField]::New(
+                                                        'Max parallel Jobs in progress allowed',
+                                                        $MaxParallelJobsOnAllDisks, 
+                                                        $true
+                                                    )
+                                                )
+
+
+
+                                                #Add purple color
+                                                $embedBuilder.WithColor(
+                                                    [DiscordColor]::New(
+                                                        'blue'
+                                                    )
+                                                )
+
+
+                                                $plotname = $config.PlotterName
+                                                $footie = "Ploto: "+$plotname
+
+                                                #Add a footer
+                                                $embedBuilder.AddFooter(
+                                                    [DiscordFooter]::New(
+                                                        $footie
+                                                    )
+                                                )
+
+                                                $WebHookURL = $config.DiscordWebhookURL
+
+                                                Invoke-PsDsHook -CreateConfig $WebHookURL 
+                                                Invoke-PSDsHook $embedBuilder     
+                                            }
+                                        catch
+                                            {
+                                                Write-Host "PlotoSpawner @"(Get-Date)": ERROR! Could not send Discord API Call or received Bad request" -ForegroundColor Red
+                                                Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
+                                            }
+
+                                    }
 
                                 #Deduct 106GB from OutDrive Capacity in Var
                                 $DeductionOutDrive = ($OutDrive.FreeSpace - 106)
@@ -303,7 +497,90 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                         catch
                             {
-                                Write-Verbose ("PlotoSpawner @"+(Get-Date)+": ERROR! Could not launch chia.exe. Check chiapath and arguments (make sure version is set correctly!). Arguments used: "+$ArgumentList) 
+                                Write-Verbose ("PlotoSpawner @"+(Get-Date)+": ERROR! Could not launch chia.exe. Check chiapath and arguments (make sure version is set correctly!). Arguments used: "+$ArgumentList)
+
+                                if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenJobCouldNotBeSpawned -eq $true)
+                                    {
+
+                                        #Create embed builder object via the [DiscordEmbed] class
+                                        $embedBuilder = [DiscordEmbed]::New(
+                                                            'Woops. Something happened. Could not spawn a job ',
+                                                            'I ran into trouble. I wanted to spawn a new plot, but something generated an error. Could Either not launch chia.exe due to missing parameters or potentially more than 1 version directory of chia is available. See below for details.'
+                                                        )
+                                        $embedBuilder.AddField(
+                                            [DiscordField]::New(
+                                                'JobId', 
+                                                $PlotoSpawnerJobId, 
+                                                $true
+                                            )
+                                        )
+
+                                        $embedBuilder.AddField(
+                                            [DiscordField]::New(
+                                                'StartTime',
+                                                $StartTime, 
+                                                $true
+                                            )
+                                        )
+
+                                        $embedBuilder.AddField(
+                                            [DiscordField]::New(
+                                                'ProcessId',
+                                                $procid, 
+                                                $true
+                                            )
+                                        )
+
+                                        $tempdriveoutp = $PlottableTempDrive.DriveLetter
+                                        $embedBuilder.AddField(
+                                            [DiscordField]::New(
+                                                'TempDrive',
+                                                $tempdriveoutp, 
+                                                $true
+                                            )
+                                        )
+
+
+                                        $embedBuilder.AddField(
+                                            [DiscordField]::New(
+                                                'OutDrive',
+                                                $OutDriveLetter, 
+                                                $true
+                                            )
+                                        )
+
+                                        $embedBuilder.AddField(
+                                            [DiscordField]::New(
+                                                'ArgumentList',
+                                                $ArgumentList, 
+                                                $true
+                                            )
+                                        )
+
+
+                                        #Add purple color
+                                        $embedBuilder.WithColor(
+                                            [DiscordColor]::New(
+                                                'red'
+                                            )
+                                        )
+
+                                        $plotname = $config.PlotterName
+                                        $footie = "Ploto: "+$plotname
+                                        #Add a footer
+                                        $embedBuilder.AddFooter(
+                                            [DiscordFooter]::New(
+                                                $footie
+                                            )
+                                        )
+
+                                        $WebHookURL = $config.DiscordWebhookURL
+
+                                        Invoke-PsDsHook -CreateConfig $WebHookURL 
+                                        Invoke-PSDsHook $embedBuilder 
+                                    
+                                    }
+                                                         
                                 Write-Host "PlotoSpawner @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
                             }
 
@@ -314,11 +591,16 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                 $count = 1
                                 do
                                     {
+                                          if ($AmountOfJobsSpawned -ge $InputAmountToSpawn)
+                                            {
+                                                throw "We are done :) Reached Amount to spawn"
+                                            }
+
                                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Starting to sleep for"+$WaitTimeBetweenPlotOnSameDisk+" Minutes, to comply with Param")
                                         Start-Sleep ($WaitTimeBetweenPlotOnSameDisk*60)
 
-                                        $JobCountAll2 = (Get-PlotoJobs | ? {$_.Status -ne "Completed"}).Count
-                                        $JobCountOnSameDisk2 = (Get-PlotoJobs | ? {$_.Status -ne "Completed"} | ? {$_.TempDrive -eq $PlottableTempDrive.DriveLetter}).Count
+                                        $JobCountAll2 = ((Get-PlotoJobs | ? {$_.Status -ne "Completed"}) | Measure-Object).Count
+                                        $JobCountOnSameDisk2 = ((Get-PlotoJobs | ? {$_.Status -ne "Completed"} | ? {$_.TempDrive -eq $PlottableTempDrive.DriveLetter}) | Measure-Object).Count
                                         Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Checking if Disk has any active Jobs and if count is higher than what it is allowed to.")
                                         if ($JobCountAll2 -ge $MaxParallelJobsOnAllDisks -or $JobCountOnSameDisk2 -ge $MaxParallelJobsOnSameDisk)
                                             {
@@ -368,6 +650,123 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                         $chiaexe = Start-Process $PathToChia -ArgumentList $ArgumentList -RedirectStandardOutput $logPath -PassThru
                                                         $pid = $chiaexe.Id
                                                         Add-Content -Path $LogPath1 -Value "PID: $pid" -Force
+                                                        $JobCountOut2 = $JobCountAll2+1
+                                                        $JobCountSameOut2 = $JobCountOnSameDisk2+1
+
+                                                        if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenJobSpawned -eq "true")
+                                                            {
+                                                                try 
+                                                                    {
+                                                                        #Create embed builder object via the [DiscordEmbed] class
+                                                                        $embedBuilder = [DiscordEmbed]::New(
+                                                                                            'New Job Spawned',
+                                                                                            'Hei its Ploto here. I spawned a new plot job for you.'
+                                                                                        )
+
+                                                                        #Create the field and then add it to the embed. The last value ($true) is if you want it to be in-line or not
+                                                                        $embedBuilder.AddField(
+                                                                            [DiscordField]::New(
+                                                                                'JobId', 
+                                                                                $PlotoSpawnerJobId, 
+                                                                                $true
+                                                                            )
+                                                                        )
+
+                                                                        $embedBuilder.AddField(
+                                                                            [DiscordField]::New(
+                                                                                'StartTime',
+                                                                                $StartTime, 
+                                                                                $true
+                                                                            )
+                                                                        )
+
+                                                                        $embedBuilder.AddField(
+                                                                            [DiscordField]::New(
+                                                                                'ProcessId',
+                                                                                $procid, 
+                                                                                $true
+                                                                            )
+                                                                        )
+
+                                                                        $tempdriveoutp = $PlottableTempDrive.DriveLetter
+                                                                        $embedBuilder.AddField(
+                                                                            [DiscordField]::New(
+                                                                                'TempDrive',
+                                                                                $tempdriveoutp, 
+                                                                                $true
+                                                                            )
+                                                                        )
+
+
+                                                                        $embedBuilder.AddField(
+                                                                            [DiscordField]::New(
+                                                                                'OutDrive',
+                                                                                $OutDriveLetter, 
+                                                                                $true
+                                                                            )
+                                                                        )
+
+                                                                        $embedBuilder.AddField(
+                                                                            [DiscordField]::New(
+                                                                                'ArgumentList',
+                                                                                $ArgumentList, 
+                                                                                $true
+                                                                            )
+                                                                        )
+
+
+                                                                        $embedBuilder.AddField(
+                                                                            [DiscordField]::New(
+                                                                                'Total Jobs in Progress',
+                                                                                $JobCountOut2, 
+                                                                                $true
+                                                                            )
+                                                                        )
+
+                                                                        $embedBuilder.AddField(
+                                                                            [DiscordField]::New(
+                                                                                'Jobs on this temp disk',
+                                                                                $JobCountSameOut2, 
+                                                                                $true
+                                                                            )
+                                                                        )
+
+                                                                        $embedBuilder.AddField(
+                                                                            [DiscordField]::New(
+                                                                                'Max parallel Jobs in progress allowed',
+                                                                                $MaxParallelJobsOnAllDisks, 
+                                                                                $true
+                                                                            )
+                                                                        )
+
+
+
+                                                                        #Add purple color
+                                                                        $embedBuilder.WithColor(
+                                                                            [DiscordColor]::New(
+                                                                                'blue'
+                                                                            )
+                                                                        )
+
+                                                                        $plotname = $config.PlotterName
+                                                                        $footie = "Ploto: "+$plotname
+                                                                        $embedBuilder.AddFooter(
+                                                                            [DiscordFooter]::New(
+                                                                                $footie
+                                                                            )
+                                                                        )
+
+                                                                        $WebHookURL = $config.DiscordWebhookURL
+
+                                                                        Invoke-PsDsHook -CreateConfig $WebHookURL 
+                                                                        Invoke-PSDsHook $embedBuilder     
+                                                                    }
+                                                                catch
+                                                                    {
+                                                                        Write-Host "PlotoSpawner @"(Get-Date)": ERROR! Could not send Discord API Call or received Bad request" -ForegroundColor Red
+                                                                        Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
+                                                                    }
+                                                            }
 
                                                         #Deduct 106GB from OutDrive Capacity in Var
                                                         $DeductionOutDrive = ($OutDrive.FreeSpace - 106)
@@ -375,10 +774,9 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                     }
                                                 catch
                                                     {
-                                                        Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
+                                                        Write-Host "PlotoSpawner @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
                                                         Write-Host "PlotoSpawner @"(Get-Date)": ERROR! Could not launch chia.exe. Chia Version tried to launch: $ChiaVersion. Check chiapath and arguments (make sure there is only latest installed chia version folder, eg app-1.1.2). Arguments used:"$ArgumentList -ForegroundColor Red
                                                     }
-
 
                                                 #Getting Plot Object Ready
                                                 $PlotJob = [PSCustomObject]@{
@@ -408,7 +806,10 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Starting to sleep for"+$WaitTimeBetweenPlotOnSeparateDisks+" Minutes, to comply with Param.")
                         Start-Sleep ($WaitTimeBetweenPlotOnSeparateDisks*60)
 
-                    }
+                    }                
+                         
+                }
+
             }
     }
 else
@@ -439,7 +840,8 @@ function Start-PlotoSpawns
     $MaxParallelJobsOnSameDisk,
     $BufferSize = 3390,
     $Thread = 2,
-    $EnableBitfield=$true
+    $EnableBitfield=$true,
+    $EnableAlerts
     )
 
     if($verbose) 
@@ -455,18 +857,19 @@ function Start-PlotoSpawns
         
         if ($verbose)
             {
-                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -Verbose
+                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -Verbose
             }
         else
             {
-                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk
+                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn
             }
         
         
         if ($SpawnedPlots)
             {
                 $SpawnedCount = $SpawnedCount + (@($SpawnedPlots) | Measure-Object).count
-                Write-Host "PlotoManager @"(Get-Date)": Amount of spawned Plots in this iteration:"(@($SpawnedPlots) | Measure-Object).count
+                $SpawnedCount = $SpawnedCount / 3
+                Write-Host "PlotoManager @"(Get-Date)": Amount of spawned Plots in this iteration:"((@($SpawnedPlots) | Measure-Object).count)/3
                 Write-Host "PlotoManager @"(Get-Date)": Overall spawned Plots since start of script:"$SpawnedCount
                 Write-Host "________________________________________________________________________________________"
             }
@@ -755,8 +1158,8 @@ function Stop-PlotoJob
         if ($FileArrToDel)
             {
                 Write-Host "PlotoStopJob @"(Get-Date)": Found .tmp files for this job to be deleted."
-                Write-Host "PlotoStopJob @"(Get-Date)": Sleeping 10 seconds before trying to attempt to delete logs and tmp files..."
-                Start-Sleep 10
+                Write-Host "PlotoStopJob @"(Get-Date)": Sleeping 4 seconds before trying to attempt to delete logs and tmp files..."
+                Start-Sleep 4
 
                 try 
                     {
@@ -1020,3 +1423,863 @@ $output = Get-content ($LogPath) | Select-String -Pattern $pattern
 
 return $output
 }
+
+
+#Helpers here. Would have loved to correctly used the module as a dependency. Just doesnt work when using with classes. Got to use the using module statement, which needs to be at the very beginning of a module or script.
+#I just load locally, this means we cannot use in the functions we call. The classes and functions wont be available within functions, thats why I baked them in directly. Massive credits to Mike Roberts! -> https://github.com/gngrninja
+
+class DiscordImage {    
+    [string]$url      = [string]::Empty
+    [string]$proxyUrl = [string]::Empty
+    [int]$width       = $null
+    [int]$height      = $null
+
+    DiscordImage([string]$url)
+    {
+        if ([string]::IsNullOrEmpty($url))
+        {
+            Write-Error "Please provide a url!"
+        }
+        else
+        {            
+            $this.url = $url
+        }
+    }
+
+    DiscordImage(   
+        [string]$url,         
+        [string]$proxyUrl
+    )
+    {
+        if ([string]::IsNullOrEmpty($url) -and [string]::IsNullOrEmpty($proxyUrl))
+        {
+            Write-Error "Please provide: a url and proxyurl"
+        }
+        else
+        {
+            $this.url      = $url
+            $this.proxyUrl = $proxyUrl
+        }
+    }
+
+    DiscordImage(
+        [string]$url,         
+        [string]$proxyUrl,
+        [int]$width, 
+        [int]$height
+    )
+    {
+        if (
+            [string]::IsNullOrEmpty($url)      -and 
+            [string]::IsNullOrEmpty($proxyUrl) -and
+            !$width -and !($height)
+        )
+        {
+            Write-Error "Please provide: a url and proxyurl"
+        }
+        else
+        {
+            $this.url      = $url
+            $this.proxyUrl = $proxyUrl        
+            $this.height   = $height
+            $this.width    = $width
+        }
+    }
+}
+
+class DiscordThumbnail {
+    [string]$url = [string]::Empty
+    [int]$width  = $null
+    [int]$height = $null
+
+    DiscordThumbnail([string]$url)
+    {
+        if ([string]::IsNullOrEmpty($url))
+        {
+            Write-Error "Please provide a url!"
+        }
+        else
+        {            
+            $this.url = $url
+        }
+    }
+
+    DiscordThumbnail(
+            [int]$width, 
+            [int]$height, 
+            [string]$url
+    )
+    {
+        if ([string]::IsNullOrEmpty($url))
+        {
+            Write-Error "Please provide a url!"
+        }
+        else
+        {
+            $this.url    = $url
+            $this.height = $height
+            $this.width  = $width
+        }
+    }
+}
+
+class DiscordAuthor {
+    [string]$name           = [string]::Empty
+    [string]$url            = [string]::Empty
+    [string]$icon_url       = [string]::Empty
+    [string]$proxy_icon_url = [string]::Empty
+
+    DiscordAuthor([string]$name)
+    {
+        if ([string]::IsNullOrEmpty($name))
+        {
+            Write-Error "Please provide a name!"
+        }
+        else
+        {            
+            $this.name = $name
+        }
+    }
+
+    DiscordAuthor(
+        [string]$name, 
+        [string]$icon_url
+    )
+    {
+        if ([string]::IsNullOrEmpty($name))
+        {
+            Write-Error "Please provide a name and icon url"
+        }
+        else
+        {
+            $this.name       = $name
+            $this.'icon_url' = $icon_url
+        }
+    }
+}
+
+class DiscordColor {
+    [int]$DecimalColor = $null
+    [string]$HexColor  = [string]::Empty
+
+    DiscordColor()
+    {
+        $embedColor = 8311585
+        $this.HexColor     = "0x$([Convert]::ToString($embedColor, 16).ToUpper())"
+        $this.DecimalColor = $embedColor
+    }
+
+    DiscordColor([int]$hex)
+    {
+        $this.DecimalColor = $hex
+        $this.HexColor     = "0x$([Convert]::ToString($hex, 16).ToUpper())"
+    }
+
+    DiscordColor([string]$color)
+    {
+
+        [int]$embedColor = $null
+
+        try {
+
+            $embedColor = $color
+
+        }
+        catch {
+            switch ($Color) {
+
+                'blue' {
+
+                    $embedColor = 4886754
+                }
+
+                'red' {
+
+                    $embedColor = 13632027
+
+                }
+
+                'orange' {
+
+                    $embedColor = 16098851
+
+                }
+
+                'yellow' {
+
+                    $embedColor = 16312092
+
+                }
+
+                'brown' {
+
+                    $embedColor = 9131818
+
+                }
+
+                'lightGreen' {
+
+                    $embedColor = 8311585
+
+                }
+
+                'green' {
+
+                    $embedColor = 4289797
+
+                }
+
+                'pink' {
+
+                    $embedColor = 12390624
+
+                }
+
+                'purple' {
+
+                    $embedColor = 9442302
+
+                }
+
+                'black' {
+
+                    $embedColor = 1
+                }
+
+                'white' {
+
+                    $embedColor = 16777215
+
+                }
+
+                'gray' {
+
+                    $embedColor = 10197915
+
+                }
+
+                default {
+
+                    $embedColor = 1
+
+                }
+            }
+        }
+
+        $this.HexColor     = "0x$([Convert]::ToString($embedColor, 16).ToUpper())"
+        $this.DecimalColor = $embedColor
+
+    }
+
+    DiscordColor(
+        [int]$r, 
+        [int]$g, 
+        [int]$b
+    )
+    {
+        $this.DecimalColor = $this.ConvertFromRgb($r, $g, $b)
+    }
+
+    [string]ConvertFromHex([string]$hex)
+    {
+        [int]$decimalValue = [Convert]::ToDecimal($hex)
+
+        return $decimalValue
+    }
+
+    [string]ConvertFromRgb(
+        [int]$r, 
+        [int]$g, 
+        [int]$b
+    )
+    {
+        $hexR = [Convert]::ToString($r, 16).ToUpper()
+        if ($hexR.Length -eq 1)
+        {
+            $hexR = "0$hexR"
+        }
+
+        $hexG = [Convert]::ToString($g, 16).ToUpper()
+        if ($hexG.Length -eq 1)
+        {
+            $hexG = "0$hexG"
+        }
+
+        $hexB = [Convert]::ToString($b, 16).ToUpper()
+        if ($hexB.Length -eq 1)
+        {
+            $hexB = "0$hexB"
+        }
+
+        [string]$hexValue     = "0x$hexR$hexG$hexB"
+        $this.HexColor        = $HexValue
+        [string]$decimalValue = $this.ConvertFromHex([int]$hexValue)
+
+        return $decimalValue
+    }
+
+    [string]ToString()
+    {
+        return $this.DecimalColor
+    }
+}
+
+class DiscordEmbed {
+    [string]$title                        = [string]::Empty
+    [string]$description                  = [string]::Empty
+    [System.Collections.ArrayList]$fields = @()
+    [string]$color                        = [DiscordColor]::New().ToString()   
+    $thumbnail                            = [string]::Empty
+    $image                                = [string]::Empty
+    $author                               = [string]::Empty
+    $footer                               = [string]::Empty
+    $url                                  = [string]::Empty
+
+    DiscordEmbed()
+    {
+        Write-Error "Please provide a title and description (and optionally, a color)!"
+    }
+
+    DiscordEmbed(
+        [string]$embedTitle, 
+        [string]$embedDescription
+    )
+    {
+        $this.title       = $embedTitle
+        $this.description = $embedDescription
+    }
+
+    DiscordEmbed(
+        [string]      $embedTitle, 
+        [string]      $embedDescription, 
+        [DiscordColor]$embedColor
+    )
+    {
+        $this.title       = $embedTitle
+        $this.description = $embedDescription
+        $this.color       = $embedColor.ToString()
+    }
+
+    [void]AddField($field) 
+    {
+        if ($field.PsObject.TypeNames[0] -eq 'DiscordField')
+        {
+            Write-Verbose "Adding field to field array!"
+            $this.Fields.Add($field) | Out-Null
+        } 
+        else
+        {
+            Write-Error "Did not receive a [DiscordField] object!"
+        }
+    }
+
+    [void]AddThumbnail($thumbNail)
+    {
+        if ($thumbNail.PsObject.TypeNames[0] -eq 'DiscordThumbnail')
+        {
+            $this.thumbnail = $thumbNail
+        } 
+        else 
+        {
+            Write-Error "Did not receive a [DiscordThumbnail] object!"
+        }
+    }
+
+    [void]AddImage($image)
+    {
+        if ($image.PsObject.TypeNames[0] -eq 'DiscordImage')
+        {
+            $this.image = $image
+        } 
+        else 
+        {
+            Write-Error "Did not receive a [DiscordImage] object!"
+        }
+    }
+
+    [void]AddAuthor($author)
+    {
+        if ($author.PsObject.TypeNames[0] -eq 'DiscordAuthor')
+        {
+            $this.author = $author
+        } 
+        else 
+        {
+            Write-Error "Did not receive a [DiscordAuthor] object!"
+        }
+    }
+
+    [void]AddFooter($footer)
+    {
+        if ($footer.PsObject.TypeNames[0] -eq 'DiscordFooter')
+        {
+            $this.footer = $footer
+        } 
+        else 
+        {
+            Write-Error "Did not receive a [DiscordFooter] object!"
+        }
+    }
+
+    [void]WithUrl($url)
+    {
+        if (![string]::IsNullOrEmpty($url))
+        {
+            $this.url = $url
+        } 
+        else 
+        {
+            Write-Error "Please provide a url!"
+        }
+    }
+
+    [void]WithColor([DiscordColor]$color)
+    {
+        $this.color = $color
+    }
+    
+    [System.Collections.ArrayList] ListFields()
+    {
+        return $this.Fields
+    }
+}
+
+class DiscordField {    
+    [string]$name
+    [string]$value
+    [bool]$inline = $false
+
+    DiscordField(
+        [string]$name, 
+        [string]$value
+    )
+    {
+        $this.name  = $name
+        $this.value = $value
+    }
+
+    DiscordField(
+        [string]$name, 
+        [string]$value, 
+        [bool]$inline
+    )
+    {
+        $this.name   = $name
+        $this.value  = $value
+        $this.inline = $inline
+    }
+}
+
+class DiscordFooter {
+    [string]$text           = [string]::Empty
+    [string]$icon_url       = [string]::Empty
+    [string]$proxy_icon_url = [string]::Empty
+
+    DiscordFooter([string]$text)
+    {
+        if ([string]::IsNullOrEmpty($text))
+        {
+            Write-Error "Please provide some footer text!"
+        }
+        else
+        {            
+            $this.text = $text
+        }
+    }
+
+    DiscordFooter(
+        [string]$text, 
+        [string]$icon_url
+    )
+    {
+        if ([string]::IsNullOrEmpty($text))
+        {
+            Write-Error "Please provide some text and an icon url"
+        }
+        else
+        {
+            $this.text       = $text
+            $this.'icon_url' = $icon_url
+        }
+    }
+}
+
+class DiscordConfig {
+    [string]$HookUrl = [string]::Empty
+
+    DiscordConfig([string]$configPath)
+    {               
+        $this.ImportConfig($configPath)    
+    }
+
+    DiscordConfig(
+        [string]$url, 
+        [string]$path
+    )
+    {
+        $this.HookUrl      = $url      
+        $this.ExportConfig($path)
+    }
+
+    [void]ExportConfig([string]$path)
+    {
+        Write-Verbose "Exporting configuration information to -> [$path]"
+
+        $folderPath = Split-Path -Path $path
+
+        if (!(Test-Path -Path $folderPath))
+        {
+            Write-Verbose "Creating folder -> [$folderPath]"
+            New-Item -ItemType Directory -Path $folderPath            
+        }
+
+        $this | ConvertTo-Json | Out-File -FilePath $path
+    }
+
+    [void]ImportConfig([string]$configPath)
+    {    
+        Write-Verbose "Importing configuration from -> [$configPath]"
+
+        $configSettings = Get-Content -Path $configPath -ErrorAction Stop | ConvertFrom-Json
+
+        $this.HookUrl = $configSettings.HookUrl 
+    }
+}
+
+$userDir = $env:USERPROFILE
+$script:separator = [IO.Path]::DirectorySeparatorChar
+$script:defaultPsDsDir = (Join-Path -Path $userDir -ChildPath '.psdshook')
+$script:configDir      = "$($defaultPsDsDir)$($separator)configs"
+
+function Invoke-PSDsHook {
+    <#
+    .SYNOPSIS
+    Invoke-PSDsHook
+    Use PowerShell classes to make using Discord Webhooks easy and extensible
+
+    .DESCRIPTION
+    This function allows you to use Discord Webhooks with embeds, files, and various configuration settings
+
+    .PARAMETER CreateConfig
+    If specified, will create a configuration file containing the webhook URL as the argument.
+    You can use the ConfigName parameter to create another configuration separate from the default.
+
+    .PARAMETER WebhookUrl   
+    If used with an embed or file, this URL will be used in the webhook call.
+
+    .PARAMETER ConfigName
+    Specified a name for the configuration file. 
+    Can be used when creating a configuration file, as well as when passing embeds/files.
+
+    .PARAMETER ListConfigs
+    Lists configuration files
+
+    .PARAMETER EmbedObject
+    Accepts an array of [EmbedObject]'s to pass in the webhook call.
+
+    .EXAMPLE
+    (Create a configuration file)
+    Configuration files are stored in a sub directory of your user's home directory named .psdshook/configs
+
+    Invoke-PsDsHook -CreateConfig "www.hook.com/hook"
+    .EXAMPLE
+    (Create a configuration file with a non-standard name)
+    Configuration files are stored in a sub directory of your user's home directory named .psdshook/configs
+
+    Invoke-PsDsHook -CreateConfig "www.hook.com/hook2" -ConfigName 'config2'
+
+    .EXAMPLE
+    (Send an embed with the default config)
+
+    using module PSDsHook
+
+    If the module is not in one of the folders listed in ($env:PSModulePath -split "$([IO.Path]::PathSeparator)")
+    You must specify the full path to the psm1 file in the above using statement
+    Example: using module 'C:\users\thegn\repos\PsDsHook\out\PSDsHook\0.0.1\PSDsHook.psm1'
+
+    Create embed builder object via the [DiscordEmbed] class
+    $embedBuilder = [DiscordEmbed]::New(
+                        'title',
+                        'description'
+                    )
+
+    Add blue color
+    $embedBuilder.WithColor(
+        [DiscordColor]::New(
+                'blue'
+        )
+    )
+    
+    Finally, call the function that will send the embed array to the webhook url via the default configuraiton file
+    Invoke-PSDsHook $embedBuilder -Verbose
+
+    .EXAMPLE
+    (Send an webhook with just text)
+
+    Invoke-PSDsHook -HookText 'this is the webhook message' -Verbose
+    #>    
+    [cmdletbinding()]
+    param(
+        [Parameter(
+            ParameterSetName = 'createDsConfig'
+        )]
+        [string]
+        $CreateConfig,
+
+        [Parameter(
+        )]
+        [string]
+        $WebhookUrl,
+
+        [Parameter(
+            Mandatory,
+            ParameterSetName = 'file'
+        )]
+        [string]
+        $FilePath,
+
+        [Parameter(
+
+        )]
+        [string]
+        $ConfigName = 'config',
+
+        [Parameter(
+            ParameterSetName = 'configList'
+        )]
+        [switch]
+        $ListConfigs,
+
+        [Parameter(
+            ParameterSetName = 'embed',
+            Position = 0
+        )]
+        $EmbedObject,
+
+        [Parameter(
+            ParameterSetName = 'simple'
+        )]
+        [string]
+        $HookText
+    )
+
+    begin {            
+
+        #Create full path to the configuration file
+        $configPath = "$($configDir)$($separator)$($ConfigName).json"
+                    
+        #Ensure we can access the path, and error out if we cannot
+        if (!(Test-Path -Path $configPath -ErrorAction SilentlyContinue) -and !$CreateConfig -and !$WebhookUrl) {
+
+            throw "Unable to access [$configPath]. Please provide a valid configuration name. Use -ListConfigs to list configurations, or -CreateConfig to create one."
+
+        } elseif (!$CreateConfig -and $WebhookUrl) {
+
+            $hookUrl = $WebhookUrl
+
+            Write-Verbose "Manual mode enabled..."
+
+        } elseif ((!$CreateConfig -and !$WebhookUrl) -and $configPath) {
+
+            #Get configuration information from the file specified                 
+            $config = [DiscordConfig]::New($configPath)                
+            $hookUrl = $config.HookUrl             
+
+        }        
+    }
+
+    process {
+            
+        switch ($PSCmdlet.ParameterSetName) {
+
+            'embed' {
+
+                $payload = Invoke-PayloadBuilder -PayloadObject $EmbedObject
+
+                Write-Verbose "Sending:"
+                Write-Verbose ""
+                Write-Verbose ($payload | ConvertTo-Json -Depth 4)
+
+                try {
+
+                    Invoke-RestMethod -Uri $hookUrl -Body ($payload | ConvertTo-Json -Depth 4) -ContentType 'Application/Json' -Method Post
+
+                }
+                catch {
+
+                    $errorMessage = $_.Exception.Message
+                    throw "Error executing Discord Webhook -> [$errorMessage]!"
+
+                }
+            }
+
+            'file' {
+
+                if ($PSVersionTable.PSVersion.Major -lt 6) {
+
+                    throw "Support for sending files is not yet available in PowerShell 5.x"
+                    
+                } else {
+
+                    $fileInfo = Invoke-PayloadBuilder -PayloadObject $FilePath
+                    $payload  = $fileInfo.Content
+    
+                    Write-Verbose "Sending:"
+                    Write-Verbose ""
+                    Write-Verbose ($payload | Out-String)
+    
+                    #If it is a file, we don't want to include the ContentType parameter as it is included in the body
+                    try {
+    
+                        Invoke-RestMethod -Uri $hookUrl -Body $payload -Method Post
+    
+                    }
+                    catch {
+    
+                        $errorMessage = $_.Exception.Message
+                        throw "Error executing Discord Webhook -> [$errorMessage]!"
+    
+                    }
+                    finally {
+    
+                        $fileInfo.Stream.Dispose()
+                        
+                    }
+                } 
+            }
+
+            'simple' {
+
+                $payload = Invoke-PayloadBuilder -PayloadObject $HookText
+
+                Write-Verbose "Sending:"
+                Write-Verbose ""
+                Write-Verbose ($payload | ConvertTo-Json -Depth 4)
+
+                try {
+                    
+                    Invoke-RestMethod -Uri $hookUrl -Body ($payload | ConvertTo-Json -Depth 4) -ContentType 'Application/Json' -Method Post
+
+                }
+                catch {
+
+                    $errorMessage = $_.Exception.Message
+                    throw "Error executing Discord Webhook -> [$errorMessage]!"
+
+                }
+            }
+
+            'createDsConfig' {
+                
+                [DiscordConfig]::New($CreateConfig, $configPath)
+
+            }
+
+            'configList' {
+
+                $configs = (Get-ChildItem -Path (Split-Path $configPath) | Where-Object {$PSitem.Extension -eq '.json'} | Select-Object -ExpandProperty Name)
+                if ($configs) {
+
+                    Write-Host "Configuration files in [$configDir]:"
+                    return $configs
+
+                } else {
+
+                    Write-Host "No configuration files found in [$configDir]"
+
+                }
+            }
+        }        
+    }
+}
+
+function Invoke-PayloadBuilder {
+    [cmdletbinding()]
+    param(
+        [Parameter(
+            Mandatory
+        )]
+        $PayloadObject
+    )
+    
+    process {
+
+        $type = $PayloadObject | Get-Member | Select-Object -ExpandProperty TypeName -Unique
+    
+        switch ($type) {
+                        
+            'DiscordEmbed' {
+
+                [bool]$createArray = $true
+
+                #check if array
+                $PayloadObject.PSObject.TypeNames | ForEach-Object {
+
+                    switch ($_) {
+
+                        {$_ -match '^System\.Collections\.Generic\.List.+'} {
+                            
+                            $createArray = $false
+
+                        }
+
+                        'System.Array' {
+
+                            $createArray = $false
+
+                        }
+
+                        'System.Collections.ArrayList' {
+                            
+                            $createArray = $false
+
+                        }
+                    }
+                }
+
+                if (!$createArray) {
+
+                    $payload = [PSCustomObject]@{
+
+                        embeds = $PayloadObject
+    
+                    }
+
+                } else {
+
+                    $embedArray = New-Object 'System.Collections.Generic.List[DiscordEmbed]'
+                    $embedArray.Add($PayloadObject) | Out-Null
+
+                    $payload = [PSCustomObject]@{
+
+                        embeds = $embedArray
+
+                    }
+                }
+            }
+
+            'System.String' {
+
+                if (Test-Path $PayloadObject -ErrorAction SilentlyContinue) {
+
+                    $payload = [DiscordFile]::New($payloadObject)
+
+                } else {
+
+                    $payload = [PSCustomObject]@{
+
+                        content = ($PayloadObject | Out-String)
+
+                    }
+                }                
+            }
+        }
+    }
+    
+    end {
+
+        return $payload
+
+    }
+}
+
