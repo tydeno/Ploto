@@ -1,0 +1,11 @@
+{
+  "PlotterName": "SirPlotAlot",
+  "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "SpawnerAlerts": [
+    {
+      "WhenJobSpawned": "true",
+      "WhenNoOutDrivesAvailable": true,
+      "WhenJobCouldNotBeSpawned": "true"
+    }
+  ]
+}
