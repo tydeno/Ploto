@@ -131,6 +131,11 @@ You can do it by using Set-ExecutionPolicy like this:
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
+* In some cases, you may need to set ExecutionPolicy to "Bypass" (If it does not allow Import with "RemoteSigned")
+```powershell
+Set-ExecutionPolicy Bypass -Scope CurrentUser
+```
+
 # How to
 If you want to use Ploto follow along.
 
