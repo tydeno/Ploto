@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.8.1
+Version: 1.0.8.2.1
 Author: Tydeno
 
 
@@ -281,7 +281,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                             )
                                         )
 
-                                        $WebHookURL = $config.DiscordWebhookURL
+                                        $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
 
                                         Invoke-PsDsHook -CreateConfig $WebHookURL 
                                         Invoke-PSDsHook $embedBuilder 
@@ -477,7 +477,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                     )
                                                 )
 
-                                                $WebHookURL = $config.DiscordWebhookURL
+                                                $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
 
                                                 Invoke-PsDsHook -CreateConfig $WebHookURL 
                                                 Invoke-PSDsHook $embedBuilder     
@@ -574,7 +574,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                             )
                                         )
 
-                                        $WebHookURL = $config.DiscordWebhookURL
+                                        $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
 
                                         Invoke-PsDsHook -CreateConfig $WebHookURL 
                                         Invoke-PSDsHook $embedBuilder 
@@ -758,7 +758,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                                             )
                                                                         )
 
-                                                                        $WebHookURL = $config.DiscordWebhookURL
+                                                                        $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
 
                                                                         Invoke-PsDsHook -CreateConfig $WebHookURL 
                                                                         Invoke-PSDsHook $embedBuilder     
@@ -1007,6 +1007,7 @@ foreach ($log in $logs)
                 {
                     $TimeToComplete = ($status -match "Total time").line.Split("=").Split(" ")[4]
                     $TimeToCompleteCalcInh = ($TimeToComplete / 60) / 60
+                    $EndDate = (Get-Date $StartTime).AddHours($TimeToCompleteCalcInh)
 
                     $StatusReturn =  "Completed"
                     $chiaPid = "None"
@@ -1084,6 +1085,7 @@ foreach ($log in $logs)
                     CompletionTimeP2 = $CompletionTimeP2
                     CompletionTimeP3 = $CompletionTimeP3
                     CompletionTimeP4 = $CompletionTimeP4
+                    EndDate = $EndDate
                     }
 
                 }
@@ -1416,6 +1418,149 @@ $LogPath= $PlotterBaseLogPath+"debug.log"
 $output = Get-content ($LogPath) | Select-String -Pattern $pattern
 
 return $output
+}
+
+
+function Invoke-PlotoFyStatusReport
+{
+
+
+    try 
+       {
+            $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoAlertConfig.json"
+            $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json
+            Write-Host "Loaded Alarmcoinfig successfully"
+        }
+    catch
+        {
+            Throw $_.Exception.Message
+        } 
+
+
+    $ReportPeriod = $config.PlotoFyAlerts.PeriodOfReportInHours
+
+    #get completed jobs in last X minutes
+    $PeriodToCheck = (Get-Date).AddHours(-$ReportPeriod)
+
+    #Get only jobs that were affected the last 2 days
+    $collectionWithJobsToReport= New-Object System.Collections.ArrayList
+
+    $Jobs = Get-PlotoJobs | Where-Object {$_.Status -eq "Completed"}
+
+    foreach ($job in $jobs) 
+        {
+            $CompletionTimeConverted = (Get-Date $job.EndDate)
+            if ($CompletionTimeConverted -gt $PeriodToCheck) 
+                {
+                    Write-Host "Thats a job do check: "$job.jobid
+
+                    $JobToReport = [PSCustomObject]@{
+                        JobId     =  $job.jobid
+                        StartTime = $job.Starttime
+                        PlotId = $job.PlotId
+                        ArgumentList = $job.ArgumentList
+                        TempDrive = $job.TempDrive
+                        OutDrive = $job.OutDrive
+                        CompletionTime = $job.CompletionTime
+                        CompletionTimeP1 = $job.CompletionTimeP1
+                        CompletionTimeP2 = $job.CompletionTimeP2
+                        CompletionTimeP3 = $job.CompletionTimeP3
+                        CompletionTimeP4 = $job.CompletionTimeP4
+                        EndDate = (Get-Date $job.StartTime).AddHours($job.CompletionTime)
+                        }
+
+                        $collectionWithJobsToReport.Add($JobToReport) | Out-Null
+                }
+        }
+
+    if ($collectionWithJobsToReport)
+        {
+            $SummaryVal = "PlotoFy calling in, as you wished. We plotted "+$collectionWithJobsToReport.Count+" jobs."
+            try 
+            {
+                $SummaryHeader = "Plotting Summary for last "+$ReportPeriod+" hours" 
+                
+                #Create embed builder object via the [DiscordEmbed] class
+                $embedBuilder = [DiscordEmbed]::New(
+                                    $SummaryHeader,
+                                    $SummaryVal
+                                )
+                $counter = 0
+                foreach ($j in $collectionWithJobsToReport)
+                    {
+                        $counter++
+                        $ArgId = "ArgumentList Job "+$counter
+                        $JobDetailsArgListMsg = $j.ArgumentList.TrimStart("plots create ")
+                        $embedBuilder.AddField(
+                            [DiscordField]::New(
+                                $ArgId,
+                                $JobDetailsArgListMsg, 
+                                $true
+                            )
+                        )
+                        $StaId = "StartTime Job "+$counter
+                        $JobDetailsStartTimeMsg = $j.StartTime
+                        $embedBuilder.AddField(
+                            [DiscordField]::New(
+                                $StaId,
+                                $JobDetailsStartTimeMsg, 
+                                $true
+                            )
+                        )
+
+                        $EndId = "EndDate Job "+$counter
+                        $JobDetailsEndTimeMsg = $j.EndDate
+                        $embedBuilder.AddField(
+                            [DiscordField]::New(
+                                $EndId,
+                                $JobDetailsEndTimeMsg, 
+                                $true
+                            )
+                        )                
+                    }
+
+                $AvgDur = ($collectionWithJobsToReport | Measure-Object -Property CompletionTime -Average).Average
+                $AvgDur = [math]::Floor($AvgDur)
+                $JobsAvgDurMsg = "It took "+$AvgDur+" (floored value) hours to complete a plot on average in that period."
+                $embedBuilder.AddField(
+                    [DiscordField]::New(
+                        'Average Duration Total',
+                        $JobsAvgDurMsg, 
+                        $true
+                    )
+                )
+
+                #Add purple color
+                $embedBuilder.WithColor(
+                    [DiscordColor]::New(
+                        'Purple'
+                    )
+                )
+
+                $plotname = $config.PlotterName
+                $footie = "Ploto: "+$plotname
+
+                #Add a footer
+                $embedBuilder.AddFooter(
+                    [DiscordFooter]::New(
+                        $footie
+                    )
+                )
+
+                $WebHookURL = $config.PlotoFyAlerts.DiscordWebHookURL
+
+                Invoke-PsDsHook -CreateConfig $WebHookURL 
+                Invoke-PSDsHook $embedBuilder     
+            }
+        catch
+            {
+                Write-Host "PlotoSpawner @"(Get-Date)": ERROR! Could not send Discord API Call or received Bad request" -ForegroundColor Red
+                Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
+            }
+        }
+
+    
+    return $collectionWithJobsToReport
 }
 
 
