@@ -1,11 +1,17 @@
 {
-  "PlotterName": "SirPlotAlot",
-  "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "PlotterName": "plotozero",
   "SpawnerAlerts": [
     {
+      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
       "WhenJobSpawned": "true",
-      "WhenNoOutDrivesAvailable": true,
+      "WhenNoOutDrivesAvailable": "true",
       "WhenJobCouldNotBeSpawned": "true"
+    }
+  ],
+  "PlotoFyAlerts": [
+    {
+      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "PeriodOfReportInHours": "6"
     }
   ]
 }
