@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.8
+Version: 1.0.8.1
 Author: Tydeno
 
 
@@ -17,7 +17,7 @@ function Get-PlotoOutDrives
 		$OutDriveDenom
 		)
 
-$outDrives = get-WmiObject win32_logicaldisk | ? {$_.VolumeName -like "*$OutDriveDenom*"}
+$outDrives = get-WmiObject win32_logicaldisk | Where-Object {$_.VolumeName -like "*$OutDriveDenom*"}
 
 #Check Space for outDrives
 $collectionWithDisks= New-Object System.Collections.ArrayList
@@ -58,13 +58,13 @@ function Get-PlotoTempDrives
 		$TempDriveDenom
 		)
 
-$tmpDrives = get-WmiObject win32_logicaldisk | ? {$_.VolumeName -like "*$TempDriveDenom*"}
+$tmpDrives = get-WmiObject win32_logicaldisk | Where-Object {$_.VolumeName -like "*$TempDriveDenom*"}
 
 #Check Space for outDrives
 $collectionWithDisks= New-Object System.Collections.ArrayList
 foreach ($tmpDrive in $tmpDrives)
     {
-        $FolderCheck = Get-ChildItem $tmpDrive.DeviceId | ? {$_.Attributes -eq "Directory"}
+        $FolderCheck = Get-ChildItem $tmpDrive.DeviceId | Where-Object {$_.Attributes -eq "Directory"}
         if ($FolderCheck)
             {
                 $HasFolder = $true
@@ -79,7 +79,7 @@ foreach ($tmpDrive in $tmpDrives)
 
 
         #Get-CurrenJobs
-        $activeJobs = Get-PlotoJobs |? {$_.TempDrive -eq $tmpDrive.DeviceId} | ? {$_.Status -ne "Completed"}
+        $activeJobs = Get-PlotoJobs | Where-Object {$_.TempDrive -eq $tmpDrive.DeviceId} | Where-Object {$_.Status -ne "Completed"}
         if ($activeJobs)
             {
                 $HasPlotInProgress = $true
@@ -201,8 +201,8 @@ catch
 
 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Invoking PlotoJobs started.")
 
-$PlottableTempDrives = Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom | ? {$_.IsPlottable -eq $true}   
-$PlottableOutDrives = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom | ? {$_.IsPlottable -eq $true}
+$PlottableTempDrives = Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom | Where-Object {$_.IsPlottable -eq $true}   
+$PlottableOutDrives = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom | Where-Object {$_.IsPlottable -eq $true}
 
 
 
@@ -212,7 +212,7 @@ if ($PlottableOutDrives -eq $null)
     } 
 
 $collectionWithPlotJobs= New-Object System.Collections.ArrayList
-$JobCountAll0 = ((Get-PlotoJobs | ? {$_.Status -ne "Completed"}) | Measure-Object).Count
+$JobCountAll0 = ((Get-PlotoJobs | Where-Object {$_.Status -ne "Completed"}) | Measure-Object).Count
 Write-Host "Current JobCountAll0: $JobCountAll0"
 
 $AmountOfJobsSpawned = 0
@@ -220,20 +220,20 @@ $AmountOfJobsSpawned = 0
 if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
     {
          Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Found available temp drives.")
-         $PlottableTempDrivesOutput = $PlottableTempDrives | ft
+         $PlottableTempDrivesOutput = $PlottableTempDrives | Format-Table
          Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": "+$PlottableTempDrivesOutput)
 
          foreach ($PlottableTempDrive in $PlottableTempDrives)
             {
                 #Check amount of Jobs ongoin
-                $JobCountAll = ((Get-PlotoJobs | ? {$_.Status -ne "Completed"}) | Measure-Object).Count
-                $JobCountOnSameDisk = ((Get-PlotoJobs | ? {$_.Status -ne "Completed"} | ? {$_.TempDrive -eq $PlottableTempDrive.DriveLetter}) | Measure-Object).Count
+                $JobCountAll = ((Get-PlotoJobs | Where-Object {$_.Status -ne "Completed"}) | Measure-Object).Count
+                $JobCountOnSameDisk = ((Get-PlotoJobs | Where-Object {$_.Status -ne "Completed"} | Where-Object {$_.TempDrive -eq $PlottableTempDrive.DriveLetter}) | Measure-Object).Count
 
                 #Check JobCountagain
                 if ($JobCountAll -lt $MaxParallelJobsOnAllDisks)
                 {
-                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Iterating trough TempDrive: "+$PlottableTempDrive.DriveLetter)
 
+                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Iterating trough TempDrive: "+$PlottableTempDrive.DriveLetter)
 
                 if ($AmountOfJobsSpawned -ge $InputAmountToSpawn)
                     {
@@ -252,7 +252,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                     {
                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": -MaxParallelJobsOnAllDisks and or -MaxParallelJobsOnSameDisk allow spawning")
                         $max = ($PlottableOutDrives | measure-object -Property FreeSpace -maximum).maximum
-                        $OutDrive = $PlottableOutDrives | ? { $_.FreeSpace -eq $max}
+                        $OutDrive = $PlottableOutDrives | Where-Object { $_.FreeSpace -eq $max}
 
                         if ($OutDrive -eq $null)
                             {
@@ -300,7 +300,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                         $ChiaBasePath = "$env:LOCALAPPDATA\chia-blockchain"
 
-                        $ChiaVersion = ((Get-ChildItem $ChiaBasePath | ? {$_.Name -like "*app*"}).Name.Split("-"))[1]
+                        $ChiaVersion = ((Get-ChildItem $ChiaBasePath | Where-Object {$_.Name -like "*app*"}).Name.Split("-"))[1]
                         $PathToChia = $ChiaBasePath+"\app-"+$ChiaVersion+"\resources\app.asar.unpacked\daemon\chia.exe" 
                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Calculated path to chia.exe: "+$PathToChia)
 
@@ -340,8 +340,8 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Using ArgumentList:"+$ArgumentList)
                                 Add-Content -Path $LogPath1 -Value "ArgumentList: $ArgumentList"
                                 $chiaexe = Start-Process $PathToChia -ArgumentList $ArgumentList -RedirectStandardOutput $LogPath -PassThru
-                                $pid = $chiaexe.Id
-                                Add-Content -Path $LogPath1 -Value "PID: $pid" -Force
+                                $procid = $chiaexe.Id
+                                Add-Content -Path $LogPath1 -Value "PID: $procid" -Force
                                 Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Added PID to LogStatFile.")
                                 $JobCountOut = $JobCountAll+1
                                 $JobCountSameOut = $JobCountOnSameDisk+1
@@ -361,7 +361,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                 #Check amount of Jobs ongoin
                                 $AmountOfJobsSpawned = $AmountOfJobsSpawned+1
 
-                                $procid = $chiaexe.Id
+                                
                                 $collectionWithPlotJobs.Add($PlotJob) | Out-Null
 
                                 Write-Host "PlotoSpawner @"(Get-Date)": Spawned the following plot Job:" -ForegroundColor Green
@@ -599,8 +599,8 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Starting to sleep for"+$WaitTimeBetweenPlotOnSameDisk+" Minutes, to comply with Param")
                                         Start-Sleep ($WaitTimeBetweenPlotOnSameDisk*60)
 
-                                        $JobCountAll2 = ((Get-PlotoJobs | ? {$_.Status -ne "Completed"}) | Measure-Object).Count
-                                        $JobCountOnSameDisk2 = ((Get-PlotoJobs | ? {$_.Status -ne "Completed"} | ? {$_.TempDrive -eq $PlottableTempDrive.DriveLetter}) | Measure-Object).Count
+                                        $JobCountAll2 = ((Get-PlotoJobs | Where-Object {$_.Status -ne "Completed"}) | Measure-Object).Count
+                                        $JobCountOnSameDisk2 = ((Get-PlotoJobs | Where-Object {$_.Status -ne "Completed"} | Where-Object {$_.TempDrive -eq $PlottableTempDrive.DriveLetter}) | Measure-Object).Count
                                         Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Checking if Disk has any active Jobs and if count is higher than what it is allowed to.")
                                         if ($JobCountAll2 -ge $MaxParallelJobsOnAllDisks -or $JobCountOnSameDisk2 -ge $MaxParallelJobsOnSameDisk)
                                             {
@@ -611,7 +611,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+" : Spawning of Job on Disk "+$PlottableTempDrive.DriveLetter+" is allowed.")
                                                 $PlotoSpawnerJobId = ([guid]::NewGuid()).Guid
                                                 $ChiaBasePath = "$env:LOCALAPPDATA\chia-blockchain"
-                                                $ChiaVersion = ((Get-ChildItem $ChiaBasePath | ? {$_.Name -like "*app*"}).Name.Split("-"))[1]
+                                                $ChiaVersion = ((Get-ChildItem $ChiaBasePath | Where-Object {$_.Name -like "*app*"}).Name.Split("-"))[1]
                                                 $PathToChia = $ChiaBasePath+"\app-"+$ChiaVersion+"\resources\app.asar.unpacked\daemon\chia.exe" 
                                                 $PlotterBaseLogPath = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\plotter\"
                                                 $LogNameBasePath = "PlotoSpawnerLog_"+((Get-Date).Day.ToString())+"_"+(Get-Date).Month.ToString()+"_"+(Get-Date).Hour.ToString()+"_"+(Get-Date).Minute.ToString()+"_"+$PlotoSpawnerJobId+"_Tmp-"+(($PlottableTempDrive).DriveLetter.Split(":"))[0]+"_Out-"+($OutDriveLetter.Split(":"))[0]+".txt"
@@ -629,7 +629,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                   
 
                                                 $max = ($PlottableOutDrives | measure-object -Property FreeSpace -maximum).maximum
-                                                $OutDrive = $PlottableOutDrives | ? { $_.FreeSpace -eq $max}
+                                                $OutDrive = $PlottableOutDrives | Where-Object { $_.FreeSpace -eq $max}
                                                 $OutDriveLetter = $OutDrive.DriveLetter
 
                                                 if ($EnableBitfield -eq $true -or $EnableBitfield -eq "yes")
@@ -648,8 +648,9 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+" : Using ArgumentList:"+$ArgumentList)
                                                         Add-Content -Path $LogPath1 -Value "ArgumentList: $ArgumentList"
                                                         $chiaexe = Start-Process $PathToChia -ArgumentList $ArgumentList -RedirectStandardOutput $logPath -PassThru
-                                                        $pid = $chiaexe.Id
+                                                        $procid = $chiaexe.Id
                                                         Add-Content -Path $LogPath1 -Value "PID: $pid" -Force
+                                                        Start-Sleep 4
                                                         $JobCountOut2 = $JobCountAll2+1
                                                         $JobCountSameOut2 = $JobCountOnSameDisk2+1
 
@@ -730,7 +731,8 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                                                 $true
                                                                             )
                                                                         )
-
+                                                                        
+                                                                        
                                                                         $embedBuilder.AddField(
                                                                             [DiscordField]::New(
                                                                                 'Max parallel Jobs in progress allowed',
@@ -791,16 +793,15 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                 }
 
                                                 $collectionWithPlotJobs.Add($PlotJob) | Out-Null
-
+                                                Write-Host "PlotoSpawner @"+(Get-Date)+": Count of Jobs on this disk:" $count
                                                 Write-Host "PlotoSpawner @"(Get-Date)": Spawned the following plot Job:" -ForegroundColor Green
                                                 $PlotJob | Out-Host
-                                                Write-Host "--------------------------------------------------------------------"
-
+                                                Write-Host "-----------------------------------------------------------------"
                                                 $count++
                                             }
                                     }
 
-                                until ($count -eq $PlottableTempDrive.AvailableAmountToPlot -or $count -eq $MaxParallelJobsOnSameDisk)
+                                until ($count -ge $PlottableTempDrive.AvailableAmountToPlot -or $count -ge $MaxParallelJobsOnSameDisk)
                             }
 
                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Starting to sleep for"+$WaitTimeBetweenPlotOnSeparateDisks+" Minutes, to comply with Param.")
@@ -895,7 +896,7 @@ function Get-PlotoJobs
    $VerbosePreference = "continue" }
 
 $PlotterBaseLogPath = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\plotter\"
-$logs = Get-ChildItem $PlotterBaseLogPath | ? {$_.Name -notlike "*@Stat*"}
+$logs = Get-ChildItem $PlotterBaseLogPath | Where-Object {$_.Name -notlike "*@Stat*"}
 $pattern = @("OutDrive", "TempDrive", "Starting plotting progress into temporary dirs:", "ID", "F1 complete, time","Starting phase 1/4", "Computing table 1","Computing table 2", "Computing table 3","Computing table 4","Computing table 5","Computing table 6","Computing table 7", "Starting phase 2/4", "Time for phase 1","Backpropagating on table 7", "Backpropagating on table 6", "Backpropagating on table 5", "Backpropagating on table 4", "Backpropagating on table 3", "Backpropagating on table 2", "Starting phase 3/4", "Compressing tables 1 and 2", "Compressing tables 2 and 3", "Compressing tables 3 and 4", "Compressing tables 4 and 5", "Compressing tables 5 and 6", "Compressing tables 6 and 7", "Starting phase 4/4", "Writing C2 table", "Time for phase 4", "Renamed final file", "Total time", "Could not copy", "Time for phase 3", "Time for phase 2")
 
 
@@ -950,7 +951,7 @@ foreach ($log in $logs)
                 default {$StatusReturn = "Could not fetch Status"}
             }
 
-            $Logstatfiles = Get-ChildItem $PlotterBaseLogPath | ? {$_.Name -like "*@Stat*"}
+            $Logstatfiles = Get-ChildItem $PlotterBaseLogPath | Where-Object {$_.Name -like "*@Stat*"}
             foreach ($logger in $Logstatfiles)
                 {
                     $SearchStat = ($logger.name).split("@")[0]
@@ -968,36 +969,32 @@ foreach ($log in $logs)
                            $StartTime = ($StartTimeSplitted[1]+":" + $StartTimeSplitted[2]+":" + $StartTimeSplitted[3]).TrimStart(" ")
                            $ArgumentList = ($loggerRead -match "ArgumentList").line.TrimStart("ArgumentList: ")
 
-
-
                            $StatLogPath = $logger.FullName
-
                                   
                            $PlotoIdToScramble = $plotId
                            #Scramble temp dir for .tmp files
 
-                           $FileArrToCountSize = Get-ChildItem $TempDrive | ? {$_.Name -like "*$PlotoIdToScramble*" -and $_.Extension -eq ".tmp"} 
-                           $SizeOnDisk = "{0:N2} GB" -f (($FileArrToCountSize | measure length -s).Sum /1GB)
+                           $FileArrToCountSize = Get-ChildItem $TempDrive | Where-Object {$_.Name -like "*$PlotoIdToScramble*" -and $_.Extension -eq ".tmp"} 
+                           $SizeOnDisk = "{0:N2} GB" -f (($FileArrToCountSize | Measure-Object length -s).Sum /1GB)
 
-                           $FileArrToCountSize = Get-ChildItem $OutDrive | ? {$_.Name -like "*$PlotoIdToScramble*" -and $_.Extension -eq ".plot"} 
-                           $SizeOnOutDisk = "{0:N2} GB" -f (($FileArrToCountSize | measure length -s).Sum /1GB)
+                           $FileArrToCountSize = Get-ChildItem $OutDrive | Where-Object {$_.Name -like "*$PlotoIdToScramble*" -and $_.Extension -eq ".plot"} 
+                           $SizeOnOutDisk = "{0:N2} GB" -f (($FileArrToCountSize | Measure-Object length -s).Sum /1GB)
 
                            if ($PerfCounter)
                             {
                                if ($StatusReturn -ne "4.3" -or $StatusReturn -ne "Completed")
                                 {
                                    Write-Verbose ("PlotoGetJobs @"+(Get-Date)+": Getting Perf counters. This may take a while...")
-                                   $p = $((Get-Counter '\Process(*)\ID Process' -ErrorAction SilentlyContinue).CounterSamples | % {[regex]$a = "^.*\($([regex]::Escape($_.InstanceName))(.*)\).*$";[PSCustomObject]@{InstanceName=$_.InstanceName;PID=$_.CookedValue;InstanceId=$a.Matches($($_.Path)).groups[1].value}})
+                                   $p = $((Get-Counter '\Process(*)\ID Process' -ErrorAction SilentlyContinue).CounterSamples | ForEach-Object {[regex]$a = "^.*\($([regex]::Escape($_.InstanceName))(.*)\).*$";[PSCustomObject]@{InstanceName=$_.InstanceName;PID=$_.CookedValue;InstanceId=$a.Matches($($_.Path)).groups[1].value}})
                                    $id = $chiaPID
-                                   $p1 = $p | where {$_.PID -eq $id}
-                                   $ProcessName = (Get-Process -Id $ProcessPID).Name
+                                   $p1 = $p | Where-Object {$_.PID -eq $id}
                                    $CpuCores = (Get-WMIObject Win32_ComputerSystem).NumberOfLogicalProcessors
                                    $Samples = (Get-Counter -Counter "\Process($($p1.InstanceName+$p1.InstanceId))\% Processor Time").CounterSamples
-                                   $cpuout = $Samples | Select `
+                                   $cpuout = $Samples | Select-Object `
                                    InstanceName,
                                    @{Name="CPU %";Expression={[Decimal]::Round(($_.CookedValue / $CpuCores), 2)}}
                                    $cpuUsage = $cpuout.'CPU %'
-                                   $MemUsage = (Get-WMIObject WIN32_PROCESS | ? {$_.processid -eq $chiapid} | Sort-Object -Property ws -Descending | Select processname,processid, @{Name="Mem Usage(MB)";Expression={[math]::round($_.ws / 1mb)}}).'Mem Usage(MB)'
+                                   $MemUsage = (Get-WMIObject WIN32_PROCESS | Where-Object {$_.processid -eq $chiapid} | Sort-Object -Property ws -Descending | Select-Object processname,processid, @{Name="Mem Usage(MB)";Expression={[math]::round($_.ws / 1mb)}}).'Mem Usage(MB)'
                                 }
                             }
                         }
@@ -1068,7 +1065,6 @@ foreach ($log in $logs)
 
             else
                 {
-
                     #Getting Plot Object Ready
                     $PlotJobOut = [PSCustomObject]@{
                     JobId = $PlotoSpawnerJobId
@@ -1105,11 +1101,9 @@ foreach ($log in $logs)
 
 
         #Clear values from former iteration
-        $pid= $null
         $StatusReturn = $null
         $tempDrive = $null
         $OutDrive = $null
-        $AmountOfThreads = $null
         $TimeToCompleteCalcInh = $null
         $TimeToComplete = $null
         $CompletionTimeP1 = $null
@@ -1121,7 +1115,7 @@ foreach ($log in $logs)
 
 $ErrorActionPreference = "Continue"
 
-$output = $collectionWithPlotJobsOut | sort Status
+$output = $collectionWithPlotJobsOut | Sort-Object Status
 
 return $output
 
@@ -1135,7 +1129,7 @@ function Stop-PlotoJob
 		)
         $ErrorActionPreference = "Stop"
 
-        $Job = Get-PlotoJobs | ? {$_.JobId -eq $JobId}
+        $Job = Get-PlotoJobs | Where-Object {$_.JobId -eq $JobId}
 
         try 
             {
@@ -1153,7 +1147,7 @@ function Stop-PlotoJob
         $PlotoIdToScramble = $job.PlotId
         #Scramble temp dir for .tmp files
 
-        $FileArrToDel = Get-ChildItem $job.TempDrive | ? {$_.Name -like "*$PlotoIdToScramble*" -and $_.Extension -eq ".tmp"} 
+        $FileArrToDel = Get-ChildItem $job.TempDrive | Where-Object {$_.Name -like "*$PlotoIdToScramble*" -and $_.Extension -eq ".tmp"} 
 
         if ($FileArrToDel)
             {
@@ -1189,7 +1183,7 @@ function Stop-PlotoJob
 
 function Remove-AbortedPlotoJobs
 {
-    $JobsToAbort = Get-PlotoJobs | ? {$_.Status -eq "Aborted"}
+    $JobsToAbort = Get-PlotoJobs | Where-Object {$_.Status -eq "Aborted"}
     Write-Host "PlotoRemoveAbortedJobs @"(Get-Date)": Found aborted Jobs to be deleted:"$JobsToAbort.JobId
     Write-Host "PlotoRemoveAbortedJobs @"(Get-Date)": Cleaning up..."
     $count = 0
@@ -1297,7 +1291,7 @@ if ($PlotsToMove)
             If ($TransferMethod -eq "BITS")
                 {
                     #Check if BITS Transfer already in progress:
-                    $HasBITSinProgress = Get-BitsTransfer | ? {$_.FileList.RemoteName -eq $plot.Filepath} 
+                    $HasBITSinProgress = Get-BitsTransfer | Where-Object {$_.FileList.RemoteName -eq $plot.Filepath} 
 
                     if ($HasBITSinProgress)
                         {
@@ -1310,13 +1304,13 @@ if ($PlotsToMove)
                                 {
                                     Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestinationDrive "using BITS"
                                     $source = $plot.FilePath
-                                    $BITSOut = Start-BitsTransfer -Source $source -Destination $DestinationDrive -Description "Moving Plot" -DisplayName "Moving Plot"
+                                    Start-BitsTransfer -Source $source -Destination $DestinationDrive -Description "Moving Plot" -DisplayName "Moving Plot"
                             
-                                    while ((Get-BitsTransfer | ? { $_.JobState -eq "Transferring" }).Count -gt 0) {     
+                                    while ((Get-BitsTransfer | Where-Object { $_.JobState -eq "Transferring" }).Count -gt 0) {     
                                         $totalbytes=0;    
                                         $bytestransferred=0; 
                                         $timeTaken = 0;    
-                                        foreach ($job in (Get-BitsTransfer | ? { $_.JobState -eq "Transferring" } | Sort-Object CreationTime)) {         
+                                        foreach ($job in (Get-BitsTransfer | Where-Object { $_.JobState -eq "Transferring" } | Sort-Object CreationTime)) {         
                                             $totalbytes += $job.BytesTotal;         
                                             $bytestransferred += $job.bytestransferred     
                                             if ($timeTaken -eq 0) { 
@@ -1343,7 +1337,7 @@ if ($PlotsToMove)
             else
                 {
                     #Check local destination drive space
-                    $DestSpaceCheck = get-WmiObject win32_logicaldisk | ? {$_.DeviceID -like "*$DestinationDrive*"}
+                    $DestSpaceCheck = get-WmiObject win32_logicaldisk | Where-Object {$_.DeviceID -like "*$DestinationDrive*"}
                     $FreeSpaceDestDrive = [math]::Round($destspaceCheck.FreeSpace  / 1073741824, 2)
 
                     if ($FreeSpaceDestDrive -gt 107)
@@ -1413,7 +1407,7 @@ function Get-PlotoFarmLog
                 "Error" {$pattern = @("ERROR")}
                 "Warning" {$pattern = @("WARN")}
 
-                default {$patterm = "Error"}
+                default {$pattern = "Error"}
             }
 
 $PlotterBaseLogPath = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\log\"
