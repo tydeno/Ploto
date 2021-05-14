@@ -132,6 +132,7 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
 * In some cases, you may need to set ExecutionPolicy to "Bypass" (If it does not allow Import with "RemoteSigned")
+
 ```powershell
 Set-ExecutionPolicy Bypass -Scope CurrentUser
 ```
@@ -171,12 +172,13 @@ PlotoManager @ 4/30/2021 3:49:13 AM : Overall spawned Plots since start of scrip
 
 ## Setup Discord Alerts
 To start with your Discord Alerts, the first step is to get the PlotoAlertConfig.json file and edit it to your wishes.
+
 1. Edit [PlotoAlertConfig.json](https://github.com/tydeno/Ploto/blob/main/PlotoAlertConfig.json)
-1.1 Set WebhookURL (Your Discord Servers Webhook)
-1.2 Set PlotterName (A freely choosen name for your plotter, to be sent in the notification)
-1.3 Set your config of alerts. Disablee/Enable the alerts your interested with true/false.
-2. Make sure you copy/move the edited .json to the folder: C:\Users\YourUserName\.chia\mainnet\config. If its not there, it wont work.
-3. Launch Start-PlotoSpawns with Param -EnableAlerts $true like this:
+2. Set WebhookURL (Your Discord Servers Webhook)
+3. Set PlotterName (A freely choosen name for your plotter, to be sent in the notification)
+4. Set your config of alerts. Disablee/Enable the alerts your interested with true/false.
+5. Make sure you copy/move the edited .json to the folder: C:\Users\YourUserName\.chia\mainnet\config. If its not there, it wont work.
+6. Launch Start-PlotoSpawns with Param -EnableAlerts $true like this:
 ```powershell
 Start-PlotoSpawns -BufferSize 3390 -Thread 2 -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 15 -WaitTimeBetweenPlotOnSameDisk 60 -MaxParallelJobsOnAllDisks 7 -MaxParallelJobsOnSameDisk 3 -EnableBitfield $true -EnableAlerts $true
 ```
