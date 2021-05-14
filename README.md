@@ -171,7 +171,7 @@ PlotoManager @ 4/30/2021 3:49:13 AM : Overall spawned Plots since start of scrip
 
 ## Setup Discord Alerts
 To start with your Discord Alerts, the first step is to get the PlotoAlertConfig.json file and edit it to your wishes.
-1. Edit PlotoAlertConfig.json
+1. Edit [PlotoAlertConfig.json](https://github.com/tydeno/Ploto/blob/main/PlotoAlertConfig.json)
 1.1 Set WebhookURL (Your Discord Servers Webhook)
 1.2 Set PlotterName (A freely choosen name for your plotter, to be sent in the notification)
 1.3 Set your config of alerts. Disablee/Enable the alerts your interested with true/false.
