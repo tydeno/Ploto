@@ -121,9 +121,6 @@ Start-PlotoSpawns -BufferSize 3390 -Thread 2 -InputAmountToSpawn 36 -OutDriveDen
 ```
 
 
-
-
-
 # Prereqs
 The following prereqs need to be met in order for Ploto to function properly:
 * chia.exe is installed (version is determined automatically) 
@@ -166,6 +163,18 @@ PlotoManager @ 4/30/2021 3:49:13 AM : Overall spawned Plots since start of scrip
 ```
 
 5. Leave the PowerShell Session open (can be minimized)
+
+## Setup Discord Alerts
+To start with your Discord Alerts, the first step is to get the PlotoAlertConfig.json file and edit it to your wishes.
+1. Edit PlotoAlertConfig.json
+1.1 Set WebhookURL (Your Discord Servers Webhook)
+1.2 Set PlotterName (A freely choosen name for your plotter, to be sent in the notification)
+1.3 Set your config of alerts. Disablee/Enable the alerts your interested with true/false.
+2. Make sure you copy/move the edited .json to the folder: C:\Users\YourUserName\.chia\mainnet\config. If its not there, it wont work.
+3. Launch Start-PlotoSpawns with Param -EnableAlerts $true like this:
+```powershell
+Start-PlotoSpawns -BufferSize 3390 -Thread 2 -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 15 -WaitTimeBetweenPlotOnSameDisk 60 -MaxParallelJobsOnAllDisks 7 -MaxParallelJobsOnSameDisk 3 -EnableBitfield $true -EnableAlerts $true
+```
 
 
 ## Get Jobs
@@ -260,9 +269,6 @@ See below for a definition of what phase coe is associated with which chia.exe l
 "Renamed final file*" {$StatusReturn = "Completed"}
 ```
 
-
-
-
 ## Stop Jobs
 1. Open a PowerShell session and import Module "Ploto" or use an existing one.
 2. Get PlotJobSpawnerId of Job you want to stop by calling "Get-PlotJobs"
@@ -338,8 +344,6 @@ concurrent.futures._base.CancelledError
 > Can I shut down the script when I dont want Ploto to spawn more Plots?
 
 Yep. The individual Chia Plot Jobs wont be affected by that.
-
-
 
 # Knowns Bugs and Limitations
 Please be aware that Ploto was built for my specific setup. I try to generalize it as much as possible, but thats not easy-breezy.
