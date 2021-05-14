@@ -375,8 +375,12 @@ There are several things you can do:
 * Spread the word, so that more people use and test it 
 * If you can and want to you're of course also invited to contribute your pieces of PowerShell to the module by submitting pull requests
 
-In case you'd like to to support the development of Ploto in a monetary way, you may donate in the currency we all are striving for:
+In case you'd like to to support the development of Ploto in a monetary way, you may donate in the currencies below with the according wallet adresses:
 * XCH Adress: xch1rz7auuuuykntmkp35xr95mhyx6tqdzr20q8gwmnxdg2ylx5j3r5qxl3mv8
+* BTC Adress: 36JQnBmN4XLuS4gHEkAFfoQVjkjnpqGuo3
+* XRP Adress: rGZV96HKpRbPCHbeYdtqE8Z5F74ULZ8o7E?dt=51451
+* DOGE Adress: 9sXPCXedbrDq1hGZLxCsLQ34MqCKcP3yMi
+* SHIB Adress: 0x0098d6cab9c10ae8648340c0b9d86beb417194a5
 
 ## Function details
 For a detailled documentation of all available functions, their params in- and outputs see the links below, or 
