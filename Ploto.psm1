@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.8.2.4.2
+Version: 1.0.8.2.4.3
 Author: Tydeno
 
 
@@ -1680,7 +1680,7 @@ function Invoke-PlotoFyStatusReport
                 Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
             }
         }
-
+    
     else
         {
             if ($jip -ne 0)
@@ -1783,7 +1783,7 @@ function Invoke-PlotoFyStatusReport
 function Request-PlotoFyStatusReport
 {
     $count = 0
-    for ($count -lt 1000000000)
+    for ($count -lt 1000000)
         {
             try 
                 {
@@ -1808,18 +1808,25 @@ function Request-PlotoFyStatusReport
 
 Function Start-PlotoFy
 {
-	Param(
-		[parameter(Mandatory=$true)]
-		$PathToPloto
-		)
 
-    $Jobber = Start-Job -ScriptBlock {
+    Start-Job -ScriptBlock {
+    try 
+        {
+             $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoAlertConfig.json"
+             $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json
+             Write-Host "Loaded Alarmcoinfig successfully"
+         }
+     catch
+         {
+             Throw $_.Exception.Message
+         } 
+ 
+    $PathToPloto = $config.PlotoFyAlerts.PathToPloto 
     Unblock-File $PathToPloto
     Import-Module $PathToPloto -Force
     Request-PlotoFyStatusReport -ErrorAction Stop
-    } 
+    } -ArgumentList $PathToPloto, $PathToPloto
 
-    return $Jobber
 }
 
 
@@ -2680,5 +2687,3 @@ function Invoke-PayloadBuilder {
 
     }
 }
-
-
