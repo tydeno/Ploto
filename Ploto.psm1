@@ -1681,14 +1681,6 @@ function Invoke-PlotoFyStatusReport
             }
         }
 
-        #DiscOverview
-        $allPhysicalDisks = Get-PhysicalDisk | Get-StorageReliabilityCounter | Sort-Object DeviceId | ft DeviceId,Temp*
-        
-        
-        BusType
-        MediaType
-        FriendlyName
-    
     else
         {
             if ($jip -ne 0)
