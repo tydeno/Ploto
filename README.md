@@ -198,6 +198,7 @@ To configure the behaviour of periodical summary reports in discord, we also use
 ![image](https://user-images.githubusercontent.com/83050419/118396604-892d0500-b650-11eb-8b5a-f05939a292b3.png)
 3. Set the intervall upon which you would like to receive the summary. This also affects the period PlotoFy uses to check for events. For example: If 1 is specified (1hr), PlotoFy will each hour lookup jobs that were copleted in the last hours, and all active jobs in progress and wrap this in a notification.
 If there are no jobs completed within the period, PlotoFy will only send the notification for the jobs in progress. If there are no completed and no jobs in progress, PlotoFy tells you with a notification, that Ploto seems not running.
+4. Set the Path to Ploto Module (where its stored right now)
 5. Make sure you copy/move the edited .json to the folder: C:\Users\YourUserName\.chia\mainnet\config. If its not there, it wont work.
 6. Open a new PowerShell Session.
 7. Import-Module "C:\Users\me\desktop\Ploto\Ploto.psm1" (make sure you change the path to Ploto.psm1 to reflect your situation)
