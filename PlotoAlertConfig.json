@@ -11,7 +11,7 @@
   "PlotoFyAlerts": [
     {
       "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "PeriodOfReportInHours": "1",
+      "PeriodOfReportInHours": "1"
     }
   ]
 }
