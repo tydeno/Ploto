@@ -204,7 +204,7 @@ If there are no jobs completed within the period, PlotoFy will only send the not
 7. Import-Module "C:\Users\me\desktop\Ploto\Ploto.psm1" (make sure you change the path to Ploto.psm1 to reflect your situation)
 8. Launch PlotoFy using the cmd below:
 ```powershell
-Start-PlotoFy -PathToPloto "C:\Users\me\desktop\Ploto\Ploto.psm1"
+Start-PlotoFy
 ```
 As PlotoFy launched a backgroundJob that continously calls "Request-PlotoFySummaryReport", for almost infinity, you may wont to stop that job at some point. To do this, you can use the following commands:
 
