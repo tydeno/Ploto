@@ -2,7 +2,7 @@
   "PlotterName": "plotozero",
   "SpawnerAlerts": [
     {
-      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxxxx",
       "WhenJobSpawned": "true",
       "WhenNoOutDrivesAvailable": "true",
       "WhenJobCouldNotBeSpawned": "true"
@@ -10,8 +10,9 @@
   ],
   "PlotoFyAlerts": [
     {
-      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "PeriodOfReportInHours": "1"
+      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxx",
+      "PeriodOfReportInHours": "1",
+      "PathToPloto": "C:/Users/me/Desktop/Ploto/Ploto.psm1"
     }
   ]
 }
