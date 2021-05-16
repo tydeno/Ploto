@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.8.2.4.1
+Version: 1.0.8.2.4.2
 Author: Tydeno
 
 
@@ -905,20 +905,9 @@ $collectionWithPlotJobsOut = New-Object System.Collections.ArrayList
 foreach ($log in $logs)
     {        
         $status = get-content ($PlotterBaseLogPath+"\"+$log.name) | Select-String -Pattern $pattern
-
-        try {
-            $CurrentStatus = $status[($status.count-1)]
-        }
-
-        catch 
-            {
-                Write-Host "It seems you have .logs in your C:\Users\me\.chia\mainnet\plotter folder, that were not created with Ploto. Please remove those as otherwise it wont work. For now." -ForegroundColor red
-                throw $_.Exception.Message
-                exit
-            }
-
         $ErrorActionPreference = "SilentlyContinue"
-
+        $CurrentStatus = $status[($status.count-1)]
+  
         $CompletionTimeP1 = (($status -match "Time for phase 1").line.Split("=")[1]).TrimStart(" ")
         $CompletionTimeP2 = (($status -match "Time for phase 2").line.Split("=")[1]).TrimStart(" ")
         $CompletionTimeP3 = (($status -match "Time for phase 3").line.Split("=")[1]).TrimStart(" ")
@@ -1692,7 +1681,13 @@ function Invoke-PlotoFyStatusReport
             }
         }
 
-    
+        #DiscOverview
+        $allPhysicalDisks = Get-PhysicalDisk | Get-StorageReliabilityCounter | Sort-Object DeviceId | ft DeviceId,Temp*
+        
+        
+        BusType
+        MediaType
+        FriendlyName
     
     else
         {
@@ -2693,4 +2688,5 @@ function Invoke-PayloadBuilder {
 
     }
 }
+
 
