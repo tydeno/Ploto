@@ -5,7 +5,12 @@ Consists of a PowerShell Module that allows to spawn, manage and move plots.
 
 
 Now also informs you in Discord about spawned jobs. 
+And if you like, you may define an Intervall upon which Plotofy sends you notifications about whats going on.
+
 ![image](https://user-images.githubusercontent.com/83050419/118192418-662f0500-b446-11eb-9340-e919234d3d5f.png)
+![image](https://user-images.githubusercontent.com/83050419/118396379-9eedfa80-b64f-11eb-9a83-1262a6625f3a.png)
+![image](https://user-images.githubusercontent.com/83050419/118396387-a57c7200-b64f-11eb-8ef5-0526bd8cb3c6.png)
+
 
 
 
@@ -170,19 +175,56 @@ PlotoManager @ 4/30/2021 3:49:13 AM : Overall spawned Plots since start of scrip
 
 5. Leave the PowerShell Session open (can be minimized)
 
-## Setup Discord Alerts
+## Setup Discord Alerts for spawned Jobs
 To start with your Discord Alerts, the first step is to get the PlotoAlertConfig.json file and edit it to your wishes.
 
 1. Edit [PlotoAlertConfig.json](https://github.com/tydeno/Ploto/blob/main/PlotoAlertConfig.json)
 2. Set WebhookURL (Your Discord Servers Webhook)
 3. Set PlotterName (A freely choosen name for your plotter, to be sent in the notification)
-4. Set your config of alerts. Disablee/Enable the alerts your interested with true/false.
+4. Set your config of alerts. Disable/Enable the alerts your interested with true/false.
 5. Make sure you copy/move the edited .json to the folder: C:\Users\YourUserName\.chia\mainnet\config. If its not there, it wont work.
-6. Launch Start-PlotoSpawns with Param -EnableAlerts $true like this:
+6. Open a PowerShell Session
+7. Import-Module "C:\Users\me\desktop\Ploto\Ploto.psm1" (make sure you change the path to Ploto.psm1 to reflect your situation)
+8. Launch Start-PlotoSpawns with Param -EnableAlerts $true like this:
 ```powershell
 Start-PlotoSpawns -BufferSize 3390 -Thread 2 -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 15 -WaitTimeBetweenPlotOnSameDisk 60 -MaxParallelJobsOnAllDisks 7 -MaxParallelJobsOnSameDisk 3 -EnableBitfield $true -EnableAlerts $true
 ```
+## Setup Discord Alerts for periodical summary of jobs completed and in progress
+To configure the behaviour of periodical summary reports in discord, we also use the PlotoAlertConfig.json stored in C:\Users\YourUserName\.chia\mainnet\config.
 
+1. Edit [PlotoAlertConfig.json](https://github.com/tydeno/Ploto/blob/main/PlotoAlertConfig.json)
+2. Set WebhookURL (Your Discord Servers Webhook). You may use the same or a different WebhookURL than what PlotoSpawner Alerts uses. This allows you to separate channels in Discord for various alerts. I use this separate for each plotter I habve:
+![image](https://user-images.githubusercontent.com/83050419/118396604-892d0500-b650-11eb-8b5a-f05939a292b3.png)
+3. Set the intervall upon which you would like to receive the summary. This also affects the period PlotoFy uses to check for events. For example: If 1 is specified (1hr), PlotoFy will each hour lookup jobs that were copleted in the last hours, and all active jobs in progress and wrap this in a notification.
+If there are no jobs completed within the period, PlotoFy will only send the notification for the jobs in progress. If there are no completed and no jobs in progress, PlotoFy tells you with a notification, that Ploto seems not running.
+5. Make sure you copy/move the edited .json to the folder: C:\Users\YourUserName\.chia\mainnet\config. If its not there, it wont work.
+6. Open a new PowerShell Session.
+7. Import-Module "C:\Users\me\desktop\Ploto\Ploto.psm1" (make sure you change the path to Ploto.psm1 to reflect your situation)
+8. Launch PlotoFy using the cmd below:
+```powershell
+Start-PlotoFy -PathToPloto "C:\Users\me\desktop\Ploto\Ploto.psm1"
+```
+As PlotoFy launched a backgroundJob that continously calls "Request-PlotoFySummaryReport", for almost infinity, you may wont to stop that job at some point. To do this, you can use the following commands:
+
+1. Get-Job to get the current running PowerShell Jobs:
+```powershell
+Get-Job
+```
+```
+Id     Name            PSJobTypeName   State         HasMoreData     Location             Command
+--     ----            -------------   -----         -----------     --------             -------
+1      Job1            BackgroundJob   Running       True            localhost            ...
+```
+
+2. Stop the Job, using Stop-Job
+```powershell
+Stop-Job -Id 1
+```
+
+3. And to clean up, we need to deleted the stopped job.
+```powershell
+Get-Job | where-object {$_.State -eq "Stopped"} | Remove-Job
+```
 
 ## Get Jobs
 1. Open another PowerShell session 
