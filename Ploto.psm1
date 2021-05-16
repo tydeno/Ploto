@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.8.2.3
+Version: 1.0.8.2.4
 Author: Tydeno
 
 
@@ -1786,7 +1786,7 @@ function Invoke-PlotoFyStatusReport
 function Request-PlotoFyStatusReport
 {
     $count = 0
-    for ($count -lt 100000)
+    for ($count -lt 1000000000)
         {
             try 
                 {
@@ -1811,11 +1811,18 @@ function Request-PlotoFyStatusReport
 
 Function Start-PlotoFy
 {
+	Param(
+		[parameter(Mandatory=$true)]
+		$PathToPloto
+		)
+
     $Jobber = Start-Job -ScriptBlock {
-    Unblock-File "C:\Users\Yanik\OneDrive\Desktop\Ploto\Ploto.psm1"
-    Import-Module "C:\Users\Yanik\OneDrive\Desktop\Ploto\Ploto.psm1" -Force
+    Unblock-File $PathToPloto
+    Import-Module $PathToPloto -Force
     Request-PlotoFyStatusReport -ErrorAction Stop
     } 
+
+    return $Jobber
 }
 
 
