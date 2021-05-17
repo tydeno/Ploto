@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.8.2.4.3
+Version: 1.0.8.2.4.4
 Author: Tydeno
 
 
@@ -588,7 +588,6 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                         if ($PlottableTempDrive.AvailableAmountToPlot -gt 1 -and $MaxParallelJobsOnSameDisk -gt 1)
                             {
                                 Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Current drive has space to temp more than 1x Plot and -MaxParallelJobsOnSameDisk param allows it.")               
-                                $count = 1
                                 do
                                     {
                                           if ($AmountOfJobsSpawned -ge $InputAmountToSpawn)
@@ -797,7 +796,12 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                 Write-Host "PlotoSpawner @"(Get-Date)": Spawned the following plot Job:" -ForegroundColor Green
                                                 $PlotJob | Out-Host
                                                 Write-Host "-----------------------------------------------------------------"
-                                                $count++
+                                            }
+
+                                        #Let see if we have another TempDrive available again. If so, we call our function again, to finally leave this loop here.
+                                        if (Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom | Where-Object {$_.IsPlottable -eq $true -and $_.DriveLetter -ne $PlottableTempDrive.DriveLetter})
+                                            {
+                                                Invoke-PlotoJob -OutDriveDenom $OutDriveDenom -InputAmountToSpawn $InputAmountToSpawn -TempDriveDenom $TempDriveDenom -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -BufferSize $BufferSize -Thread $Thread -EnableBitfield $EnableBitfield -EnableAlerts $EnableAlerts
                                             }
                                     }
 
