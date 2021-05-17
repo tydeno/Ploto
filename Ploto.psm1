@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.8.2.4.4
+Version: 1.0.8.2.4.5
 Author: Tydeno
 
 
@@ -595,7 +595,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                 throw "We are done :) Reached Amount to spawn"
                                             }
 
-                                        Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Starting to sleep for"+$WaitTimeBetweenPlotOnSameDisk+" Minutes, to comply with Param")
+                                        Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": In Loop for DisksWithMoreThanOneJob: Starting to sleep for"+$WaitTimeBetweenPlotOnSameDisk+" Minutes, to comply with Param -$WaitTimeBetweenPlotOnSameDisk")
                                         Start-Sleep ($WaitTimeBetweenPlotOnSameDisk*60)
 
                                         $JobCountAll2 = ((Get-PlotoJobs | Where-Object {$_.Status -ne "Completed"}) | Measure-Object).Count
@@ -604,6 +604,17 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                         if ($JobCountAll2 -ge $MaxParallelJobsOnAllDisks -or $JobCountOnSameDisk2 -ge $MaxParallelJobsOnSameDisk)
                                             {
                                                 Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Disk has active Jobs and count is higher than what is allowed as Input or calculated")
+                                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Disk has active Jobs and or Count is higher than allowed. -MaxParallelJobsOnAllDisks and or -MaxParallelJobsOnSameDisk prohibits spawning.")
+                                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Amount of Plots in Progress overall: "+$MaxParallelJobsOnAllDisks)
+                                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Amount of Plots in Progress on this Drive: "+$MaxParallelJobsOnSameDisk) 
+                                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Skipping Drive: "+$PlottableTempDrive)
+                                                Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Checking other drives...")
+                                                #Let see if we have another TempDrive available again. If so, we call our function again, to finally leave this loop here.
+                                                if (Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom | Where-Object {$_.IsPlottable -eq $true -and $_.DriveLetter -ne $PlottableTempDrive.DriveLetter})
+                                                    {
+                                                        Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Other Drives available. Calling Invoke-PlotoJob again to leave this loop here.")
+                                                        Invoke-PlotoJob -OutDriveDenom $OutDriveDenom -InputAmountToSpawn $InputAmountToSpawn -TempDriveDenom $TempDriveDenom -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -BufferSize $BufferSize -Thread $Thread -EnableBitfield $EnableBitfield -EnableAlerts $EnableAlerts
+                                                    }
                                             }
                                         else
                                             {
