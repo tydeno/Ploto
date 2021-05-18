@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.8.2.4.3
+Version: 1.0.9
 Author: Tydeno
 
 
@@ -77,6 +77,23 @@ foreach ($tmpDrive in $tmpDrives)
         $DiskSize = ([math]::Round($tmpDrive.Size  / 1073741824, 2))
         $FreeSpace = [math]::Round($tmpDrive.FreeSpace  / 1073741824, 2)
 
+        $Partition = Get-Partition | Where-Object {$_.DriveLetter -eq ($tmpDrive.DeviceId.TrimEnd(":"))}
+
+        If ($Partition.DiskNumber -eq $null)
+            {
+                Write-Host "PlotoSpawner @ "(Get-Date)": Cannot get disks for the logical volume" $tmpDrive.DeviceID "by PowerShell using Get-Partition/Get-Disk cmdlet. Cannot get the disk and temperature for reporting. Can keep going." -ForegroundColor Yellow
+            }
+
+        #$approxDiskModel = $Partition.DiskPathsplit("&")[2].trimstart("prod_").Replace("_", " ").Split("#")[0]
+
+        $oldea = $ErrorActionPreference
+        $ErrorActionPreference = "SilentlyContinue"
+
+        #Get Disk from partition
+        $Disk = Get-Disk -Number $Partition.DiskNumber
+        $PhysicalDisk = Get-PhysicalDisk | Where-Object {$_.FriendlyName -eq $Disk.Model}
+
+        $ErrorActionPreference = $oldea
 
         #Get-CurrenJobs
         $activeJobs = Get-PlotoJobs | Where-Object {$_.TempDrive -eq $tmpDrive.DeviceId} | Where-Object {$_.Status -ne "Completed"}
@@ -130,6 +147,9 @@ foreach ($tmpDrive in $tmpDrives)
         $driveToPass = [PSCustomObject]@{
         DriveLetter     =  $tmpDrive.DeviceID
         ChiaDriveType = "Temp"
+        Disk = $Disk.Model
+        DiskType = $PhysicalDisk.MediaType
+        DiskBus = $PhysicalDisk.BusType
         VolumeName = $tmpDrive.VolumeName
         FreeSpace = $FreeSpace
         TotalSpace = $DiskSize
@@ -192,7 +212,7 @@ $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoAl
 try 
     {
         $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json
-        Write-Host "Loaded Alarmcoinfig successfully"
+        Write-Host "Loaded Alarmconfig successfully"
     }
 catch
     {
@@ -213,7 +233,7 @@ if ($PlottableOutDrives -eq $null)
 
 $collectionWithPlotJobs= New-Object System.Collections.ArrayList
 $JobCountAll0 = ((Get-PlotoJobs | Where-Object {$_.Status -ne "Completed"}) | Measure-Object).Count
-Write-Host "Current JobCountAll0: $JobCountAll0"
+Write-Host "Current JobCount: $JobCountAll0"
 
 $AmountOfJobsSpawned = 0
 
@@ -242,9 +262,9 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                 if ($JobCountAll -ge $MaxParallelJobsOnAllDisks -or $JobCountOnSameDisk -ge $MaxParallelJobsOnSameDisk)
                     {
-                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Found available Temp Drives, but -MaxParallelJobsOnAllDisks and or -MaxParallelJobsOnSameDisk prohibits spawning.")
-                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Amount of Plots in Progress overall: "+$MaxParallelJobsOnAllDisks)
-                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Amount of Plots in Progress on this Drive: "+$MaxParallelJobsOnSameDisk) 
+                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Found available Temp Drives, but -MaxParallelJobsOnAllDisks and or -MaxParallelJobsOnSameDisk prohibits spawning.")                       
+                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Amount of Plots in Progress overall: "+$JobCountAll)
+                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Amount of Plots in Progress on this Drive: "+$JobCountOnSameDisk) 
                          Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Skipping Drive: "+$PlottableTempDrive)
                     }
 
@@ -254,6 +274,12 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                         $max = ($PlottableOutDrives | measure-object -Property FreeSpace -maximum).maximum
                         $OutDrive = $PlottableOutDrives | Where-Object { $_.FreeSpace -eq $max}
 
+                        if ($OutDrive.Count -gt 1)
+                            {
+                                #We have several OutDisks in our Array that could be the best OutDrive. Need to pick one!
+                                $OutDrive = $OutDrive[0]
+                            }
+
                         if ($OutDrive -eq $null)
                             {
 
@@ -261,8 +287,8 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                     {
                                         #Create embed builder object via the [DiscordEmbed] class
                                         $embedBuilder = [DiscordEmbed]::New(
-                                                            'We cant move on. No Outdrives available. ',
-                                                            'I ran into trouble. I wanted to spawn a new plot, but it seems we either ran out of space on our OutDrives or I just cant find them. You sure you gave the right denominator for them? Please check your OutDrives, and if applicable, move some final plots away from it.'
+                                                            'Sorry to bother you but we cant move on. No Outdrives available. ',
+                                                            'I ran into trouble. I wanted to spawn a new plot, but it seems we either ran out of space on our OutDrives or I just cant find them. You sure you gave the right denominator for them? I stopped myself now. Please check your OutDrives, and if applicable, move some final plots away from it.'
                                                         )
 
                                         #Add purple color
@@ -287,7 +313,6 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                         Invoke-PSDsHook $embedBuilder 
                                     
                                     }
-
                                 
                                 Throw "Error: No outdrives found"
                             }
@@ -358,9 +383,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                 StartTime = $StartTime
                                 }
 
-                                #Check amount of Jobs ongoin
                                 $AmountOfJobsSpawned = $AmountOfJobsSpawned+1
-
                                 
                                 $collectionWithPlotJobs.Add($PlotJob) | Out-Null
 
@@ -588,7 +611,6 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                         if ($PlottableTempDrive.AvailableAmountToPlot -gt 1 -and $MaxParallelJobsOnSameDisk -gt 1)
                             {
                                 Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Current drive has space to temp more than 1x Plot and -MaxParallelJobsOnSameDisk param allows it.")               
-                                $count = 1
                                 do
                                     {
                                           if ($AmountOfJobsSpawned -ge $InputAmountToSpawn)
@@ -596,7 +618,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                 throw "We are done :) Reached Amount to spawn"
                                             }
 
-                                        Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Starting to sleep for"+$WaitTimeBetweenPlotOnSameDisk+" Minutes, to comply with Param")
+                                        Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": In Loop for DisksWithMoreThanOneJob: Starting to sleep for"+$WaitTimeBetweenPlotOnSameDisk+" Minutes, to comply with Param -$WaitTimeBetweenPlotOnSameDisk")
                                         Start-Sleep ($WaitTimeBetweenPlotOnSameDisk*60)
 
                                         $JobCountAll2 = ((Get-PlotoJobs | Where-Object {$_.Status -ne "Completed"}) | Measure-Object).Count
@@ -605,6 +627,21 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                         if ($JobCountAll2 -ge $MaxParallelJobsOnAllDisks -or $JobCountOnSameDisk2 -ge $MaxParallelJobsOnSameDisk)
                                             {
                                                 Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Disk has active Jobs and count is higher than what is allowed as Input or calculated")
+                                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Disk has active Jobs and or Count is higher than allowed. -MaxParallelJobsOnAllDisks and or -MaxParallelJobsOnSameDisk prohibits spawning.")
+                                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Amount of Plots in Progress overall: "+$JobCountAll)
+                                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Amount of Plots in Progress on this Drive: "+$JobCountOnSameDisk)
+                                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Skipping Drive: "+$PlottableTempDrive)
+                                                Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Checking other drives...")
+                                                #Let see if we have another TempDrive available again. If so, we call our function again, to finally leave this loop here.
+                                                if (Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom | Where-Object {$_.IsPlottable -eq $true -and $_.DriveLetter -ne $PlottableTempDrive.DriveLetter})
+                                                    {
+                                                        Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Other Drives available. Calling Invoke-PlotoJob again to leave this loop here.")
+                                                        Invoke-PlotoJob -OutDriveDenom $OutDriveDenom -InputAmountToSpawn $InputAmountToSpawn -TempDriveDenom $TempDriveDenom -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -BufferSize $BufferSize -Thread $Thread -EnableBitfield $EnableBitfield -EnableAlerts $EnableAlerts
+                                                    }
+                                                else
+                                                    {
+                                                        Write-Verbose ("PlotoSpawner @"+(Get-Date)+": No others available. Will use this one.")
+                                                    }
                                             }
                                         else
                                             {
@@ -632,11 +669,54 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                 $OutDrive = $PlottableOutDrives | Where-Object { $_.FreeSpace -eq $max}
                                                 $OutDriveLetter = $OutDrive.DriveLetter
 
+                                                if ($OutDrive.Count -gt 1)
+                                                {
+                                                    #We have several OutDisks in our Array that could be the best OutDrive. Need to pick one!
+                                                    $OutDrive = $OutDrive[0]
+                                                }
+                    
+                                                if ($OutDrive -eq $null)
+                                                    {
+                        
+                                                        if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenNoOutDrivesAvailable -eq $true)
+                                                            {
+                                                                #Create embed builder object via the [DiscordEmbed] class
+                                                                $embedBuilder = [DiscordEmbed]::New(
+                                                                                    'We cant move on. No Outdrives available. ',
+                                                                                    'I ran into trouble. I wanted to spawn a new plot, but it seems we either ran out of space on our OutDrives or I just cant find them. You sure you gave the right denominator for them? Please check your OutDrives, and if applicable, move some final plots away from it.'
+                                                                                )
+                        
+                                                                #Add purple color
+                                                                $embedBuilder.WithColor(
+                                                                    [DiscordColor]::New(
+                                                                        'red'
+                                                                    )
+                                                                )
+                        
+                                                                $plotname = $config.PlotterName
+                                                                $footie = "Ploto: "+$plotname
+                                                                #Add a footer
+                                                                $embedBuilder.AddFooter(
+                                                                    [DiscordFooter]::New(
+                                                                        $footie
+                                                                    )
+                                                                )
+                        
+                                                                $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
+                        
+                                                                Invoke-PsDsHook -CreateConfig $WebHookURL 
+                                                                Invoke-PSDsHook $embedBuilder 
+                                                            
+                                                            }
+                                                        
+                                                        Throw "Error: No outdrives found"
+                                                    }
                                                 if ($EnableBitfield -eq $true -or $EnableBitfield -eq "yes")
                                                     {
                                                         $ArgumentList = "plots create -k 32 -b "+$BufferSize+" -r "+$Thread+" -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\"
-                                                    }
 
+                                                    }
+        
                                                 else
                                                     {
                                                         $ArgumentList = "plots create -k 32 -b "+$BufferSize+" -r "+$Thread+" -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\ -e"
@@ -653,6 +733,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                         Start-Sleep 4
                                                         $JobCountOut2 = $JobCountAll2+1
                                                         $JobCountSameOut2 = $JobCountOnSameDisk2+1
+                                                        $AmountOfJobsSpawned = $AmountOfJobsSpawned+1
 
                                                         if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenJobSpawned -eq "true")
                                                             {
@@ -797,7 +878,18 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                 Write-Host "PlotoSpawner @"(Get-Date)": Spawned the following plot Job:" -ForegroundColor Green
                                                 $PlotJob | Out-Host
                                                 Write-Host "-----------------------------------------------------------------"
-                                                $count++
+                                            }
+
+                                        #Let see if we have another TempDrive available again. If so, we call our function again, to finally leave this loop here.
+                                        Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Checking if we have any other Drive available than this...")
+                                        if (Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom | Where-Object {$_.IsPlottable -eq $true -and $_.DriveLetter -ne $PlottableTempDrive.DriveLetter})
+                                            {
+                                                Write-Verbose ("PlotoSpawner @"+(Get-Date)+": We do have another drive availaable. Calling function again to launch job on that drive.")
+                                                Invoke-PlotoJob -OutDriveDenom $OutDriveDenom -InputAmountToSpawn $InputAmountToSpawn -TempDriveDenom $TempDriveDenom -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -BufferSize $BufferSize -Thread $Thread -EnableBitfield $EnableBitfield -EnableAlerts $EnableAlerts
+                                            }
+                                        else
+                                            {
+                                                Write-Verbose ("PlotoSpawner @"+(Get-Date)+": No other drive available, will go with this one..")
                                             }
                                     }
 
@@ -1426,7 +1518,7 @@ function Invoke-PlotoFyStatusReport
        {
             $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoAlertConfig.json"
             $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json
-            Write-Host "Loaded Alarmcoinfig successfully"
+            Write-Host "Loaded Alarmconnfig successfully"
         }
     catch
         {
