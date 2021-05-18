@@ -422,7 +422,6 @@ There are several things you can do:
 In case you'd like to to support the development of Ploto in a monetary way, you may donate in the currencies below with the according wallet adresses:
 * XCH Adress: xch1rz7auuuuykntmkp35xr95mhyx6tqdzr20q8gwmnxdg2ylx5j3r5qxl3mv8
 * BTC Adress: 36JQnBmN4XLuS4gHEkAFfoQVjkjnpqGuo3
-* XRP Adress: rGZV96HKpRbPCHbeYdtqE8Z5F74ULZ8o7E?dt=51451
 * DOGE Adress: 9sXPCXedbrDq1hGZLxCsLQ34MqCKcP3yMi
 * SHIB Adress: 0x0098d6cab9c10ae8648340c0b9d86beb417194a5
 
