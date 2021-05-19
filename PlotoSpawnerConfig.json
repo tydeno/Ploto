@@ -1,0 +1,24 @@
+{
+    "IntervallToCheckInMinutes": "5",
+    "InputAmountToSpawn": "100", 
+    "EnableAlerts": "false",
+
+    "DiskConfig": [
+      {
+        "TempDriveDenom": "plot",
+        "OutDriveDenom": "out"
+      }
+    ],
+
+    "JobConfig": [
+        {
+          "WaitTimeBetweenPlotOnSeparateDisks": "15",
+          "WaitTimeBetweenPlotOnSameDisk": "30",
+          "MaxParallelJobsOnAllDisks": "8",
+          "MaxParallelJobsOnSameDisk": "3",
+          "BufferSize": "3390",
+          "Thread": "1",
+          "Bitfield": "true"
+        }
+      ]
+  }
