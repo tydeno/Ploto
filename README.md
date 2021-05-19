@@ -53,7 +53,10 @@ Ploto iterates once through all available TempDrives and spawns a plot per each 
 After that, Ploto checks if amount Spawned is equal as defined as input. If not, Ploto keeps going until it is.
 
 You can specify several vital parameters to control when and where plots are spawned, temped and stored. 
+
+## Understanding Plot and OutDrives
 PlotoSpawner identifies your drives for temping and storing plots by a common denominator you specify. 
+This means that all drives that match that denominator, will be used as either Temp or OutDrive.
 
 IMPORTANT: Ploto Assumes you Plot in the root of your Drives and that the Drives are dedicated to plotting. So make sure you do that aswell.
 It may work when the drives contains other data but, but Ploto was designed for empty, plot-only drives.
