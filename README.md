@@ -17,9 +17,36 @@ And if you like, you may define an Intervall upon which Plotofy sends you notifi
 
 # PlotoSpawn
 TLDR: It plots 1x plot on each TempDrive (if you have 6x TempDrives = 6x parallel Plot Jobs) as long as you want it to and as long as you have OutDrive space.
+When and where Plots are spawned is defined by PlotoSpawnerConfig.json which looks like this:
 
+```
+{
+    "IntervallToCheckInMinutes": "5",
+    "InputAmountToSpawn": "100", 
+    "EnableAlerts": "false",
+
+    "DiskConfig": [
+      {
+        "TempDriveDenom": "plot",
+        "OutDriveDenom": "out"
+      }
+    ],
+
+    "JobConfig": [
+        {
+          "WaitTimeBetweenPlotOnSeparateDisks": "15",
+          "WaitTimeBetweenPlotOnSameDisk": "30",
+          "MaxParallelJobsOnAllDisks": "8",
+          "MaxParallelJobsOnSameDisk": "3",
+          "BufferSize": "3390",
+          "Thread": "1",
+          "Bitfield": "true"
+        }
+      ]
+  }
+```
 Ploto checks periodically, if a TempDrive and OutDrive is available for plotting. 
-If there is no TempDrive available, or no OutDrive, Ploto checks again in 300 seconds.
+If there is no TempDrive available, or no OutDrive, Ploto checks again in amount of minutes defines in $config.IntervallToCheckInMinutes
 
 When there is one available, Ploto determines the best OutDrive (most free space) and calls chia.exe to start the plot.
 Ploto iterates once through all available TempDrives and spawns a plot per each TempDrive (as long as enough OutDrive space is given).
@@ -54,28 +81,22 @@ For reference heres my setup:
 
 So my denominators for my TempDrives its "plot" and for my destination drives its "out".
 
-By default, Ploto spawns only 1x Plot Job on each Disk in parallel. So when I launch Ploto with default amount to spawn:
-```powershell
-Start-PlotoSpawns -BufferSize 3390 -Thread 2 -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 15 EnableBitfield $true -MaxParallelJobsOnAllDisks 5
-```
-the following will happen:
-If there is enough free space on the temp and out drives, Ploto spawns 1x job on each disk with the specified wait time between jobs. For each job, it calculates the most suitable out drive anew, being aware of the plot jobs in progress on that disk. 
-
+### About parallelization on separate disks
 Using the Parameter "-MaxParallelJobsOnAllDisks", you can define how many Plots Jobs overall there should be in parallel. So this will be your hard cap. If there are as many jobs as you defined as max, PlotoSpawner wont spawn further Jobs. This keeps your system from overcommiting.
 Using the Parameter "-BufferSize", you can define RAM used per process, the default value is 3390MB.
 Using the Parameter "-Thread", you can define threads used per process the default value is 2 threads.
 
-So in our example:
-* Ploto will pause spawning, when there are 5x jobs spawned, and continues when one job finishes. It keeps going until it has spawned 36 plots or the script is cancelled by the user/system.
-
-
-### I need more parallelization
-Using "-MaxParallelJobsOnSameDisks" you can define how many PlotsJobs there should be in parallel on a single disk. This param affects all Disks that can host more than 1 Plot. Ploto checks each disk for free space and determines the amount of plots it can hold as a tempDrive. Also being aware of the jobs in progress. It will spawn as many jobs as possible by the disk until it reached either the hard cap of -MaxParallelJobsOnAllDisks or -MaxParallelJobsOnSameDisk
+### About parallelization on the same disk
+Using "MaxParallelJobsOnSameDisks" you can define how many PlotsJobs there should be in parallel on a single disk. This param affects all Disks that can host more than 1 Plot. Ploto checks each disk for free space and determines the amount of plots it can hold as a tempDrive. Also being aware of the jobs in progress. It will spawn as many jobs as possible by the disk until it reached either the hard cap of -MaxParallelJobsOnAllDisks or -MaxParallelJobsOnSameDisk
 
 If I launch PlotoSpawner with these params like this:
-```powershell
-Start-PlotoSpawns -BufferSize 3390 -Thread 2 -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 15 -WaitTimeBetweenPlotOnSameDisk 60 -MaxParallelJobsOnAllDisks 7 -MaxParallelJobsOnSameDisk 3 -EnableBitfield $true
 ```
+WaitTimeBetweenPlotOnSeparateDisks = 15
+WaitTimeBetweenPlotOnSameDisk = 60
+MaxParallelJobsOnAllDisks = 7
+MaxParallelJobsOnSameDisk = 3
+```
+The following will happen:
 
 PlotoSpawner will at max spawn 7 parallel jobs, and max 3 Jobs in parallel on the same disk. This means for my temp drive setup the following:
 | Name          | DriveLetter | Type   | Size      | Total Plots in parallel |
@@ -104,13 +125,20 @@ And creates two log files for each job with the following notation:
 You can control whether you want to receive and what kind of alerts in a handy config file. It looks like this
 ```
 {
-  "PlotterName": "SirPlotAlot",
-  "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "PlotterName": "plotozero",
   "SpawnerAlerts": [
     {
+      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxxxx",
       "WhenJobSpawned": "true",
-      "WhenNoOutDrivesAvailable": true,
+      "WhenNoOutDrivesAvailable": "true",
       "WhenJobCouldNotBeSpawned": "true"
+    }
+  ],
+  "PlotoFyAlerts": [
+    {
+      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxx",
+      "PeriodOfReportInHours": "1",
+      "PathToPloto": "C:/Users/me/Desktop/Ploto/Ploto.psm1"
     }
   ]
 }
@@ -151,13 +179,14 @@ If you want to use Ploto follow along.
 2. If you start to use Ploto and you have Logs created by GUI or any other manager in C:\Users\me.chia\mainnet\plotter\, Get-PlotoJobs wont the able to read the status.
 Make sure you delete/move all existing Logs in said path. 
 3. Download Ploto as .ZIP from [here](https://github.com/tydeno/Ploto/archive/refs/heads/main.zip)
-4. Import-Module "Ploto" (make sure you change the path to Ploto.psm1 to reflect your situation)
+4. Get the PlotoSpawnerConfig.json, adjust it to your needs and make sure its stored in C:\Users\YourUserName\.chia\mainnet\config
+5. Import-Module "Ploto" (make sure you change the path to Ploto.psm1 to reflect your situation)
 ```powershell
 Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
 ```
 4. Launch PlotoSpawner
 ```powershell
-Start-PlotoSpawns -BufferSize 3390 -Thread 2 -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 15 -WaitTimeBetweenPlotOnSameDisk 60 -MaxParallelJobsOnAllDisks 7 -MaxParallelJobsOnSameDisk 3 -EnableBitfield $true
+Start-PlotoSpawns
 ```
 ```
 PlotoSpawner @ 4/30/2021 3:19:13 AM : Spawned the following plot Job:
@@ -185,10 +214,11 @@ To start with your Discord Alerts, the first step is to get the PlotoAlertConfig
 4. Set your config of alerts. Disable/Enable the alerts your interested with true/false.
 5. Make sure you copy/move the edited .json to the folder: C:\Users\YourUserName\.chia\mainnet\config. If its not there, it wont work.
 6. Open a PowerShell Session
-7. Import-Module "C:\Users\me\desktop\Ploto\Ploto.psm1" (make sure you change the path to Ploto.psm1 to reflect your situation)
-8. Launch Start-PlotoSpawns with Param -EnableAlerts $true like this:
+7. Edit PlotoSpawnerConfig to EnableAlerts = true
+8. Import-Module "C:\Users\me\desktop\Ploto\Ploto.psm1" (make sure you change the path to Ploto.psm1 to reflect your situation)
+9. Launch Start-PlotoSpawns with Param -EnableAlerts $true like this:
 ```powershell
-Start-PlotoSpawns -BufferSize 3390 -Thread 2 -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 15 -WaitTimeBetweenPlotOnSameDisk 60 -MaxParallelJobsOnAllDisks 7 -MaxParallelJobsOnSameDisk 3 -EnableBitfield $true -EnableAlerts $true
+Start-PlotoSpawns 
 ```
 ## Setup Discord Alerts for periodical summary of jobs completed and in progress
 To configure the behaviour of periodical summary reports in discord, we also use the PlotoAlertConfig.json stored in C:\Users\YourUserName\.chia\mainnet\config.
