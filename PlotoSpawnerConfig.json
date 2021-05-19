@@ -2,12 +2,14 @@
     "IntervallToCheckInMinutes": "5",
     "InputAmountToSpawn": "100", 
     "EnableAlerts": "false",
+    "ChiaWindowStyle": "hidden",
 
     "DiskConfig": [
       {
         "TempDriveDenom": "plot",
-        "Temp2Denom": "t2",
-        "OutDriveDenom": "out"
+	    "Temp2Denom": "t2",
+        "OutDriveDenom": "out",
+	    "EnableT2": "true"
       }
     ],
 
@@ -15,9 +17,9 @@
         {
           "WaitTimeBetweenPlotOnSeparateDisks": "15",
           "WaitTimeBetweenPlotOnSameDisk": "30",
-          "MaxParallelJobsOnAllDisks": "8",
-          "MaxParallelJobsOnSameDisk": "3",
-          "BufferSize": "3390",
+          "MaxParallelJobsOnAllDisks": "6",
+          "MaxParallelJobsOnSameDisk": "2",
+          "BufferSize": "1000",
           "Thread": "1",
           "Bitfield": "true"
         }
