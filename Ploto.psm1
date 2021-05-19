@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9
+Version: 1.0.9.1
 Author: Tydeno
 
 
@@ -168,6 +168,126 @@ foreach ($tmpDrive in $tmpDrives)
     return $collectionWithDisks 
 }
 
+function Get-PlotoT2Drives
+{
+
+	Param(
+        [parameter(Mandatory=$true)]
+		$T2Denom
+		)
+
+$tmpDrives = get-WmiObject win32_logicaldisk | Where-Object {$_.VolumeName -like "*$T2Denom*"}
+
+#Check Space for outDrives
+$collectionWithDisks= New-Object System.Collections.ArrayList
+foreach ($tmpDrive in $tmpDrives)
+    {
+        $FolderCheck = Get-ChildItem $tmpDrive.DeviceId | Where-Object {$_.Attributes -eq "Directory"}
+        if ($FolderCheck)
+            {
+                $HasFolder = $true
+            }
+        else
+            {
+                $HasFolder = $false
+            }
+        
+        $DiskSize = ([math]::Round($tmpDrive.Size  / 1073741824, 2))
+        $FreeSpace = [math]::Round($tmpDrive.FreeSpace  / 1073741824, 2)
+
+        $Partition = Get-Partition | Where-Object {$_.DriveLetter -eq ($tmpDrive.DeviceId.TrimEnd(":"))}
+
+        If ($Partition.DiskNumber -eq $null)
+            {
+                Write-Host "PlotoSpawner @ "(Get-Date)": Cannot get disks for the logical volume" $tmpDrive.DeviceID "by PowerShell using Get-Partition/Get-Disk cmdlet. Cannot get the disk and temperature for reporting. Can keep going." -ForegroundColor Yellow
+            }
+
+        #$approxDiskModel = $Partition.DiskPathsplit("&")[2].trimstart("prod_").Replace("_", " ").Split("#")[0]
+
+        $oldea = $ErrorActionPreference
+        $ErrorActionPreference = "SilentlyContinue"
+
+        #Get Disk from partition
+        $Disk = Get-Disk -Number $Partition.DiskNumber
+        $PhysicalDisk = Get-PhysicalDisk | Where-Object {$_.FriendlyName -eq $Disk.Model}
+
+        $ErrorActionPreference = $oldea
+
+        #Get-CurrenJobs
+        $activeJobs = Get-PlotoJobs | Where-Object {$_.TempDrive -eq $tmpDrive.DeviceId} | Where-Object {$_.Status -ne "Completed"}
+        if ($activeJobs)
+            {
+                $HasPlotInProgress = $true
+                $PlotInProgressName = $activeJobs.PlotId
+                $PlotInProgressCount = $activeJobs.count
+
+                if ($PlotInProgressCount -eq $null)
+                    {
+                        $PlotInProgressCount = 1
+                    }
+                
+                $RedundencyCheck = $DiskSize - ($FreeSpace + $PlotInProgressCount * 107)
+                #has addiontal data in the disk
+                if($RedundencyCheck -gt 0)
+                    {
+                        $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / 107))
+                        $AvailableAmounToPlot = $AmountOfPlotsToTempMax - $PlotInProgressCount
+                    }
+                else
+                    {
+                        $AmountOfPlotsinProgressOccupied = [math]::Floor(($PlotInProgressCount * 107))
+                        $AvailableAmounToPlot = [math]::Floor(($DiskSize - $AmountOfPlotsinProgressOccupied) / 107)
+                        $AmountOfPlotsToTempMax = $AvailableAmounToPlot + $PlotInProgressCount
+                    }
+
+            }
+
+        else
+            {
+                $HasPlotInProgress = $false
+                $PlotInProgressName = " "
+                $PlotInProgressCount = 0
+                $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / 107))
+                $AvailableAmounToPlot = $AmountOfPlotsToTempMax
+            }
+
+
+        if ($AvailableAmounToPlot -ge 1)
+            {
+                $IsPlottable = $true
+            }
+        else
+            {
+                $IsPlottable = $false
+            }
+
+        
+        $driveToPass = [PSCustomObject]@{
+        DriveLetter     =  $tmpDrive.DeviceID
+        ChiaDriveType = "T2"
+        Disk = $Disk.Model
+        DiskType = $PhysicalDisk.MediaType
+        DiskBus = $PhysicalDisk.BusType
+        VolumeName = $tmpDrive.VolumeName
+        FreeSpace = $FreeSpace
+        TotalSpace = $DiskSize
+        hasFolder = $HasFolder
+        IsPlottable    = $IsPlottable
+        HasPlotInProgress = $HasPlotInProgress
+        AmountOfPlotsInProgress =  $PlotInProgressCount
+        AmountOfPlotsToTempMax = $AmountOfPlotsToTempMax
+        AvailableAmountToPlot = $AvailableAmounToPlot
+        PlotInProgressID = $PlotInProgressName
+        }
+
+        $collectionWithDisks.Add($driveToPass) | Out-Null
+
+    }
+    return $collectionWithDisks
+
+
+}
+
 function Invoke-PlotoJob
 {
 	Param(
@@ -190,7 +310,8 @@ function Invoke-PlotoJob
         $Thread=2,
         $EnableBitfield=$true,
         $EnableAlerts,
-        $CountSpawnedJobs
+        $CountSpawnedJobs,
+        $T2Denom
 		)
 
  if($verbose) {
@@ -355,25 +476,73 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                     $logstatName = "PlotoSpawnerLog_"+((Get-Date).Day.ToString())+"_"+(Get-Date).Month.ToString()+"_"+(Get-Date).Hour.ToString()+"_"+(Get-Date).Minute.ToString()+"_"+$PlotoSpawnerJobId+"_Tmp-"+(($PlottableTempDrive).DriveLetter.Split(":"))[0]+"_Out-"+($OutDriveLetter.Split(":"))[0]+"@Stat.txt"
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Calculated LogStatName "+$logstatName)
 
-
                                     $logPath1 = (New-Item -Path $PlotterBaseLogPath -Name $logstatName).FullName
                                     Add-Content -Path $LogPath1 -Value "PlotoSpawnerJobId: $PlotoSpawnerJobId"
                                     Add-Content -Path $LogPath1 -Value "OutDrive: $OutDrive"
                                     Add-Content -Path $LogPath1 -Value "TempDrive: $PlottableTempDrive"
+                                    Add-Content -Path $LogPath1 -Value "T2Drive: $t2driveletter"
                                     Add-Content -Path $LogPath1 -Value "StartTime: $StartTime"
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Created LogStat file and passed values along.")
 
                                     if ($EnableBitfield -eq $true -or $EnableBitfield -eq "yes")
                                         {
                                             Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Bitfield is set to be used.")
-                                            $ArgumentList = "plots create -k 32 -b "+$BufferSize+" -r "+$Thread+" -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\"
+
+                                            if ($T2Denom)
+                                                {
+                                                    Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Using T2 drive.")
+                                                    #Get best fitted t2 Drive 
+                                                    $PlottableT2Drives = Get-PlotoT2Drives -T2denom $T2Denom | Where-Object {$_.IsPlottable -eq $true}   
+                                                    $min = ($PlottableT2Drives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
+                                                    $t2drive = $PlottableT2Drives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
+                                            
+                                                    if ($t2drive.Count -gt 1)
+                                                    {
+                                                        #We have several OutDisks in our Array that could be the best OutDrive. Need to pick one!
+                                                        $t2drive = $t2drive[0]
+                                                        $t2driveletter = $t2drive.DriveLetter
+
+                                                        $ArgumentList = "plots create -k 32 -b "+$BufferSize+" -r "+$Thread+" -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\ -2 "+$t2driveletter+"\"
+
+                                                    }
+                                                }
+                                            else
+                                                {
+                                                    Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Not using T2 drive.")
+                                                    $t2driveletter = "None"
+                                                    $ArgumentList = "plots create -k 32 -b "+$BufferSize+" -r "+$Thread+" -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\"
+                                                } 
                                         }
 
                                     else
                                         {
                                             Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Bitfield is not used.")
-                                            $ArgumentList = "plots create -k 32 -b "+$BufferSize+" -r "+$Thread+" -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\ -e"
-                                        }
+                                            
+                                            if ($T2Denom)
+                                                {
+                                                    Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Using T2 drive.")
+                                                    #Get best fitted t2 Drive 
+                                                    $PlottableT2Drives = Get-PlotoT2Drives -T2denom $T2Denom | Where-Object {$_.IsPlottable -eq $true}   
+                                                    $min = ($PlottableT2Drives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
+                                                    $t2drive = $PlottableT2Drives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
+                                            
+                                                    if ($t2drive.Count -gt 1)
+                                                    {
+                                                        #We have several OutDisks in our Array that could be the best OutDrive. Need to pick one!
+                                                        $t2drive = $t2drive[0]
+                                                        $t2driveletter = $t2drive.DriveLetter
+
+                                                        $ArgumentList = "plots create -k 32 -b "+$BufferSize+" -r "+$Thread+" -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\ -2 "+$t2driveletter+"\ -e"
+
+                                                    }
+                                                }
+                                            else
+                                                {
+                                                    Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Not using T2 drive.")
+                                                    $t2driveletter = "None"
+                                                    $ArgumentList = "plots create -k 32 -b "+$BufferSize+" -r "+$Thread+" -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\ -e"
+                                                }
+                                           }
 
 
 
@@ -807,6 +976,7 @@ foreach ($log in $logs)
                            $loggerRead = Get-Content ($PlotterBaseLogPath+"\"+$logger.Name) | Select-String -Pattern $pattern2
                            $OutDrive = ($loggerRead -match "OutDrive").line.Split("=").split(";")[1]
                            $tempDrive = ($loggerRead -match "TempDrive").line.Split("=").split(";")[1]
+                           $t2drive = ($loggerRead -match "T2Drive").line.Split("=").split(";")[1]
                            $chiaPid = ($loggerRead -match "PID").line.Split(" ")[1]
                            $PlotoSpawnerJobId = ($loggerRead -match "PlotoSpawnerJobId").line.Split(" ")[1]
                            $StartTimeSplitted = ($loggerRead -match "StartTime").line.Split(":")
