@@ -21,26 +21,26 @@ When and where Plots are spawned is defined by PlotoSpawnerConfig.json which loo
 
 ```
 {
-    "IntervallToCheckInMinutes": "5",
-    "InputAmountToSpawn": "100", 
-    "EnableAlerts": "false",
-    "ChiaWindowStyle": "hidden",
+    "IntervallToCheckInMinutes": "5",   | Defines the time Ploto waits between each iteration to check for available tempd drives again 
+    "InputAmountToSpawn": "100",        | Amount of jobs maximal to be spawned in this launch of ploto
+    "EnableAlerts": "false",            | Enable JobSpawned Alerts (Webhook config in PlotoAlertsConfig.json)
+    "ChiaWindowStyle": "hidden",        | Determines Window Style of chia.exe (Allowed Values: normal, hidden, maximized, minimized)
 
     "DiskConfig": [
       {
-        "TempDriveDenom": "plot",
-	    "Temp2Denom": "t2",
-        "OutDriveDenom": "out",
-	    "EnableT2": "true"
+        "TempDriveDenom": "plot",      | The commono denominator for all your TempDrives
+	"Temp2Denom": "t2",	       | The commono denominator for all your Temp2Drives
+        "OutDriveDenom": "out",        | The commono denominator for all your OutDrives
+	"EnableT2": "true"             | Determines if PLoto uses Temp2 drives. Must be set to true along with temp2denom defined
       }
     ],
 
     "JobConfig": [
         {
-          "WaitTimeBetweenPlotOnSeparateDisks": "15",
-          "WaitTimeBetweenPlotOnSameDisk": "30",
-          "MaxParallelJobsOnAllDisks": "6",
-          "MaxParallelJobsOnSameDisk": "2",
+          "WaitTimeBetweenPlotOnSeparateDisks": "15", | Wait time in minutes Ploto waits until a new job on another disk is spawned
+          "WaitTimeBetweenPlotOnSameDisk": "30",      | Wait time in minutes Ploto waits until a new job on the same disk is spawned
+          "MaxParallelJobsOnAllDisks": "6", 	      | Maximum amount of parallel jobs allowed on all disks combined
+          "MaxParallelJobsOnSameDisk": "2", 	      | Maximum amount of parallel jobs allowed on a single disk. Affects all disks of all sizes. Set to you're highest disk.
           "BufferSize": "1000",
           "Thread": "1",
           "Bitfield": "true"
@@ -54,8 +54,6 @@ If there is no TempDrive available, or no OutDrive, Ploto checks again in amount
 When there is one available, Ploto determines the best OutDrive (most free space) and calls chia.exe to start the plot.
 Ploto iterates once through all available TempDrives and spawns a plot per each TempDrive (as long as enough OutDrive space is given).
 After that, Ploto checks if amount Spawned is equal as defined as input. If not, Ploto keeps going until it is.
-
-You can specify several vital parameters to control when and where plots are spawned, temped and stored. 
 
 ## Understanding Plot and OutDrives
 PlotoSpawner identifies your drives for temping and storing plots by a common denominator you specify. 
