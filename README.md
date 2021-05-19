@@ -24,11 +24,14 @@ When and where Plots are spawned is defined by PlotoSpawnerConfig.json which loo
     "IntervallToCheckInMinutes": "5",
     "InputAmountToSpawn": "100", 
     "EnableAlerts": "false",
+    "ChiaWindowStyle": "hidden",
 
     "DiskConfig": [
       {
         "TempDriveDenom": "plot",
-        "OutDriveDenom": "out"
+	    "Temp2Denom": "t2",
+        "OutDriveDenom": "out",
+	    "EnableT2": "true"
       }
     ],
 
@@ -36,9 +39,9 @@ When and where Plots are spawned is defined by PlotoSpawnerConfig.json which loo
         {
           "WaitTimeBetweenPlotOnSeparateDisks": "15",
           "WaitTimeBetweenPlotOnSameDisk": "30",
-          "MaxParallelJobsOnAllDisks": "8",
-          "MaxParallelJobsOnSameDisk": "3",
-          "BufferSize": "3390",
+          "MaxParallelJobsOnAllDisks": "6",
+          "MaxParallelJobsOnSameDisk": "2",
+          "BufferSize": "1000",
           "Thread": "1",
           "Bitfield": "true"
         }
@@ -84,6 +87,12 @@ For reference heres my setup:
 
 So my denominators for my TempDrives its "plot" and for my destination drives its "out".
 
+### About -2 drives
+Ploto now supports -2 drives. You define them just like plot and tempdrives. On each Job Ploto checks if a -2 drive is plottable. If yes, it spawns the job using that -2 drive. If not, it spawns the job without the drive. The implementation ir rather basic now, as I currently do not use -2 drives for my plotting and may nor understand the usage of this param correctly yet. 
+```
+-2 [tmp dir 2]: Define a secondary temporary directory for plot creation. This is where Plotting Phase 3 (Compression) and Phase 4 (Checkpoints) occur. Depending on your OS, -2 might default to either -t or -d. Therefore, if either -t or -d are running low on space, it's recommended to set -2 manually. The -2 dir requires an equal amount of working space as the final size of the plot.
+```
+
 ### About parallelization on separate disks
 Using the Parameter "-MaxParallelJobsOnAllDisks", you can define how many Plots Jobs overall there should be in parallel. So this will be your hard cap. If there are as many jobs as you defined as max, PlotoSpawner wont spawn further Jobs. This keeps your system from overcommiting.
 Using the Parameter "-BufferSize", you can define RAM used per process, the default value is 3390MB.
@@ -91,6 +100,7 @@ Using the Parameter "-Thread", you can define threads used per process the defau
 
 ### About parallelization on the same disk
 Using "MaxParallelJobsOnSameDisks" you can define how many PlotsJobs there should be in parallel on a single disk. This param affects all Disks that can host more than 1 Plot. Ploto checks each disk for free space and determines the amount of plots it can hold as a tempDrive. Also being aware of the jobs in progress. It will spawn as many jobs as possible by the disk until it reached either the hard cap of -MaxParallelJobsOnAllDisks or -MaxParallelJobsOnSameDisk
+
 
 If I launch PlotoSpawner with these params like this:
 ```
