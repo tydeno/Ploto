@@ -28,10 +28,10 @@ When and where Plots are spawned is defined by PlotoSpawnerConfig.json which loo
 
     "DiskConfig": [
       {
-        "TempDriveDenom": "plot",      | The commono denominator for all your TempDrives
-	"Temp2Denom": "t2",	       | The commono denominator for all your Temp2Drives
-        "OutDriveDenom": "out",        | The commono denominator for all your OutDrives
-	"EnableT2": "true"             | Determines if PLoto uses Temp2 drives. Must be set to true along with temp2denom defined
+        "TempDriveDenom": "plot",      | The common denominator for all your TempDrives
+	"Temp2Denom": "t2",	       | The common denominator for all your Temp2Drives
+        "OutDriveDenom": "out",        | The common denominator for all your OutDrives
+	"EnableT2": "true"             | Determines if Ploto uses Temp2 drives. Must be set to true along with temp2denom defined
       }
     ],
 
@@ -87,9 +87,10 @@ So my denominators for my TempDrives its "plot" and for my destination drives it
 
 ### About -2 drives
 Ploto now supports -2 drives. You define them just like plot and tempdrives. On each Job Ploto checks if a -2 drive is plottable. If yes, it spawns the job using that -2 drive. If not, it spawns the job without the drive. The implementation ir rather basic now, as I currently do not use -2 drives for my plotting and may nor understand the usage of this param correctly yet. 
-```
--2 [tmp dir 2]: Define a secondary temporary directory for plot creation. This is where Plotting Phase 3 (Compression) and Phase 4 (Checkpoints) occur. Depending on your OS, -2 might default to either -t or -d. Therefore, if either -t or -d are running low on space, it's recommended to set -2 manually. The -2 dir requires an equal amount of working space as the final size of the plot.
-```
+
+
+> -2 [tmp dir 2]: Define a secondary temporary directory for plot creation. This is where Plotting Phase 3 (Compression) and Phase 4 (Checkpoints) occur. Depending on your OS, > -2 might default to either -t or -d. Therefore, if either -t or -d are running low on space, it's recommended to set -2 manually. The -2 dir requires an equal amount of > > working space as the final size of the plot.
+
 
 ### About parallelization on separate disks
 Using the Parameter "-MaxParallelJobsOnAllDisks", you can define how many Plots Jobs overall there should be in parallel. So this will be your hard cap. If there are as many jobs as you defined as max, PlotoSpawner wont spawn further Jobs. This keeps your system from overcommiting.
