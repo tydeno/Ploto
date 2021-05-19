@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.1
+Version: 1.0.9.2
 Author: Tydeno
 
 
@@ -17,7 +17,7 @@ function Get-PlotoOutDrives
 		$OutDriveDenom
 		)
 
-$outDrives = get-WmiObject win32_logicaldisk | Where-Object {$_.VolumeName -like "*$OutDriveDenom*"}
+$outDrives = Get-CimInstance win32_logicaldisk | Where-Object {$_.VolumeName -like "*$OutDriveDenom*"}
 
 #Check Space for outDrives
 $collectionWithDisks= New-Object System.Collections.ArrayList
@@ -58,7 +58,7 @@ function Get-PlotoTempDrives
 		$TempDriveDenom
 		)
 
-$tmpDrives = get-WmiObject win32_logicaldisk | Where-Object {$_.VolumeName -like "*$TempDriveDenom*"}
+$tmpDrives = Get-CimInstance win32_logicaldisk | Where-Object {$_.VolumeName -like "*$TempDriveDenom*"}
 
 #Check Space for outDrives
 $collectionWithDisks= New-Object System.Collections.ArrayList
@@ -176,7 +176,7 @@ function Get-PlotoT2Drives
 		$T2Denom
 		)
 
-$tmpDrives = get-WmiObject win32_logicaldisk | Where-Object {$_.VolumeName -like "*$T2Denom*"}
+$tmpDrives = Get-CimInstance win32_logicaldisk | Where-Object {$_.VolumeName -like "*$T2Denom*"}
 
 #Check Space for outDrives
 $collectionWithDisks= New-Object System.Collections.ArrayList
