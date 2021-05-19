@@ -472,23 +472,6 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                             )
                                                         )
 
-
-                                                        $embedBuilder.AddField(
-                                                            [DiscordField]::New(
-                                                                'Total Jobs in Progress',
-                                                                $JobCountOut, 
-                                                                $true
-                                                            )
-                                                        )
-
-                                                        $embedBuilder.AddField(
-                                                            [DiscordField]::New(
-                                                                'Jobs on this temp disk',
-                                                                $JobCountSameOut, 
-                                                                $true
-                                                            )
-                                                        )
-
                                                         $embedBuilder.AddField(
                                                             [DiscordField]::New(
                                                                 'Max parallel Jobs in progress allowed',
