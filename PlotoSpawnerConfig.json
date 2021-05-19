@@ -6,6 +6,7 @@
     "DiskConfig": [
       {
         "TempDriveDenom": "plot",
+        "Temp2Denom": "t2",
         "OutDriveDenom": "out"
       }
     ],
