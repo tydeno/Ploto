@@ -1,10 +1,8 @@
 # Ploto
-A basic Windows PowerShell based Chia Plotting Manager. 
-Cause I was tired of spawning them myself. 
+A Windows PowerShell based Chia Plotting Manager. 
 Consists of a PowerShell Module that allows to spawn, manage and move plots.
 
-
-Now also informs you in Discord about spawned jobs. 
+Also informs you in Discord about spawned jobs. 
 And if you like, you may define an Intervall upon which Plotofy sends you notifications about whats going on.
 
 ![image](https://user-images.githubusercontent.com/83050419/118192418-662f0500-b446-11eb-9340-e919234d3d5f.png)
@@ -21,8 +19,6 @@ When and where Plots are spawned is defined by PlotoSpawnerConfig.json which loo
 
 ```
 {
-    "IntervallToCheckInMinutes": "5",   | Defines the time Ploto waits between each iteration to check for available tempd drives again 
-    "InputAmountToSpawn": "100",        | Amount of jobs maximal to be spawned in this launch of ploto
     "EnableAlerts": "false",            | Enable JobSpawned Alerts (Webhook config in PlotoAlertsConfig.json)
     "ChiaWindowStyle": "hidden",        | Determines Window Style of chia.exe (Allowed Values: normal, hidden, maximized, minimized)
 
@@ -37,6 +33,8 @@ When and where Plots are spawned is defined by PlotoSpawnerConfig.json which loo
 
     "JobConfig": [
         {
+	  "IntervallToCheckInMinutes": "5",   	      | Defines the time Ploto waits between each iteration to check for available tempd drives again 
+    	  "InputAmountToSpawn": "100",                | Amount of jobs maximal to be spawned in this launch of ploto
           "WaitTimeBetweenPlotOnSeparateDisks": "15", | Wait time in minutes Ploto waits until a new job on another disk is spawned
           "WaitTimeBetweenPlotOnSameDisk": "30",      | Wait time in minutes Ploto waits until a new job on the same disk is spawned
           "MaxParallelJobsOnAllDisks": "6", 	      | Maximum amount of parallel jobs allowed on all disks combined
@@ -46,7 +44,23 @@ When and where Plots are spawned is defined by PlotoSpawnerConfig.json which loo
           "Bitfield": "true"
         }
       ]
-  }
+    "SpawnerAlerts": [
+	    {
+	      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxxxx",    | EndpointURL of your discord Webhook 
+	      "WhenJobSpawned": "true",                                                
+	      "WhenNoOutDrivesAvailable": "true",
+	      "WhenJobCouldNotBeSpawned": "true"
+	    }
+	  ],
+
+	  "PlotoFyAlerts": [
+	    {
+	      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxx",    | EndpointURL of your discord Webhook 
+	      "PeriodOfReportInHours": "1",                                              | Period the report is send out and covering
+	      "PathToPloto": "C:/Users/me/Desktop/Ploto/Ploto.psm1"                      | Absolute path to the module as the background jobs needs to load it again
+	    }
+	  ]
+}
 ```
 Ploto checks periodically, if a TempDrive and OutDrive is available for plotting. 
 If there is no TempDrive available, or no OutDrive, Ploto checks again in amount of minutes defines in $config.IntervallToCheckInMinutes
