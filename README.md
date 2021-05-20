@@ -160,11 +160,7 @@ Now change the WebhookUrl to match the URL of your Discord Servers Webhook and e
 
 Set the Name for your plotter, as it allows you to distinguish between alerts for each plotter. You may also use several Webhooks in different Discord Channels.
 
-When you Start Ploto, make sure you also specify the Parameter -EnableAlerts. If not specified, your Disocrd remains silent.
-
-```powershell
-Start-PlotoSpawns -BufferSize 3390 -Thread 2 -InputAmountToSpawn 36 -OutDriveDenom "out" -TempDriveDenom "plot" -WaitTimeBetweenPlotOnSeparateDisks 15 EnableBitfield $true -MaxParallelJobsOnAllDisks 5
-```
+When you Start Ploto, make sure you also specified the Parameter "EnableAlerts" in the config. If not specified, your Disocrd remains silent.
 
 
 # Prereqs
@@ -228,7 +224,7 @@ To start with your Discord Alerts, the first step is to get the PlotoAlertConfig
 6. Open a PowerShell Session
 7. Edit PlotoSpawnerConfig to EnableAlerts = true
 8. Import-Module "C:\Users\me\desktop\Ploto\Ploto.psm1" (make sure you change the path to Ploto.psm1 to reflect your situation)
-9. Launch Start-PlotoSpawns with Param -EnableAlerts $true like this:
+9. Launch Start-PlotoSpawns:
 ```powershell
 Start-PlotoSpawns 
 ```
