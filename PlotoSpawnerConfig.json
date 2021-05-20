@@ -1,27 +1,47 @@
 {
-    "IntervallToCheckInMinutes": "5",
-    "InputAmountToSpawn": "100", 
-    "EnableAlerts": "false",
-    "ChiaWindowStyle": "hidden",
+  "PlotterName": "plotozero",
+  "EnableAlerts": "false",
+  "ChiaWindowStyle": "normal",
 
-    "DiskConfig": [
+  "DiskConfig": [
+    {
+      "TempDriveDenom": "plot",
+      "Temp2Denom": "",
+      "OutDriveDenom": "out",
+      "EnableT2": "false"
+    }
+  ],
+
+  "JobConfig": [
       {
-        "TempDriveDenom": "plot",
-	    "Temp2Denom": "t2",
-        "OutDriveDenom": "out",
-	    "EnableT2": "true"
+        "IntervallToCheckInMinutes": "5",
+        "InputAmountToSpawn": "100", 
+        "WaitTimeBetweenPlotOnSeparateDisks": "15",
+        "WaitTimeBetweenPlotOnSameDisk": "30",
+        "MaxParallelJobsOnAllDisks": "8",
+        "MaxParallelJobsOnSameDisk": "3",
+        "BufferSize": "3390",
+        "Thread": "4",
+        "Bitfield": "true",
+        "FarmerKey": "",
+        "PoolKey": ""
       }
     ],
 
-    "JobConfig": [
-        {
-          "WaitTimeBetweenPlotOnSeparateDisks": "15",
-          "WaitTimeBetweenPlotOnSameDisk": "30",
-          "MaxParallelJobsOnAllDisks": "6",
-          "MaxParallelJobsOnSameDisk": "2",
-          "BufferSize": "1000",
-          "Thread": "1",
-          "Bitfield": "true"
-        }
-      ]
-  }
+  "SpawnerAlerts": [
+    {
+      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxxxx",
+      "WhenJobSpawned": "true",
+      "WhenNoOutDrivesAvailable": "true",
+      "WhenJobCouldNotBeSpawned": "true"
+    }
+  ],
+
+  "PlotoFyAlerts": [
+    {
+      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxx",
+      "PeriodOfReportInHours": "1",
+      "PathToPloto": "C:/Users/me/Desktop/Ploto/Ploto.psm1"
+    }
+  ]
+}
