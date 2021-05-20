@@ -86,7 +86,7 @@ For reference heres my setup:
 So my denominators for my TempDrives its "plot" and for my destination drives its "out".
 
 ### About -2 drives
-Ploto now supports -2 drives. You define them just like plot and tempdrives. On each Job Ploto checks if a -2 drive is plottable. If yes, it spawns the job using that -2 drive. If not, it spawns the job without the drive. The implementation ir rather basic now, as I currently do not use -2 drives for my plotting and may nor understand the usage of this param correctly yet. 
+Ploto now supports -2 drives. You define them just like plot and tempdrives. On each Job Ploto checks if a -2 drive is plottable. If yes, it spawns the job using that -2 drive. If not, it spawns the job without the drive. The implementation is rather basic now, as I currently do not use -2 drives for my plotting and may not understand the usage of this param correctly yet. 
 
 
 > -2 [tmp dir 2]: Define a secondary temporary directory for plot creation. This is where Plotting Phase 3 (Compression) and Phase 4 (Checkpoints) occur. Depending on your OS, > -2 might default to either -t or -d. Therefore, if either -t or -d are running low on space, it's recommended to set -2 manually. The -2 dir requires an equal amount of > > working space as the final size of the plot.
