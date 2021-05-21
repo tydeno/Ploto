@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.3
+Version: 1.0.9.4
 Author: Tydeno
 
 
@@ -311,7 +311,9 @@ function Invoke-PlotoJob
         $EnableAlerts,
         $CountSpawnedJobs,
         $T2Denom,
-        $WindowStyle
+        $WindowStyle,
+        $FarmerKey,
+        $PoolKey
 		)
 
  if($verbose) {
@@ -328,11 +330,11 @@ if ($WaitTimeBetweenPlotOnSameDisk -eq $null)
         $WaitTimeBetweenPlotOnSameDisk = 30
     }
 
-$PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoAlertConfig.json"
+$PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
 
 try 
     {
-        $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json
+        $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
         Write-Verbose "Loaded Alarmconfig successfully"
     }
 catch
@@ -522,6 +524,8 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                             $ArgumentList = "plots create -k 32 -b "+$BufferSize+" -r "+$Thread+" -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\ -2 "+$t2driveletter+"\"
                                                         }
 
+
+
                                                     Add-Content -Path $LogPath1 -Value "T2Drive: $t2drive"
                                                     
                                                 }
@@ -563,7 +567,31 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                 }
                                            }
 
+                                    if ($FarmerKey -ne $null -or $FarmerKey -ne "")
+                                        {
+                                            #Lets check if its a Key
+                                            $CharArray = $FarmerKey.ToCharArray()
+                                            if ($CharArray.Count -eq 96)
+                                                {
+                                                    Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": This looks like a valid key based on its lenght")
+                                                    $ExpandedArgs = "-f "+$FarmerKey
+                                                    $ArgumentList = $ArgumentList+" "+$ExpandedArgs
+                                                }
 
+                                        }
+
+                                    if ($PoolKey -ne $null -or $PoolKey -ne "")
+                                        {
+                                            #Lets check if its a Key
+                                            $CharArray = $PoolKey.ToCharArray()
+                                            if ($CharArray.Count -eq 96)
+                                                {
+                                                    Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": This looks like a valid key based on its lenght")
+                                                    $ExpandedArgs = "-p "+$PoolKey
+                                                    $ArgumentList = $ArgumentList+" "+$ExpandedArgs
+                                                }
+
+                                        }
 
                                     try 
                                         {
@@ -859,8 +887,8 @@ function Start-PlotoSpawns
         } 
 
     #setting params from config 
-    [int]$IntervallToWait= $config.IntervallToCheckInMinutes
-    [int]$InputAmountToSpawn = $config.InputAmountToSpawn 
+    [int]$IntervallToWait= $config.JobConfig.IntervallToCheckInMinutes
+    [int]$InputAmountToSpawn = $config.JobConfig.InputAmountToSpawn 
     [int]$WaitTimeBetweenPlotOnSeparateDisks = $config.JobConfig.WaitTimeBetweenPlotOnSeparateDisks
     [int]$WaitTimeBetweenPlotOnSameDisk = $config.JobConfig.WaitTimeBetweenPlotOnSameDisk
     $OutDriveDenom = $config.DiskConfig.OutDriveDenom
@@ -873,6 +901,8 @@ function Start-PlotoSpawns
     $EnableBitfield = $config.JobConfig.Bitfield
     $EnableAlerts = $config.EnableAlerts
     $WindowStyle = $config.ChiaWindowStyle
+    $FarmerKey = $config.JobConfig.FarmerKey
+    $PoolKey = $config.JobConfig.PoolKey
     
 
     Write-Host "PlotoManager @"(Get-Date)": InputAmountToSpawn:" $InputAmountToSpawn
@@ -891,11 +921,11 @@ function Start-PlotoSpawns
 
         if ($verbose)
             {
-                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -Verbose
+                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -Verbose
             }
         else
             {
-                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle
+                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey
             }
         
         
@@ -1464,8 +1494,8 @@ function Invoke-PlotoFyStatusReport
 {
     try 
        {
-            $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoAlertConfig.json"
-            $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json
+            $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
+            $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
             Write-Verbose "Loaded Alarmconnfig successfully"
         }
     catch
@@ -1827,8 +1857,8 @@ function Request-PlotoFyStatusReport
         {
             try 
                 {
-                    $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoAlertConfig.json"
-                    $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json
+                    $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
+                    $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
                     Write-Verbose "Loaded Alarmconfig successfully"
                 }
             catch
@@ -1852,8 +1882,8 @@ Function Start-PlotoFy
     Start-Job -ScriptBlock {
     try 
         {
-             $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoAlertConfig.json"
-             $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json
+             $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
+             $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
              Write-Verbose "Loaded Alarmcoinfig successfully"
          }
      catch
@@ -2726,11 +2756,6 @@ function Invoke-PayloadBuilder {
         return $payload
 
     }
-
-
-
-
-
 }
 
 
