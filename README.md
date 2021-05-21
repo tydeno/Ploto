@@ -148,27 +148,7 @@ And creates two log files for each job with the following notation:
 
 
 ### Alright, I saw that Discord Bot picture, how do I use that?
-You can control whether you want to receive and what kind of alerts in a handy config file. It looks like this
-```
-{
-  "PlotterName": "plotozero",
-  "SpawnerAlerts": [
-    {
-      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxxxx",
-      "WhenJobSpawned": "true",
-      "WhenNoOutDrivesAvailable": "true",
-      "WhenJobCouldNotBeSpawned": "true"
-    }
-  ],
-  "PlotoFyAlerts": [
-    {
-      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxx",
-      "PeriodOfReportInHours": "1",
-      "PathToPloto": "C:/Users/me/Desktop/Ploto/Ploto.psm1"
-    }
-  ]
-}
-```
+You can control whether you want to receive and what kind of alerts in a handy config file.
 This config file belongs in the following folder: C:\Users\YourUsserName\.chia\mainnet\config. Make sure you copy it there, as Ploto expects to find it at that location.
 Now change the WebhookUrl to match the URL of your Discord Servers Webhook and enable/disable alert notifications as you wish. [How to create a Discord Webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks). 
 
@@ -230,7 +210,7 @@ PlotoManager @ 4/30/2021 3:49:13 AM : Overall spawned Plots since start of scrip
 ## Setup Discord Alerts for spawned Jobs
 To start with your Discord Alerts, the first step is to get the PlotoAlertConfig.json file and edit it to your wishes.
 
-1. Edit [PlotoAlertConfig.json](https://github.com/tydeno/Ploto/blob/main/PlotoAlertConfig.json)
+1. Edit PlotoSpawnerConfig.json
 2. Set WebhookURL (Your Discord Servers Webhook)
 3. Set PlotterName (A freely choosen name for your plotter, to be sent in the notification)
 4. Set your config of alerts. Disable/Enable the alerts your interested with true/false.
@@ -245,7 +225,7 @@ Start-PlotoSpawns
 ## Setup Discord Alerts for periodical summary of jobs completed and in progress
 To configure the behaviour of periodical summary reports in discord, we also use the PlotoAlertConfig.json stored in C:\Users\YourUserName\.chia\mainnet\config.
 
-1. Edit [PlotoAlertConfig.json](https://github.com/tydeno/Ploto/blob/main/PlotoAlertConfig.json)
+1. Edit PlotoSpawnerConfig.json
 2. Set WebhookURL (Your Discord Servers Webhook). You may use the same or a different WebhookURL than what PlotoSpawner Alerts uses. This allows you to separate channels in Discord for various alerts. I use this separate for each plotter I habve:
 ![image](https://user-images.githubusercontent.com/83050419/118396604-892d0500-b650-11eb-8b5a-f05939a292b3.png)
 3. Set the intervall upon which you would like to receive the summary. This also affects the period PlotoFy uses to check for events. For example: If 1 is specified (1hr), PlotoFy will each hour lookup jobs that were copleted in the last hours, and all active jobs in progress and wrap this in a notification.
