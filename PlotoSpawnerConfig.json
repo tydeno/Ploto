@@ -20,6 +20,7 @@
         "WaitTimeBetweenPlotOnSameDisk": "30",
         "MaxParallelJobsOnAllDisks": "8",
         "MaxParallelJobsOnSameDisk": "3",
+        "UseDynamicStagger": "true"
         "MaxParallelJobsInPhase1OnSameDisk": "2",
         "StartEarly": "true"
         "StartEarlyPhase": "4"
