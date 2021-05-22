@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.4.2
+Version: 1.0.9.4.3
 Author: Tydeno
 
 
@@ -17,7 +17,7 @@ function Get-PlotoOutDrives
 		$OutDriveDenom
 		)
 
-$outDrives = Get-CimInstance win32_logicaldisk | Where-Object {$_.VolumeName -like "*$OutDriveDenom*"}
+$outDrives = Get-CimInstance win32_logicaldisk -Verbose:$false | Where-Object {$_.VolumeName -like "*$OutDriveDenom*"} 
 
 #Check Space for outDrives
 $collectionWithDisks= New-Object System.Collections.ArrayList
@@ -114,7 +114,8 @@ function Get-PlotoTempDrives
 		$TempDriveDenom
 		)
 
-$tmpDrives = Get-CimInstance win32_logicaldisk | Where-Object {$_.VolumeName -like "*$TempDriveDenom*"}
+$tmpDrives = Get-CimInstance win32_logicaldisk -Verbose:$false | Where-Object {$_.VolumeName -like "*$TempDriveDenom*"}
+
 
 #Check Space for outDrives
 $collectionWithDisks= New-Object System.Collections.ArrayList
@@ -157,7 +158,6 @@ foreach ($tmpDrive in $tmpDrives)
             {
                 $HasPlotInProgress = $true
                 $PlotInProgressName = $activeJobs.PlotId
-                $PlotInProgressStatus = $activeJobs.Status
                 $PlotInProgressCount = $activeJobs.count
                 $PlotInProgressPhase = $activeJobs.Status
 
@@ -236,7 +236,8 @@ function Get-PlotoT2Drives
 		$T2Denom
 		)
 
-$tmp2drives = Get-CimInstance win32_logicaldisk | Where-Object {$_.VolumeName -like "*$T2Denom*"}
+$tmp2drives = Get-CimInstance win32_logicaldisk -Verbose:$false | Where-Object {$_.VolumeName -like "*$T2Denom*"}
+
 
 #Check Space for outDrives
 $collectionWithDisks= New-Object System.Collections.ArrayList
@@ -282,6 +283,7 @@ foreach ($tmp2Drive in $tmp2Drives)
                 $PlotInProgressCount = $activeJobs.count
                 $PlotInProgressPhase = $activeJobs.Status
 
+                
 
                 if ($PlotInProgressCount -eq $null)
                     {
@@ -434,9 +436,27 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
          Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Found available temp drives.")
          foreach ($PlottableTempDrive in $PlottableTempDrives)
             {
+                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+":  We have drives available that allow jobs to be spawned based on -MaxParallelJobsOnAllDisks and $MaxParallJobsOnSameDisk")
+                #Lets get the best suited TempDrive (The one with least amount of jobs ongoing)
+                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+":  Scanning for the drive with least amount of jobs...")
+                $PlottableTempDrives = Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom | Where-Object {$_.IsPlottable -eq $true}   
+
+                $min = ($PlottableTempDrives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
+                $PlottableTempDrive = $PlottableTempDrives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
+
+                if ($PlottableTempDrive.Count -gt 1)
+                {
+                    #We have several OutDisks in our Array that could be the best OutDrive. Need to pick one!
+                    $PlottableTempDrive = $PlottableTempDrive[0]
+                }
+
+               Write-Verbose ("PlotoSpawner @ "+(Get-Date)+":  Will be using TempDrive: "+$PlottableTempDrive.DriveLetter+" to check for jobs on it...")
+
+               $JobsAll = Get-PlotoJobs
 
                if ($StartEarly -eq "true")
                     {
+                        Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": StartEarly set to true")
                         #Check amount of Jobs ongoin
                         $JobCountAll = (($JobsAll | Where-Object {$_.Status -lt $StartEarlyPhase}) | Measure-Object).Count
                         $JobCountOnSameDisk = (($JobsAll | Where-Object {$_.Status -lt $StartEarlyPhase} | Where-Object {$_.TempDrive -eq $PlottableTempDrive.DriveLetter}) | Measure-Object).Count
@@ -455,21 +475,20 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                 #Check JobCountagain
                 if ($JobCountAll -lt $MaxParallelJobsOnAllDisks)
-                {
-                        Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": -MaxParallelJobsOnAllDisks and MaxParallJobsOnSameDisk allow spawning. Iterating trough TempDrive: "+$PlottableTempDrive.DriveLetter)
-                        
-                        if ($JobCountAll -le $MaxParallelJobsOnAllDisks -and $JobCountOnSameDisk -le $MaxParallelJobsOnSameDisk -and $AmountOfJobsInPhase1OnThisDisk -le $MaxParallelJobsInPhase1OnSameDisk -and $AmountOfJobsInPhase1OnAllDisks -le $MaxParallelJobsInPhase1OnAllDisks )
-                            {
+                    {
 
-                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+":  No hard cap reached, will continue.")
-                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+":  Will be using TempDrive: "+$PlottableTempDrive.DriveLetter+" to check for jobs on it...")
+                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": -MaxParallelJobsOnAllDisks and MaxParallJobsOnSameDisk allow spawning. Iterating trough TempDrive: "+$PlottableTempDrive.DriveLetter)
+
+                                                
+                        if ($JobCountOnSameDisk -lt $MaxParallelJobsOnSameDisk -and $AmountOfJobsInPhase1OnThisDisk -lt $MaxParallelJobsInPhase1OnSameDisk -and $AmountOfJobsInPhase1OnAllDisks -lt $MaxParallelJobsInPhase1OnAllDisks)
+                            {
 
                                 # Did we spawn a PlotJob on this Disk within the duration specified in -WaitTimeBetweenPlotOnSameDisk? If yes, we gotta skip
                                 $CheckPeriod = (Get-Date).AddMinutes(-$WaitTimeBetweenPlotOnSameDisk)
-
                                 if ($StartEarly -eq "true")
                                     {
                                         $JobsOnThisDiskIPWithinCheckPeriod = Get-PlotoJobs | Where-Object {$_.Status -lt $StartEarlyPhase} | Where-Object {$_.StartTime -gt $CheckPeriod } | Where-Object {$_.TempDrive -eq $PlottableTempDrive.DriveLetter}
+
                                     }
                                 else
                                     {
@@ -519,8 +538,8 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                                                 $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
 
-                                                Invoke-PsDsHook -CreateConfig $WebHookURL 
-                                                Invoke-PSDsHook $embedBuilder 
+                                                Invoke-PsDsHook -CreateConfig $WebHookURL -Verbose:$false
+                                                Invoke-PSDsHook $embedBuilder -Verbose:$false
                                     
                                             }
                                 
@@ -814,8 +833,8 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                                                         $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
 
-                                                        Invoke-PsDsHook -CreateConfig $WebHookURL | Out-Null
-                                                        Invoke-PSDsHook $embedBuilder | Out-Null
+                                                        Invoke-PsDsHook -CreateConfig $WebHookURL -Verbose:$false | Out-Null
+                                                        Invoke-PSDsHook $embedBuilder -Verbose:$false | Out-Null 
                                                     }
                                                 catch
                                                     {
@@ -913,8 +932,8 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                                                 $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
 
-                                                Invoke-PsDsHook -CreateConfig $WebHookURL | Out-Null
-                                                Invoke-PSDsHook $embedBuilder | Out-Null
+                                                Invoke-PsDsHook -CreateConfig $WebHookURL -Verbose:$false | Out-Null
+                                                Invoke-PSDsHook $embedBuilder -Verbose:$false | Out-Null
                                     
                                             }
                                         }                 
@@ -929,15 +948,29 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Starting to sleep for"+$WaitTimeBetweenPlotOnSeparateDisks+" Minutes, to comply with Param.")
                                     Start-Sleep ($WaitTimeBetweenPlotOnSeparateDisks*60)
                                 }
-                            }
-
                         else
                             {
-                                 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Found an available Temp Drive, but -MaxParallelJobsOnAllDisks,  -MaxParallelJobsOnSameDisk, -WaitTimeBetweenPlotsOnSameDisk or -MaxParallelJobsInPhase1OnSameDisk prohibits spawning for now.")  
-                                 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Amount of Plots in Progress overall: "+$JobCountAll)                    
-                                 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Amount of Plots in Progress on this Drive: "+$JobCountOnSameDisk) 
-                                 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Skipping Drive: "+$PlottableTempDrive)
-                            }                             
+
+                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Plotting not allowed. Is prohibited by MaxParallelJobsOnSameDisk, MaxParallelJobsInPhase1OnSameDisk, or MaxParallelJobsInPhase1OnAllDisks.")  
+                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Job count all jobs on dthis drive: "+$JobCountOnSameDisk) 
+                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Max allowed on this drive in all phases: "+$MaxParallelJobsOnSameDisk)
+                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Job count in P1 on this drive: "+$AmountOfJobsInPhase1OnThisDisk) 
+                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Max allowed on this drive in P1: "+$MaxParallelJobsInPhase1OnSameDisk)                    
+                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Job count in P1 on all drives: "+$AmountOfJobsInPhase1OnAllDisks) 
+                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Max allowed on all drives in P1: "+$MaxParallelJobsInPhase1OnAllDisks) 
+                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Skipping Drive: "+$PlottableTempDrive)
+                            }
+                     }
+
+
+                else
+                    {
+                                
+                            Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Found an available Temp Drive, but -MaxParallelJobsOnAllDisks,  -MaxParallelJobsOnSameDisk or -WaitTimeBetweenPlotsOnSameDisk prohibits spawning for now.")  
+                            Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Amount of Plots in Progress overall: "+$JobCountAll)                    
+                            Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Amount of Plots in Progress on this Drive: "+$JobCountOnSameDisk) 
+                            Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Skipping Drive: "+$PlottableTempDrive)
+                    }                             
 
                 }
                          
@@ -1017,11 +1050,11 @@ function Start-PlotoSpawns
 
         if ($verbose)
             {
-                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -Verbose
+                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -Verbose
             }
         else
             {
-                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase
+                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase
             }
         
         
@@ -1130,6 +1163,10 @@ foreach ($log in $logs)
                            $StartTimeSplitted = ($loggerRead -match "StartTime").line.Split(":")
                            $StartTime = ($StartTimeSplitted[1]+":" + $StartTimeSplitted[2]+":" + $StartTimeSplitted[3]).TrimStart(" ")
                            $ArgumentList = ($loggerRead -match "ArgumentList").line.TrimStart("ArgumentList: ")
+
+
+                           if ($t2drive -eq "2")
+                            {$t2drive = ""}
 
                            $StatLogPath = $logger.FullName
                                   
@@ -2850,8 +2887,10 @@ function Invoke-PayloadBuilder {
     end {
 
         return $payload
+
     }
 }
+
 
 function Measure-Latest {
     BEGIN { $latest = $null }
