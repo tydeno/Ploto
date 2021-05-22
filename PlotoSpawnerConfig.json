@@ -1,7 +1,9 @@
 {
   "PlotterName": "SirNotPlotAlot",
   "EnableAlerts": "false",
+  "EnablePlotoFyOnStart": "true",
   "ChiaWindowStyle": "normal",
+  
 
   "DiskConfig": [
     {
