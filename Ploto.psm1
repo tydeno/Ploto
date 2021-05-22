@@ -40,7 +40,7 @@ foreach ($drive in $outDrives)
                         $PlotInProgressCount = 1
                     }
                 
-                $RedundencyCheck = $DiskSize - ($FreeSpace + $PlotInProgressCount * 290)
+                $RedundencyCheck = $DiskSize - ($FreeSpace + $PlotInProgressCount * 107)
                 #has addiontal data in the disk
                 if($RedundencyCheck -gt 0)
                     {
