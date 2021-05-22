@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.4
+Version: 1.0.9.4.1
 Author: Tydeno
 
 
@@ -26,6 +26,56 @@ foreach ($drive in $outDrives)
 
         $DiskSize = [math]::Round($tmpDrive.Size  / 1073741824, 2)
         $FreeSpace = [math]::Round($drive.FreeSpace  / 1073741824, 2)
+
+                #Get-CurrenJobs
+        $activeJobs = Get-PlotoJobs | Where-Object {$_.OutDrive -eq $drive.DeviceId} | Where-Object {$_.Status -ne "Completed"}
+        if ($activeJobs)
+            {
+                $HasPlotInProgress = $true
+                $PlotInProgressName = $activeJobs.PlotId
+                $PlotInProgressCount = $activeJobs.count
+
+                if ($PlotInProgressCount -eq $null)
+                    {
+                        $PlotInProgressCount = 1
+                    }
+                
+                $RedundencyCheck = $DiskSize - ($FreeSpace + $PlotInProgressCount * 290)
+                #has addiontal data in the disk
+                if($RedundencyCheck -gt 0)
+                    {
+                        $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / 107))
+                        $AvailableAmounToPlot = $AmountOfPlotsToTempMax - $PlotInProgressCount
+                    }
+                else
+                    {
+                        $AmountOfPlotsinProgressOccupied = [math]::Floor(($PlotInProgressCount * 107))
+                        $AvailableAmounToPlot = [math]::Floor(($DiskSize - $AmountOfPlotsinProgressOccupied) / 107)
+                        $AmountOfPlotsToTempMax = $AvailableAmounToPlot + $PlotInProgressCount
+                    }
+
+            }
+
+        else
+            {
+                $HasPlotInProgress = $false
+                $PlotInProgressName = " "
+                $PlotInProgressCount = 0
+                $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / 107))
+                $AvailableAmounToPlot = $AmountOfPlotsToTempMax
+            }
+
+
+        if ($AvailableAmounToPlot -ge 1)
+            {
+                $IsPlottable = $true
+            }
+        else
+            {
+                $IsPlottable = $false
+            }
+
+
         If ($FreeSpace -gt 107)
             {
                 $PlotToDest = $true
@@ -42,7 +92,11 @@ foreach ($drive in $outDrives)
         FreeSpace = $FreeSpace
         TotalSpace = $DiskSize
         IsPlottable    = $PlotToDest
-        AmountOfPlotsToHold = [math]::Floor(($FreeSpace / 100))
+        HasPlotInProgress = $HasPlotInProgress
+        AmountOfPlotsInProgress =  $PlotInProgressCount
+        AmountOfPlotsToTempMax = $AmountOfPlotsToTempMax
+        AvailableAmountToPlot = $AvailableAmounToPlot
+        PlotInProgressID = $PlotInProgressName
         }
 
         $collectionWithDisks.Add($outdriveToPass) | Out-Null
@@ -407,10 +461,10 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                 if (!$JobsOnThisDiskIPWithinCheckPeriod)
                                     {
  
-
+                                    $PlottableOutDrives = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom | Where-Object {$_.IsPlottable -eq $true}
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": -MaxParallelJobsOnAllDisks and -MaxParallelJobsOnSameDisk allow spawning")
-                                    $max = ($PlottableOutDrives | measure-object -Property FreeSpace -maximum).maximum
-                                    $OutDrive = $PlottableOutDrives | Where-Object { $_.FreeSpace -eq $max}
+                                    $min = ($PlottableOutDrives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
+                                    $OutDrive = $PlottableOutDrives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
 
                                     if ($OutDrive.Count -gt 1)
                                         {
@@ -458,7 +512,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                         }
 
                                     $OutDriveLetter = $OutDrive.DriveLetter
-                                    Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Best Outdrive most free space: "+$OutDriveLetter)
+                                    Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Best Outdrive most least jobs: "+$OutDriveLetter)
 
                                     $PlotoSpawnerJobId = ([guid]::NewGuid()).Guid
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": GUID for PlotoSpawnerID: "+$PlotoSpawnerJobId)
@@ -853,7 +907,6 @@ else
     {
         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": No Jobs spawned as either no TempDrives available or max parallel jobs reached. Max Parallel Jobs: "+$MaxParallelJobsOnAllDisks+ "Current amount of Jobs: "+ $JobCountAll0 )
     }
-
 
    $VerbosePreference = $oldverbose
    return $collectionWithPlotJobs
