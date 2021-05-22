@@ -22,8 +22,8 @@
         "MaxParallelJobsOnSameDisk": "3",
         "MaxParallelJobsInPhase1OnSameDisk": "2",
         "MaxParallelJobsInPhase1OnAllDisks" : "10",
-        "StartEarly": "true"
-        "StartEarlyPhase": "4"
+        "StartEarly": "true",
+        "StartEarlyPhase": "4",
         "BufferSize": "3390",
         "Thread": "4",
         "Bitfield": "true",
