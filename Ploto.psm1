@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.4.3
+Version: 1.0.9.4.4
 Author: Tydeno
 
 
@@ -1032,10 +1032,31 @@ function Start-PlotoSpawns
     $MaxParallelJobsInPhase1OnAllDisks = $config.JobConfig.MaxParallelJobsInPhase1OnAllDisks
     $StartEarly = $config.JobConfig.StartEarly
     $StartEarlyPhase = $config.JobConfig.StartEarlyPhase
-    
+    $EnableFy = $config.EnablePlotoFyOnStart
+
 
     Write-Host "PlotoManager @"(Get-Date)": InputAmountToSpawn:" $InputAmountToSpawn
     Write-Host "PlotoManager @"(Get-Date)": Intervall to wait:" $IntervallToWait
+
+    if ($EnableFy -eq "true")
+        {
+            Write-Host "PlotoManager @"(Get-Date)": PlotoFy is set to startup. Checking for active PlotoFy jobs..."
+
+            $bgjobs = Get-Job | Where-Object {$_.Name -like "*PlotoFy*"}
+            if ($bgjobs)
+                {
+                    $bgjobs | Stop-Job | Remove-Job
+                }
+            try 
+                {
+                    Start-PlotoFy
+                }
+            catch
+                {
+                    Write-Host "Could not launch PlotoFy!" -ForegroundColor Red
+                }
+            
+        }
 
     $SpawnedCountOverall = 0 
 
@@ -1199,7 +1220,9 @@ foreach ($log in $logs)
                         }
                 }
 
+            #split off "plots create" for output
 
+            $ArgumentList = $ArgumentList.TrimStart("plots create ")
 
             #Set certian properties when is Complete
             if ($StatusReturn -eq "4.3")
@@ -1338,14 +1361,21 @@ function Stop-PlotoJob
         try 
             {
                 Stop-Process -id $job.PID
-                Write-Host "PlotoStopJob @"(Get-Date)": stopped chia.exe with PID:" $job.pid -ForegroundColor Green 
+                
             }
 
         catch
             {
-                Write-Host "PlotoStopJob @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Yellow        
+                If ($_.Exception.Message -like "*Cannot bind parameter 'Id'*")
+                    {
+                        Write-Host "PlotoStopJob @"(Get-Date)": stopped chia.exe with PID:" $job.pid -ForegroundColor Green 
+                    }
+                else
+                    {
+                        Write-Host "PlotoStopJob @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Yellow
+                    }
+      
             }   
-
 
 
         $PlotoIdToScramble = $job.PlotId
@@ -1794,7 +1824,7 @@ function Invoke-PlotoFyStatusReport
                         )
                     )
 
-                    $EndId = "Phase"+$countji
+                    $EndId = "Phase Job"+$countji
                     $JobDetailsStatMsg = $ji.Status
                     $embedBuilder.AddField(
                         [DiscordField]::New(
@@ -2028,13 +2058,15 @@ Function Start-PlotoFy
     Unblock-File $PathToPloto
     Import-Module $PathToPloto -Force
     Request-PlotoFyStatusReport -ErrorAction stop
-    } -ArgumentList $PathToPloto, $PathToPloto
+    } -ArgumentList $PathToPloto, $PathToPloto -Name PlotoFy
 
 }
 
 
 #Helpers here. Would have loved to correctly used the module as a dependency. Just doesnt work when using with classes. Got to use the using module statement, which needs to be at the very beginning of a module or script.
 #I just load locally, this means we cannot use in the functions we call. The classes and functions wont be available within functions, thats why I baked them in directly. Massive credits to Mike Roberts! -> https://github.com/gngrninja
+
+
 
 class DiscordImage {    
     [string]$url      = [string]::Empty
