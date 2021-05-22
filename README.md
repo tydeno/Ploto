@@ -39,6 +39,10 @@ When and where Plots are spawned is defined by PlotoSpawnerConfig.json which loo
           "WaitTimeBetweenPlotOnSameDisk": "30",      | Wait time in minutes Ploto waits until a new job on the same disk is spawned
           "MaxParallelJobsOnAllDisks": "6", 	      | Maximum amount of parallel jobs allowed on all disks combined
           "MaxParallelJobsOnSameDisk": "2", 	      | Maximum amount of parallel jobs allowed on a single disk. Affects all disks of all sizes. Set to you're highest disk.
+	  "MaxParallelJobsInPhase1OnSameDisk": "2",   | Maximum amoumt of parallel jobs allowed on the same in  phase 1
+          "MaxParallelJobsInPhase1OnAllDisks" : "10", | Maximum amoumt of parallel jobs allowed on all disks in  phase 1
+          "StartEarly": "true",		              | Enable EarlyStart (when jobs completed StatusEarlyPhase)
+          "StartEarlyPhase": "3",                     | Defines when a job should be early started. If a job completes phase 3 in this example, it is not considered an active                                                           job anymore and makes room for another to spawn early.
           "BufferSize": "1000",
           "Thread": "1",
           "Bitfield": "true"
