@@ -12,6 +12,8 @@ And if you like, you may define an Intervall upon which Plotofy sends you notifi
 ![image](https://user-images.githubusercontent.com/83050419/118398002-f479d580-b656-11eb-82f7-a92a4a0af4a9.png)
 
 ## Contact
+For generl chatting, issues and support of hwo to use Ploto, you may join the Discord below.
+If you find any bugs, do not hesitate to create an issue directly here in GitHub.
 [Ploto Discord](https://discord.gg/NgEsMDWWT5)
 
 ## How you can support this project
