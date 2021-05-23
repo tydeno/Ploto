@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.4.4
+Version: 1.0.9.4.5
 Author: Tydeno
 
 
@@ -458,18 +458,16 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                     {
                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": StartEarly set to true")
                         #Check amount of Jobs ongoin
-                        $JobCountAll = (($JobsAll | Where-Object {$_.Status -lt $StartEarlyPhase}) | Measure-Object).Count
+                        $JobCountAll = (($JobsAll | Where-Object {$_.Status -lt $StartEarlyPhase -and $_.Status -ne "Completed"}) | Measure-Object).Count
                         $JobCountOnSameDisk = (($JobsAll | Where-Object {$_.Status -lt $StartEarlyPhase} | Where-Object {$_.TempDrive -eq $PlottableTempDrive.DriveLetter}) | Measure-Object).Count
-                        $AmountOfJobsInPhase1OnThisDisk = ($JobsAll| Where-Object {$_.TempDrive -eq $PlottableTempDrive.DriveLetter} | Where-Object {$_.Status -lt 2 -and $Status -ne "Completed" -or $_.Status -ne "Aborted" } | Measure-Object).Count
-                        $AmountOfJobsInPhase1OnAllDisks = ($JobsAll | Where-Object {$_.Status -lt 2 -and $Status -ne "Completed" -or $_.Status -ne "Aborted" } | Measure-Object).Count
+                        $AmountOfJobsInPhase1OnAllDisks = ($JobsAll | Where-Object {$_.Status -ne "Completed" -and $_.Status -ne "Aborted" -and $_.Status -lt 2 } | Measure-Object).Count
                     }
                 else 
                     {
                         #Check amount of Jobs ongoin
                         $JobCountAll = (($JobsAll | Where-Object {$_.Status -ne "Completed"}) | Measure-Object).Count
                         $JobCountOnSameDisk = (($JobsAll | Where-Object {$_.Status -ne "Completed"} | Where-Object {$_.TempDrive -eq $PlottableTempDrive.DriveLetter}) | Measure-Object).Count
-                        $AmountOfJobsInPhase1OnThisDisk = ($JobsAll | Where-Object {$_.TempDrive -eq $PlottableTempDrive.DriveLetter} | Where-Object {$_.Status -lt 2 -and $Status -ne "Completed" -or $_.Status -ne "Aborted" } | Measure-Object).Count
-                        $AmountOfJobsInPhase1OnAllDisks = ($JobsAll | Where-Object {$_.Status -lt 2 -and $Status -ne "Completed" -or $_.Status -ne "Aborted" } | Measure-Object).Count
+                        $AmountOfJobsInPhase1OnAllDisks = ($JobsAll | Where-Object {$_.Status -ne "Completed" -and $_.Status -ne "Aborted" -and $_.Status -lt 2 } | Measure-Object).Count
                     }
 
 
@@ -480,7 +478,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                          Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": -MaxParallelJobsOnAllDisks and MaxParallJobsOnSameDisk allow spawning. Iterating trough TempDrive: "+$PlottableTempDrive.DriveLetter)
 
                                                 
-                        if ($JobCountOnSameDisk -lt $MaxParallelJobsOnSameDisk -and $AmountOfJobsInPhase1OnThisDisk -lt $MaxParallelJobsInPhase1OnSameDisk -and $AmountOfJobsInPhase1OnAllDisks -lt $MaxParallelJobsInPhase1OnAllDisks)
+                        if ($JobCountOnSameDisk -lt $MaxParallelJobsOnSameDisk -and $AmountOfJobsInPhase1OnAllDisks -lt $MaxParallelJobsInPhase1OnAllDisks)
                             {
 
                                 # Did we spawn a PlotJob on this Disk within the duration specified in -WaitTimeBetweenPlotOnSameDisk? If yes, we gotta skip
