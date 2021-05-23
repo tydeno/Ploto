@@ -1,4 +1,6 @@
-# Ploto
+![logo_small](https://user-images.githubusercontent.com/83050419/119255604-fc88c680-bbbc-11eb-8918-1b1d2e9ced71.png)
+
+
 A Windows PowerShell based Chia Plotting Manager. 
 Consists of a PowerShell Module that allows to spawn, manage and move plots.
 
