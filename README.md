@@ -465,6 +465,7 @@ Yep. The individual Chia Plot Jobs wont be affected by that.
 Make sure all '"' and "," are set correctly. Also make sure for PLotoPathToModule you use "/" instead of "\".
 
 > Ploto wont start due to an error. What can I do?
+
 Try flushing your logs. You can simply move them to another folder. This is due to the fact that Ploto handles log different than the Chia GUI/CLI Plotter.
 
 # Knowns Bugs and Limitations
