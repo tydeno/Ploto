@@ -434,6 +434,13 @@ concurrent.futures._base.CancelledError
 
 Yep. The individual Chia Plot Jobs wont be affected by that.
 
+> My config does not laod due to an error. What can I do?
+ 
+Make sure all '"' and "," are set correctly. Also make sure for PLotoPathToModule you use "/" instead of "\".
+
+> Ploto wont start due to an error. What can I do?
+Try flushing your logs. You can simply move them to another folder. This is due to the fact that Ploto handles log different than the Chia GUI/CLI Plotter.
+
 # Knowns Bugs and Limitations
 Please be aware that Ploto was built for my specific setup. I try to generalize it as much as possible, but thats not easy-breezy.
 So what works for me, may not ultimately work for you. 
@@ -450,6 +457,10 @@ Make sure you delete/move all existing Logs in said path.
 * PlotoMover does not check for available free space on network drives as its unaware of it (only does for local drives)
 * If you have more than 1x version of chia within your C:\Users\Me\AppData\Local\chia-blockchain folder, Ploto wont be able to determine the version and will fail.
   Make sure theres only one available folder with chia.exe (eg. app-1.1.3)
+
+## Contact
+(Ploto Discord)[https://discord.gg/NgEsMDWWT5]
+
 
 ## How you can support this project
 There are several things you can do:
