@@ -1,4 +1,6 @@
-# Ploto
+
+![logo_small](https://user-images.githubusercontent.com/83050419/119256230-fea05480-bbbf-11eb-80af-bd42ba233f53.png)
+
 A Windows PowerShell based Chia Plotting Manager. 
 Consists of a PowerShell Module that allows to spawn, manage and move plots.
 
@@ -448,6 +450,9 @@ Make sure you delete/move all existing Logs in said path.
 * PlotoMover does not check for available free space on network drives as its unaware of it (only does for local drives)
 * If you have more than 1x version of chia within your C:\Users\Me\AppData\Local\chia-blockchain folder, Ploto wont be able to determine the version and will fail.
   Make sure theres only one available folder with chia.exe (eg. app-1.1.3)
+  
+## Contact
+(Ploto Discord)[https://discord.com/channels/@me/845736464541024306/845966666793746432]
 
 ## How you can support this project
 There are several things you can do:
