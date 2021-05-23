@@ -452,7 +452,7 @@ Make sure you delete/move all existing Logs in said path.
   Make sure theres only one available folder with chia.exe (eg. app-1.1.3)
   
 ## Contact
-(Ploto Discord)[https://discord.com/channels/@me/845736464541024306/845966666793746432]
+[Ploto Discord](https://discord.com/channels/@me/845736464541024306/845966666793746432)
 
 ## How you can support this project
 There are several things you can do:
@@ -463,8 +463,7 @@ There are several things you can do:
 In case you'd like to to support the development of Ploto in a monetary way, you may donate in the currencies below with the according wallet adresses:
 * XCH Adress: xch1rz7auuuuykntmkp35xr95mhyx6tqdzr20q8gwmnxdg2ylx5j3r5qxl3mv8
 * BTC Adress: 36JQnBmN4XLuS4gHEkAFfoQVjkjnpqGuo3
-* DOGE Adress: 9sXPCXedbrDq1hGZLxCsLQ34MqCKcP3yMi
-* SHIB Adress: 0x0098d6cab9c10ae8648340c0b9d86beb417194a5
+
 
 ## Function details
 For a detailled documentation of all available functions, their params in- and outputs see the links below, or 
