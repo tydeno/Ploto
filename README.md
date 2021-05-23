@@ -1,5 +1,5 @@
+![logo_small](https://user-images.githubusercontent.com/83050419/119255604-fc88c680-bbbc-11eb-8918-1b1d2e9ced71.png)
 
-![logo_small](https://user-images.githubusercontent.com/83050419/119256230-fea05480-bbbf-11eb-80af-bd42ba233f53.png)
 
 A Windows PowerShell based Chia Plotting Manager. 
 Consists of a PowerShell Module that allows to spawn, manage and move plots.
@@ -434,6 +434,13 @@ concurrent.futures._base.CancelledError
 
 Yep. The individual Chia Plot Jobs wont be affected by that.
 
+> My config does not laod due to an error. What can I do?
+ 
+Make sure all '"' and "," are set correctly. Also make sure for PLotoPathToModule you use "/" instead of "\".
+
+> Ploto wont start due to an error. What can I do?
+Try flushing your logs. You can simply move them to another folder. This is due to the fact that Ploto handles log different than the Chia GUI/CLI Plotter.
+
 # Knowns Bugs and Limitations
 Please be aware that Ploto was built for my specific setup. I try to generalize it as much as possible, but thats not easy-breezy.
 So what works for me, may not ultimately work for you. 
@@ -453,6 +460,10 @@ Make sure you delete/move all existing Logs in said path.
   
 ## Contact
 [Ploto Discord](https://discord.com/channels/@me/845736464541024306/845966666793746432)
+
+## Contact
+(Ploto Discord)[https://discord.gg/NgEsMDWWT5]
+
 
 ## How you can support this project
 There are several things you can do:
