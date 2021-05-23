@@ -9,8 +9,33 @@ And if you like, you may define an Intervall upon which Plotofy sends you notifi
 ![image](https://user-images.githubusercontent.com/83050419/118396387-a57c7200-b64f-11eb-8ef5-0526bd8cb3c6.png)
 ![image](https://user-images.githubusercontent.com/83050419/118396379-9eedfa80-b64f-11eb-9a83-1262a6625f3a.png)
 
-
 ![image](https://user-images.githubusercontent.com/83050419/118398002-f479d580-b656-11eb-82f7-a92a4a0af4a9.png)
+
+## Contact
+[Ploto Discord](https://discord.gg/NgEsMDWWT5)
+
+## How you can support this project
+There are several things you can do:
+* Use Ploto and provide feedback about what works, what not, and what features you'd like to see
+* Spread the word, so that more people use and test it 
+* If you can and want to you're of course also invited to contribute your pieces of PowerShell to the module by submitting pull requests
+
+In case you'd like to to support the development of Ploto in a monetary way, you may donate in the currencies below with the according wallet adresses:
+* XCH Adress: xch1rz7auuuuykntmkp35xr95mhyx6tqdzr20q8gwmnxdg2ylx5j3r5qxl3mv8
+* BTC Adress: 36JQnBmN4XLuS4gHEkAFfoQVjkjnpqGuo3
+
+# What effect sponsoring has on the development of Ploto
+All the work I'm doing on Ploto happens in my time off-work, most of the times until deep in the night.
+Your sponsoring helps me to fuel the ongoing development of a PowerShell based toolset for chia farming.
+ It allows me to spend more time on it, fix out the bugs and keep adding new features.
+
+Your donations will be mainly used as gas to fuel the development with:
+
+- Coffee
+- Energydrinks
+- Pizza
+
+So if you'd like to support me and my work; Why not get me a coffee? :)
 
 
 # PlotoSpawn
@@ -455,20 +480,6 @@ Make sure you delete/move all existing Logs in said path.
 * PlotoMover does not check for available free space on network drives as its unaware of it (only does for local drives)
 * If you have more than 1x version of chia within your C:\Users\Me\AppData\Local\chia-blockchain folder, Ploto wont be able to determine the version and will fail.
   Make sure theres only one available folder with chia.exe (eg. app-1.1.3)
-
-## Contact
-(Ploto Discord)[https://discord.gg/NgEsMDWWT5]
-
-
-## How you can support this project
-There are several things you can do:
-* Use Ploto and provide feedback about what works, what not, and what features you'd like to see
-* Spread the word, so that more people use and test it 
-* If you can and want to you're of course also invited to contribute your pieces of PowerShell to the module by submitting pull requests
-
-In case you'd like to to support the development of Ploto in a monetary way, you may donate in the currencies below with the according wallet adresses:
-* XCH Adress: xch1rz7auuuuykntmkp35xr95mhyx6tqdzr20q8gwmnxdg2ylx5j3r5qxl3mv8
-* BTC Adress: 36JQnBmN4XLuS4gHEkAFfoQVjkjnpqGuo3
 
 ## Function details
 For a detailled documentation of all available functions, their params in- and outputs see the links below, or 
