@@ -46,7 +46,7 @@
     {
       "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxx",
       "PeriodOfReportInHours": "1",
-      "PathToPloto": "C:/Users/me/Desktop/Ploto/Ploto.psm1"
+      "PathToPloto": "C:/Users/Tydeno/Desktop/Ploto/Ploto.psm1"
     }
   ]
 }
