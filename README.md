@@ -171,7 +171,7 @@ Drive Q:\ will never see more than 3x Plots in parallel as defined by -MaxParall
 When a job is done and a temp drive becommes available again, PlotoSpawner will spawn the next jobs, until it has spawned the amount you specified as -InputAmountToSpawn or it reaches it max cap.
 
 PlotoSpawner redirects the output of chia.exe to to the following path: 
-* C:\Users\me\.chia\mainnet\plotter\
+* C:\Users\Tydeno\.chia\mainnet\plotter\ (Tydeno is adjusted with your Username)
 
 And creates two log files for each job with the following notation:
 * PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b_Tmp-E_Out-K.txt (chia.exe output)
@@ -213,7 +213,7 @@ If you want to use Ploto follow along.
 2. If you start to use Ploto and you have Logs created by GUI or any other manager in C:\Users\me.chia\mainnet\plotter\, Get-PlotoJobs wont the able to read the status.
 Make sure you delete/move all existing Logs in said path. 
 3. Download Ploto as .ZIP from [here](https://github.com/tydeno/Ploto/archive/refs/heads/main.zip)
-4. Get the PlotoSpawnerConfig.json, adjust it to your needs and make sure its stored in C:\Users\YourUserName\.chia\mainnet\config
+4. Get the PlotoSpawnerConfig.json, adjust it to your needs and make sure its stored in C:\Users\Tydeno\.chia\mainnet\config (adjust Tydeno to your username)
 5. Import-Module "Ploto" (make sure you change the path to Ploto.psm1 to reflect your situation)
 ```powershell
 Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
@@ -462,7 +462,7 @@ Yep. The individual Chia Plot Jobs wont be affected by that.
 
 > My config does not laod due to an error. What can I do?
  
-Make sure all '"' and "," are set correctly. Also make sure for PLotoPathToModule you use "/" instead of "\".
+Make sure all '"' and "," are set correctly. Also make sure for PLotoPathToModule you use "/" instead of "\\".
 
 > Ploto wont start due to an error. What can I do?
 
