@@ -12,10 +12,10 @@ And if you like, you may define an Intervall upon which Plotofy sends you notifi
 ![image](https://user-images.githubusercontent.com/83050419/118398002-f479d580-b656-11eb-82f7-a92a4a0af4a9.png)
 
 ## Contact
-[Ploto Discord](https://discord.gg/NgEsMDWWT5)
 For general chatting, issues and support of how to use Ploto, you may join the Discord below.
-If you find any bugs, do not hesitate to create an issue directly here in GitHub.
+If you find any bugs, do not hesitate to create or update an issue directly here in GitHub.
 
+* ### [Ploto Discord](https://discord.gg/NgEsMDWWT5)
 
 ## How you can support this project
 There are several things you can do:
@@ -30,16 +30,14 @@ In case you'd like to to support the development of Ploto in a monetary way, you
 # What effect sponsoring has on the development of Ploto
 All the work I'm doing on Ploto happens in my time off-work, most of the times until deep in the night.
 Your sponsoring helps me to fuel the ongoing development of a PowerShell based toolset for chia farming.
- It allows me to spend more time on it, fix out the bugs and keep adding new features.
+It allows me to spend more time on it, fix out the bugs and keep adding new features.
 
 Your donations will be mainly used as gas to fuel the development with:
-
 - Coffee
 - Energydrinks
 - Pizza
 
 So if you'd like to support me and my work; Why not get me a coffee? :)
-
 
 # PlotoSpawn
 TLDR: It plots 1x plot on each TempDrive (if you have 6x TempDrives = 6x parallel Plot Jobs) as long as you want it to and as long as you have OutDrive space.
@@ -176,8 +174,6 @@ PlotoSpawner redirects the output of chia.exe to to the following path:
 And creates two log files for each job with the following notation:
 * PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b_Tmp-E_Out-K.txt (chia.exe output)
 * PlotoSpawnerLog_30_4_0_49_49ab3c48-532b-4f17-855d-3c5b4981528b_Tmp-E_Out-K'@'Stat.txt (Additional Info from PLotoSpawner)
-
-
 
 ### Alright, I saw that Discord Bot picture, how do I use that?
 You can control whether you want to receive and what kind of alerts in a handy config file.
