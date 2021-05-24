@@ -13,6 +13,9 @@ And if you like, you may define an Intervall upon which Plotofy sends you notifi
 
 ## Contact
 [Ploto Discord](https://discord.gg/NgEsMDWWT5)
+For general chatting, issues and support of how to use Ploto, you may join the Discord below.
+If you find any bugs, do not hesitate to create an issue directly here in GitHub.
+
 
 ## How you can support this project
 There are several things you can do:
@@ -462,6 +465,7 @@ Yep. The individual Chia Plot Jobs wont be affected by that.
 Make sure all '"' and "," are set correctly. Also make sure for PLotoPathToModule you use "/" instead of "\".
 
 > Ploto wont start due to an error. What can I do?
+
 Try flushing your logs. You can simply move them to another folder. This is due to the fact that Ploto handles log different than the Chia GUI/CLI Plotter.
 
 # Knowns Bugs and Limitations
