@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.4.7.1
+Version: 1.0.9.4.7.2
 Author: Tydeno
 
 
@@ -1007,7 +1007,32 @@ function Start-PlotoSpawns
         }
     catch
         {
-             Throw $_.Exception.Message
+            Write-Host "PlotoManager @"(Get-Date)": Could not read Config. Check your config with the hints below and on https://jsonformatter.org/ for validation. If you cant get it to run, join Ploto Discord for help.  " -ForegroundColor Red
+
+            if ($_.Exception.Message -like "*1384*")
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Looks like your PathToPlotoModule is not specified correctly. You have to use \ instead of /!" -ForegroundColor Yellow
+                }
+
+           if ($_.Exception.Message -like "*1093*")
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Looks like there is a ','  missing somewhere at the end of a line " -ForegroundColor Yellow
+                }
+
+           if ($_.Exception.Message -like "*1094*")
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Looks like there is a '$a' missing somewhere at the  beginning or end of a  property " -ForegroundColor Yellow
+                }
+
+
+
+            if ($_.Exception.Message -notlike "*1384*" -and $_.Exception.Message -notlike "*1093*" -and $_.Exception.Message -notlike "*1094*") 
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Could not determine possible rootcause. Check your config on https://jsonformatter.org/ for validation. If you cant get it to run, join Ploto Discord for help." -ForegroundColor Red
+                    Write-Host $_.Exception.Message -ForegroundColor red
+                }
+
+            throw "Exiting cause there is no readable config."
         } 
 
     #setting params from config 
