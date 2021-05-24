@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.4.5
+Version: 1.0.9.4.6
 Author: Tydeno
 
 
@@ -24,7 +24,7 @@ $collectionWithDisks= New-Object System.Collections.ArrayList
 foreach ($drive in $outDrives)
     {
 
-        $DiskSize = [math]::Round($tmpDrive.Size  / 1073741824, 2)
+        $DiskSize = [math]::Round($drive.Size  / 1073741824, 2)
         $FreeSpace = [math]::Round($drive.FreeSpace  / 1073741824, 2)
 
                 #Get-CurrenJobs
