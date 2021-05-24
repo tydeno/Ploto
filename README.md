@@ -5,6 +5,11 @@ Consists of a PowerShell Module that allows to spawn, manage and move plots.
 Also informs you in Discord about spawned jobs. 
 And if you like, you may define an Intervall upon which Plotofy sends you notifications about whats going on.
 
+
+![image](https://user-images.githubusercontent.com/83050419/119401060-4536a180-bcdb-11eb-8bb5-fa587b229d59.png)
+
+
+
 ![image](https://user-images.githubusercontent.com/83050419/118192418-662f0500-b446-11eb-9340-e919234d3d5f.png)
 ![image](https://user-images.githubusercontent.com/83050419/118396387-a57c7200-b64f-11eb-8ef5-0526bd8cb3c6.png)
 ![image](https://user-images.githubusercontent.com/83050419/118396379-9eedfa80-b64f-11eb-9a83-1262a6625f3a.png)
