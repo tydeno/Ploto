@@ -1,7 +1,9 @@
 {
   "PlotterName": "SirNotPlotAlot",
   "EnableAlerts": "false",
+  "EnablePlotoFyOnStart": "true",
   "ChiaWindowStyle": "normal",
+  
 
   "DiskConfig": [
     {
@@ -20,7 +22,6 @@
         "WaitTimeBetweenPlotOnSameDisk": "30",
         "MaxParallelJobsOnAllDisks": "8",
         "MaxParallelJobsOnSameDisk": "3",
-        "MaxParallelJobsInPhase1OnSameDisk": "2",
         "MaxParallelJobsInPhase1OnAllDisks" : "10",
         "StartEarly": "true",
         "StartEarlyPhase": "4",

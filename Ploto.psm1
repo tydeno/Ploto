@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.4.3
+Version: 1.0.9.4.5
 Author: Tydeno
 
 
@@ -458,18 +458,16 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                     {
                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": StartEarly set to true")
                         #Check amount of Jobs ongoin
-                        $JobCountAll = (($JobsAll | Where-Object {$_.Status -lt $StartEarlyPhase}) | Measure-Object).Count
+                        $JobCountAll = (($JobsAll | Where-Object {$_.Status -lt $StartEarlyPhase -and $_.Status -ne "Completed"}) | Measure-Object).Count
                         $JobCountOnSameDisk = (($JobsAll | Where-Object {$_.Status -lt $StartEarlyPhase} | Where-Object {$_.TempDrive -eq $PlottableTempDrive.DriveLetter}) | Measure-Object).Count
-                        $AmountOfJobsInPhase1OnThisDisk = ($JobsAll| Where-Object {$_.TempDrive -eq $PlottableTempDrive.DriveLetter} | Where-Object {$_.Status -lt 2 -and $Status -ne "Completed" -or $_.Status -ne "Aborted" } | Measure-Object).Count
-                        $AmountOfJobsInPhase1OnAllDisks = ($JobsAll | Where-Object {$_.Status -lt 2 -and $Status -ne "Completed" -or $_.Status -ne "Aborted" } | Measure-Object).Count
+                        $AmountOfJobsInPhase1OnAllDisks = ($JobsAll | Where-Object {$_.Status -ne "Completed" -and $_.Status -ne "Aborted" -and $_.Status -lt 2 } | Measure-Object).Count
                     }
                 else 
                     {
                         #Check amount of Jobs ongoin
                         $JobCountAll = (($JobsAll | Where-Object {$_.Status -ne "Completed"}) | Measure-Object).Count
                         $JobCountOnSameDisk = (($JobsAll | Where-Object {$_.Status -ne "Completed"} | Where-Object {$_.TempDrive -eq $PlottableTempDrive.DriveLetter}) | Measure-Object).Count
-                        $AmountOfJobsInPhase1OnThisDisk = ($JobsAll | Where-Object {$_.TempDrive -eq $PlottableTempDrive.DriveLetter} | Where-Object {$_.Status -lt 2 -and $Status -ne "Completed" -or $_.Status -ne "Aborted" } | Measure-Object).Count
-                        $AmountOfJobsInPhase1OnAllDisks = ($JobsAll | Where-Object {$_.Status -lt 2 -and $Status -ne "Completed" -or $_.Status -ne "Aborted" } | Measure-Object).Count
+                        $AmountOfJobsInPhase1OnAllDisks = ($JobsAll | Where-Object {$_.Status -ne "Completed" -and $_.Status -ne "Aborted" -and $_.Status -lt 2 } | Measure-Object).Count
                     }
 
 
@@ -480,7 +478,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                          Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": -MaxParallelJobsOnAllDisks and MaxParallJobsOnSameDisk allow spawning. Iterating trough TempDrive: "+$PlottableTempDrive.DriveLetter)
 
                                                 
-                        if ($JobCountOnSameDisk -lt $MaxParallelJobsOnSameDisk -and $AmountOfJobsInPhase1OnThisDisk -lt $MaxParallelJobsInPhase1OnSameDisk -and $AmountOfJobsInPhase1OnAllDisks -lt $MaxParallelJobsInPhase1OnAllDisks)
+                        if ($JobCountOnSameDisk -lt $MaxParallelJobsOnSameDisk -and $AmountOfJobsInPhase1OnAllDisks -lt $MaxParallelJobsInPhase1OnAllDisks)
                             {
 
                                 # Did we spawn a PlotJob on this Disk within the duration specified in -WaitTimeBetweenPlotOnSameDisk? If yes, we gotta skip
@@ -953,9 +951,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                                 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Plotting not allowed. Is prohibited by MaxParallelJobsOnSameDisk, MaxParallelJobsInPhase1OnSameDisk, or MaxParallelJobsInPhase1OnAllDisks.")  
                                 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Job count all jobs on dthis drive: "+$JobCountOnSameDisk) 
-                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Max allowed on this drive in all phases: "+$MaxParallelJobsOnSameDisk)
-                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Job count in P1 on this drive: "+$AmountOfJobsInPhase1OnThisDisk) 
-                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Max allowed on this drive in P1: "+$MaxParallelJobsInPhase1OnSameDisk)                    
+                                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Max allowed on this drive in all phases: "+$MaxParallelJobsOnSameDisk)                   
                                 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Job count in P1 on all drives: "+$AmountOfJobsInPhase1OnAllDisks) 
                                 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Max allowed on all drives in P1: "+$MaxParallelJobsInPhase1OnAllDisks) 
                                 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Skipping Drive: "+$PlottableTempDrive)
@@ -1032,10 +1028,31 @@ function Start-PlotoSpawns
     $MaxParallelJobsInPhase1OnAllDisks = $config.JobConfig.MaxParallelJobsInPhase1OnAllDisks
     $StartEarly = $config.JobConfig.StartEarly
     $StartEarlyPhase = $config.JobConfig.StartEarlyPhase
-    
+    $EnableFy = $config.EnablePlotoFyOnStart
+
 
     Write-Host "PlotoManager @"(Get-Date)": InputAmountToSpawn:" $InputAmountToSpawn
     Write-Host "PlotoManager @"(Get-Date)": Intervall to wait:" $IntervallToWait
+
+    if ($EnableFy -eq "true")
+        {
+            Write-Host "PlotoManager @"(Get-Date)": PlotoFy is set to startup. Checking for active PlotoFy jobs..."
+
+            $bgjobs = Get-Job | Where-Object {$_.Name -like "*PlotoFy*"}
+            if ($bgjobs)
+                {
+                    $bgjobs | Stop-Job | Remove-Job
+                }
+            try 
+                {
+                    Start-PlotoFy
+                }
+            catch
+                {
+                    Write-Host "Could not launch PlotoFy!" -ForegroundColor Red
+                }
+            
+        }
 
     $SpawnedCountOverall = 0 
 
@@ -1199,7 +1216,9 @@ foreach ($log in $logs)
                         }
                 }
 
+            #split off "plots create" for output
 
+            $ArgumentList = $ArgumentList.TrimStart("plots create ")
 
             #Set certian properties when is Complete
             if ($StatusReturn -eq "4.3")
@@ -1338,14 +1357,21 @@ function Stop-PlotoJob
         try 
             {
                 Stop-Process -id $job.PID
-                Write-Host "PlotoStopJob @"(Get-Date)": stopped chia.exe with PID:" $job.pid -ForegroundColor Green 
+                
             }
 
         catch
             {
-                Write-Host "PlotoStopJob @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Yellow        
+                If ($_.Exception.Message -like "*Cannot bind parameter 'Id'*")
+                    {
+                        Write-Host "PlotoStopJob @"(Get-Date)": stopped chia.exe with PID:" $job.pid -ForegroundColor Green 
+                    }
+                else
+                    {
+                        Write-Host "PlotoStopJob @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Yellow
+                    }
+      
             }   
-
 
 
         $PlotoIdToScramble = $job.PlotId
@@ -1794,7 +1820,7 @@ function Invoke-PlotoFyStatusReport
                         )
                     )
 
-                    $EndId = "Phase"+$countji
+                    $EndId = "Phase Job"+$countji
                     $JobDetailsStatMsg = $ji.Status
                     $embedBuilder.AddField(
                         [DiscordField]::New(
@@ -2028,13 +2054,15 @@ Function Start-PlotoFy
     Unblock-File $PathToPloto
     Import-Module $PathToPloto -Force
     Request-PlotoFyStatusReport -ErrorAction stop
-    } -ArgumentList $PathToPloto, $PathToPloto
+    } -ArgumentList $PathToPloto, $PathToPloto -Name PlotoFy
 
 }
 
 
 #Helpers here. Would have loved to correctly used the module as a dependency. Just doesnt work when using with classes. Got to use the using module statement, which needs to be at the very beginning of a module or script.
 #I just load locally, this means we cannot use in the functions we call. The classes and functions wont be available within functions, thats why I baked them in directly. Massive credits to Mike Roberts! -> https://github.com/gngrninja
+
+
 
 class DiscordImage {    
     [string]$url      = [string]::Empty
