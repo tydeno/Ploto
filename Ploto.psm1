@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.4.6
+Version: 1.0.9.4.7
 Author: Tydeno
 
 
@@ -994,13 +994,16 @@ function Start-PlotoSpawns
         }
 
     Write-Host "PlotoManager @"(Get-Date)": Ploto Manager started."
-    Write-Host "PlotoManager @"(Get-Date)": Loading config from C:\Users\me\.chia\mainnet\config..."
+
+
+
+    Write-Host "PlotoManager @"(Get-Date)": Loading config from "$env:HOMEDRIVE$env:HOMEPath"\.chia\mainnet\config\PlotoSpawnerConfig.json..."
     $PathToConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
 
     try 
         {
             $config = Get-Content -raw -Path $PathToConfig | ConvertFrom-Json
-            Write-Verbose "Loaded config successfully"
+            Write-Verbose "Loaded config successfully."
         }
     catch
         {
@@ -1041,16 +1044,20 @@ function Start-PlotoSpawns
             $bgjobs = Get-Job | Where-Object {$_.Name -like "*PlotoFy*"}
             if ($bgjobs)
                 {
+                    Write-Host "PlotoManager @"(Get-Date)": We have found active PlotoFy jobs. Stopping it and starting fresh..."
                     $bgjobs | Stop-Job | Remove-Job
                 }
             try 
                 {
                     Start-PlotoFy
+                    Write-Host "PlotoManager @"(Get-Date)": Started PlotoFy successfully. Check your Discord" -ForegroundColor Green
                 }
             catch
                 {
-                    Write-Host "Could not launch PlotoFy!" -ForegroundColor Red
+                    Write-Host "PlotoManager @"(Get-Date)": Could not launch PlotoFy!" -ForegroundColor Red
                 }
+
+           Write-Host "---------------------------------------------------------------------------------"
             
         }
 
@@ -1354,25 +1361,33 @@ function Stop-PlotoJob
 
         $Job = Get-PlotoJobs | Where-Object {$_.JobId -eq $JobId}
 
-        try 
-            {
-                Stop-Process -id $job.PID
-                
-            }
+        Write-Host "PlotoStopJob @"(Get-Date)": Found the job to be aborted with JobId: "$Job.JobId
 
-        catch
+        if ($Job.pid -ne "None" -or $null)
             {
-                If ($_.Exception.Message -like "*Cannot bind parameter 'Id'*")
+                Write-Host "PlotostopJob @"(Get-Date)": Process with PID: "$Job.pid "is still running. Stopping it..."
+                try 
                     {
+                        Stop-Process -id $job.PID
                         Write-Host "PlotoStopJob @"(Get-Date)": stopped chia.exe with PID:" $job.pid -ForegroundColor Green 
                     }
-                else
-                    {
-                        Write-Host "PlotoStopJob @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Yellow
-                    }
-      
-            }   
 
+                catch
+                    {
+                        If ($_.Exception.Message -like "*Cannot bind parameter 'Id'*")
+                            {
+                                Write-Host "PlotoStopJob @"(Get-Date)": stopped chia.exe with PID:" $job.pid -ForegroundColor Green 
+                            }
+                        else
+                            {
+                                Write-Host "PlotoStopJob @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Yellow
+                            }
+                    }   
+
+            
+                Write-Host "PlotoStopJob @"(Get-Date)": Sleeping 5 seconds before trying to attempt to delete logs and tmp files..."
+                Start-Sleep 5
+            }
 
         $PlotoIdToScramble = $job.PlotId
         #Scramble temp dir for .tmp files
@@ -1381,34 +1396,72 @@ function Stop-PlotoJob
 
         if ($FileArrToDel)
             {
-                Write-Host "PlotostopJob @"(Get-Date)": Found .tmp files for this job to be deleted."
-                Write-Host "PlotostopJob @"(Get-Date)": Sleeping 4 seconds before trying to attempt to delete logs and tmp files..."
-                Start-Sleep 4
+                Write-Host "PlotoStopJob @"(Get-Date)": Found .tmp files for this job to be deleted on TempDrive: "$Job.TempDrive
+
 
                 try 
                     {
                         $FileArrToDel | Remove-Item -Force
-                        Write-Host "PlotostopJob @"(Get-Date)": Removed temp files on"$Job.TempDrive -ForegroundColor Green   
+                        Write-Host "PlotoStopJob @"(Get-Date)": Removed temp files on"$Job.TempDrive -ForegroundColor Green   
                     }
 
                 catch
                     {
-                        Write-Host "PlotostopJob @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red   
+                        Write-Host "PlotoStopJob @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red   
                     }               
             }     
 
-        #Remove logs
-        try
+        
+        $T2FileArrayToDel = Get-ChildItem $job.T2Drive | Where-Object {$_.Name -like "*$PlotoIdToScramble*" -and $_.Extension -eq ".tmp"} 
+
+        If ($T2FileArrayToDel)
             {
-                Remove-Item -Path $Job.LogPath
-                Remove-Item -Path $Job.StatLogPath
-                Write-Host "PlotostopJob @"(Get-Date)": Removed log files for this job." -ForegroundColor Green     
+                Write-Host "PlotoStopJob @"(Get-Date)": Found .tmp files for this job to be deleted on T2 drive."
+
+                try 
+                    {
+                        $T2FileArrayToDel | Remove-Item -Force
+                        Write-Host "PlotoStopJob @"(Get-Date)": Removed temp files on t2drive: "$Job.T2Drive -ForegroundColor Green   
+                    }
+
+                catch
+                    {
+                        Write-Host "PlotoStopJob @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red   
+                    }    
+            
             }
 
-        catch
+        #Remove logs
+
+        if (Test-Path $Job.LogPath)
             {
-               Write-Host "PlotostopJob @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red 
+                Write-Host "PlotoStopJob @"(Get-Date)": Found logfiles tor this job. Going ahead with deletion..."
+                try
+                    {
+                        Remove-Item -Path $Job.LogPath
+                        Write-Host "PlotStopJob @"(Get-Date)": Removed log files for this job." -ForegroundColor Green     
+                    }
+
+                catch
+                    {
+                       Write-Host "PlotoStopJob @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red 
+                    }
             }
+        if (Test-Path $Job.StatLogPath)
+            {
+                Write-Host "PlotoStopJob @"(Get-Date)": Found statlogfile tor this job. Going ahead with deletion..."
+                try
+                    {
+                        Remove-Item -Path $Job.StatLogPath
+                        Write-Host "PlotoStopJob @"(Get-Date)": Removed statlog files for this job." -ForegroundColor Green     
+                    }
+
+                catch
+                    {
+                       Write-Host "PlotostopJob @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red 
+                    }
+            }
+
 }
 
 function Remove-AbortedPlotoJobs
@@ -1420,6 +1473,7 @@ function Remove-AbortedPlotoJobs
     foreach ($job in $JobsToAbort)
         {
             Stop-PlotoJob -JobId $job.jobid
+            Write-Host "-----------------------------------------------------------------------"
             $count++
         }
     Write-Host "PlotoRemoveAbortedJobs @"(Get-Date)": Removed Amount of aborted Jobs:"$count
