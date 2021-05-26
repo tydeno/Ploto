@@ -32,7 +32,7 @@ In case you'd like to to support the development of Ploto in a monetary way, you
 * XCH Adress: xch1rz7auuuuykntmkp35xr95mhyx6tqdzr20q8gwmnxdg2ylx5j3r5qxl3mv8
 * BTC Adress: 36JQnBmN4XLuS4gHEkAFfoQVjkjnpqGuo3
 
-# What effect sponsoring has on the development of Ploto
+## What effect sponsoring has on the development of Ploto
 All the work I'm doing on Ploto happens in my time off-work, most of the times until deep in the night.
 Your sponsoring helps me to fuel the ongoing development of a PowerShell based toolset for chia farming.
 It allows me to spend more time on it, fix out the bugs and keep adding new features.
