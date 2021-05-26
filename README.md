@@ -46,16 +46,16 @@ So if you'd like to support me and my work; Why not get me a coffee? :)
 
 ## Is it safe to use? 
 We've seen some horrific stuff happening with 3rd Party Tools around a Chia. For instance
-there was/is a PowerShell Script that should add some Introducers to your farm It does that yes. But it also empties your wallet and sends your private keys home.
+there was/is a PowerShell Script that should add some Introducers to your farm. It does that yes. But it also empties your wallet and sends your private keys home.
 
 This was a good reminder that we should never trust blindly on the internet (and everywhere else!).
-Never trust, always verify is the leading principle here. 
+Never trust, always verify is the leading principle. 
 
-So I encourage you to go trough the code, line by line to verify if it does something bad. You should not trust my words, even though I assure theres no such thing in Ploto as described above.
+So I encourage you to go trough the code in this repo, line by line to verify if it does something bad.
 If theres a line you don't understand (cause I maybe went crazy with aliases) do not hesitate to raise an issue and ask straight away.
 
 
-From a technical perspective, if you are cooncerned that your private keys and or wallet my be exposed to Ploto, you can mitigate that.
+From a technical perspective, if you are cooncerned that your private keys and or wallet might be exposed to Ploto, you can mitigate that.
 Ploto only needs chia.exe to start PlotJobs. No private keys, no access to farmers/harvesters nor a wallet.
 If you run Ploto on dedicated plotting machines, you can specify your public keys in the config and generate valid plots for your farm.
 
