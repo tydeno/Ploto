@@ -29,7 +29,7 @@ There are several things you can do:
 * If you can and want to you're of course also invited to contribute your pieces of PowerShell to the module by submitting pull requests
 
 In case you'd like to to support the development of Ploto in a monetary way, you may donate in the currencies below with the according wallet adresses:
-* XCH Adress: xch1rz7auuuuykntmkp35xr95mhyx6tqdzr20q8gwmnxdg2ylx5j3r5qxl3mv8
+* XCH Adress: xch19ddu8lxgq2g6ssnk7kmexmwxazapvdt7fp8cekeun0cdm9jt6vxsqg30yt
 * BTC Adress: 36JQnBmN4XLuS4gHEkAFfoQVjkjnpqGuo3
 
 ## What effect sponsoring has on the development of Ploto
