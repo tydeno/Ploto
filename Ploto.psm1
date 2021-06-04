@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.4.9.2
+Version: 1.0.9.4.9.3
 Author: Tydeno
 
 
@@ -721,7 +721,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                         {
                                             #Lets check if its a Key
                                             $CharArray = $P2Singleton.ToCharArray()
-                                            if ($CharArray.Count -eq 96)
+                                            if ($CharArray.Count -gt 61)
                                                 {
                                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": This looks like a valid key based on its length")
                                                     $ExpandedArgs = "-c "+$P2Singleton
