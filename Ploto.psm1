@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.4.9.1
+Version: 1.0.9.4.9.2
 Author: Tydeno
 
 
@@ -691,7 +691,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                 }
                                            }
 
-                                    if ($FarmerKey -ne $null -or $FarmerKey -ne "")
+                                    if ($FarmerKey -ne "" -or $FarmerKey -ne " ")
                                         {
                                             #Lets check if its a Key
                                             $CharArray = $FarmerKey.ToCharArray()
@@ -704,7 +704,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                                         }
 
-                                    if ($PoolKey -ne $null -or $PoolKey -ne "")
+                                    if ($PoolKey -ne "" -or $PoolKey -ne " ")
                                         {
                                             #Lets check if its a Key
                                             $CharArray = $PoolKey.ToCharArray()
@@ -717,7 +717,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                                         }
 
-                                     if ($P2Singleton -ne $null -or $P2Singleton -ne "")
+                                     if ($P2Singleton -ne "" -or $P2Singleton -ne " ")
                                         {
                                             #Lets check if its a Key
                                             $CharArray = $P2Singleton.ToCharArray()
