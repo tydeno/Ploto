@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.4.8
+Version: 1.0.9.4.9.3
 Author: Tydeno
 
 
@@ -77,7 +77,7 @@ foreach ($drive in $outDrives)
             }
 
 
-        If ($FreeSpace -gt 107)
+        If ($FreeSpace -gt 107 -and $AvailableAmounToPlot -ge 1)
             {
                 $PlotToDest = $true
             }
@@ -382,7 +382,8 @@ function Invoke-PlotoJob
         $MaxParallelJobsInPhase1OnSameDisk,
         $MaxParallelJobsInPhase1OnAllDisks,
         $StartEarly,
-        $StartEarlyPhase
+        $StartEarlyPhase,
+        $P2Singleton
 		)
 
  if($verbose) {
@@ -439,7 +440,15 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+":  We have drives available that allow jobs to be spawned based on -MaxParallelJobsOnAllDisks and $MaxParallJobsOnSameDisk")
                 #Lets get the best suited TempDrive (The one with least amount of jobs ongoing)
                 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+":  Scanning for the drive with least amount of jobs...")
+
                 $PlottableTempDrives = Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom | Where-Object {$_.IsPlottable -eq $true}   
+
+                #Is there an nvme?
+                If ($PlottableTempDrives | Where-Object {$_.DiskBus -like "*NVME*"})
+                    {
+                        $min = ($PlottableTempDrives | Where-Object {$_.DiskBus -like "*NVME*"} | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
+                        $PlottableTempDrive = $PlottableTempDrives | Where-Object {$_.DiskBus -like "*NVME*"} | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
+                    } 
 
                 $min = ($PlottableTempDrives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
                 $PlottableTempDrive = $PlottableTempDrives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
@@ -497,6 +506,11 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                     {
  
                                     $PlottableOutDrives = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom | Where-Object {$_.IsPlottable -eq $true}
+                                    if ($PlottableOutDrives -eq $null)
+                                    {
+                                        Throw "Error: No outdrives found"
+                                        exit
+                                    } 
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": -MaxParallelJobsOnAllDisks and -MaxParallelJobsOnSameDisk allow spawning")
                                     $min = ($PlottableOutDrives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
                                     $OutDrive = $PlottableOutDrives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
@@ -677,7 +691,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                 }
                                            }
 
-                                    if ($FarmerKey -ne $null -or $FarmerKey -ne "")
+                                    if ($FarmerKey -ne "" -or $FarmerKey -ne " ")
                                         {
                                             #Lets check if its a Key
                                             $CharArray = $FarmerKey.ToCharArray()
@@ -690,7 +704,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                                         }
 
-                                    if ($PoolKey -ne $null -or $PoolKey -ne "")
+                                    if ($PoolKey -ne "" -or $PoolKey -ne " ")
                                         {
                                             #Lets check if its a Key
                                             $CharArray = $PoolKey.ToCharArray()
@@ -698,6 +712,19 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                 {
                                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": This looks like a valid key based on its length")
                                                     $ExpandedArgs = "-p "+$PoolKey
+                                                    $ArgumentList = $ArgumentList+" "+$ExpandedArgs
+                                                }
+
+                                        }
+
+                                     if ($P2Singleton -ne "" -or $P2Singleton -ne " ")
+                                        {
+                                            #Lets check if its a Key
+                                            $CharArray = $P2Singleton.ToCharArray()
+                                            if ($CharArray.Count -gt 61)
+                                                {
+                                                    Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": This looks like a valid key based on its length")
+                                                    $ExpandedArgs = "-c "+$P2Singleton
                                                     $ArgumentList = $ArgumentList+" "+$ExpandedArgs
                                                 }
 
@@ -1057,6 +1084,7 @@ function Start-PlotoSpawns
     $StartEarly = $config.JobConfig.StartEarly
     $StartEarlyPhase = $config.JobConfig.StartEarlyPhase
     $EnableFy = $config.EnablePlotoFyOnStart
+    $P2Singleton = $config.JobConfig.P2SingletonAdress
 
 
     Write-Host "PlotoManager @"(Get-Date)": InputAmountToSpawn:" $InputAmountToSpawn
@@ -1099,11 +1127,11 @@ function Start-PlotoSpawns
 
         if ($verbose)
             {
-                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -Verbose
+                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -P2Singleton $P2Singleton -Verbose
             }
         else
             {
-                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase
+                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -P2Singleton $P2Singleton
             }
         
         
@@ -1140,12 +1168,7 @@ function Get-PlotoJobs
    $VerbosePreference = "continue" }
 
 $PlotterBaseLogPath = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\plotter\"
-
-
 $logs = Get-ChildItem $PlotterBaseLogPath | Where-Object {$_.Name -notlike "*@Stat*" -and $_.Name -notlike "*plotter*"}
-
-
-
 $pattern = @("OutDrive", "TempDrive", "Starting plotting progress into temporary dirs:", "ID", "F1 complete, time","Starting phase 1/4", "Computing table 1","Computing table 2", "Computing table 3","Computing table 4","Computing table 5","Computing table 6","Computing table 7", "Starting phase 2/4", "Time for phase 1","Backpropagating on table 7", "Backpropagating on table 6", "Backpropagating on table 5", "Backpropagating on table 4", "Backpropagating on table 3", "Backpropagating on table 2", "Starting phase 3/4", "Compressing tables 1 and 2", "Compressing tables 2 and 3", "Compressing tables 3 and 4", "Compressing tables 4 and 5", "Compressing tables 5 and 6", "Compressing tables 6 and 7", "Starting phase 4/4", "Writing C2 table", "Time for phase 4", "Renamed final file", "Total time", "Could not copy", "Time for phase 3", "Time for phase 2")
 
 
@@ -1619,26 +1642,6 @@ if ($PlotsToMove)
                                     Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestinationDrive "using BITS"
                                     $source = $plot.FilePath
                                     Start-BitsTransfer -Source $source -Destination $DestinationDrive -Description "Moving Plot" -DisplayName "Moving Plot"
-                            
-                                    while ((Get-BitsTransfer | Where-Object { $_.JobState -eq "Transferring" }).Count -gt 0) {     
-                                        $totalbytes=0;    
-                                        $bytestransferred=0; 
-                                        $timeTaken = 0;    
-                                        foreach ($job in (Get-BitsTransfer | Where-Object { $_.JobState -eq "Transferring" } | Sort-Object CreationTime)) {         
-                                            $totalbytes += $job.BytesTotal;         
-                                            $bytestransferred += $job.bytestransferred     
-                                            if ($timeTaken -eq 0) { 
-                                                #Get the time of the oldest transfer aka the one that started first
-                                                $timeTaken = ((Get-Date) - $job.CreationTime).TotalMinutes 
-                                            }
-                                        }    
-                                        #TimeRemaining = (TotalFileSize - BytesDownloaded) * TimeElapsed/BytesDownloaded
-                                        if ($totalbytes -gt 0) {        
-                                            [int]$timeLeft = ($totalBytes - $bytestransferred) * ($timeTaken / $bytestransferred)
-                                            [int]$pctComplete = $(($bytestransferred*100)/$totalbytes);     
-                                            Write-Progress -Status "Transferring $bytestransferred of $totalbytes ($pctComplete%). $timeLeft minutes remaining." -Activity "Dowloading files" -PercentComplete $pctComplete  
-                                        }
-                                    }
                                 }
 
                             catch

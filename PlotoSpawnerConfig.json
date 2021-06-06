@@ -29,7 +29,8 @@
         "Thread": "4",
         "Bitfield": "true",
         "FarmerKey": "",
-        "PoolKey": ""
+        "PoolKey": "",
+        "P2SingletonAdress": ""
       }
     ],
 
