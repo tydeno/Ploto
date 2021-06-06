@@ -32,18 +32,6 @@ In case you'd like to to support the development of Ploto in a monetary way, you
 * XCH Adress: xch19ddu8lxgq2g6ssnk7kmexmwxazapvdt7fp8cekeun0cdm9jt6vxsqg30yt
 * BTC Adress: 36JQnBmN4XLuS4gHEkAFfoQVjkjnpqGuo3
 
-## What effect sponsoring has on the development of Ploto
-All the work I'm doing on Ploto happens in my time off-work, most of the times until deep in the night.
-Your sponsoring helps me to fuel the ongoing development of a PowerShell based toolset for chia farming.
-It allows me to spend more time on it, fix out the bugs and keep adding new features.
-
-Your donations will be mainly used as gas to fuel the development with:
-- Coffee
-- Energydrinks
-- Pizza
-
-So if you'd like to support me and my work; Why not get me a coffee? :)
-
 ## Is it safe to use? 
 We've seen some horrific stuff happening with 3rd Party Tools around a Chia. For instance
 there was/is a PowerShell Script that should add some Introducers to your farm. It does that yes. But it also empties your wallet and sends your private keys home.
@@ -54,11 +42,11 @@ Never trust, always verify is the leading principle.
 So I encourage you to go trough the code in this repo, line by line to verify if it does something bad.
 If theres a line you don't understand do not hesitate to raise an issue and ask straight away.
 
-
 From a technical perspective, if you are cooncerned that your private keys and or wallet might be exposed to Ploto, you can mitigate that.
 Ploto only needs chia.exe to start PlotJobs. No private keys, no access to farmers/harvesters nor a wallet.
 If you run Ploto on dedicated plotting machines, you can specify your public keys in the config and generate valid plots for your farm.
 
+On top of that; it always makes sense to set your reward address to a cold wallet.
 
 # PlotoSpawn
 TLDR: It plots 1x plot on each TempDrive (if you have 6x TempDrives = 6x parallel Plot Jobs) as long as you want it to and as long as you have OutDrive space.
