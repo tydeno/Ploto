@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.4.9.4
+Version: 1.0.9.4.9.6
 Author: Tydeno
 
 
@@ -383,7 +383,10 @@ function Invoke-PlotoJob
         $MaxParallelJobsInPhase1OnAllDisks,
         $StartEarly,
         $StartEarlyPhase,
-        $P2Singleton
+        $P2Singleton,
+        $ReplotDriveDenom, 
+        $Replot,
+        $ksize
 		)
 
  if($verbose) {
@@ -405,7 +408,6 @@ $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSp
 try 
     {
         $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
-        Write-Verbose "Loaded Alarmconfig successfully"
     }
 catch
     {
@@ -512,52 +514,121 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                         exit
                                     } 
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": -MaxParallelJobsOnAllDisks and -MaxParallelJobsOnSameDisk allow spawning")
-                                    $min = ($PlottableOutDrives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
-                                    $OutDrive = $PlottableOutDrives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
 
-                                    if ($OutDrive.Count -gt 1)
+
+                                    #Building ArgumentList for chia.exe
+                                    if ($Replot -eq "true")
                                         {
-                                            #We have several OutDisks in our Array that could be the best OutDrive. Need to pick one!
-                                            $OutDrive = $OutDrive[0]
-                                        }
+                                            Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Replotting enabled. Will delete existing plots shortly upon before a job enters phase 4. Also ignoring the fact that an OutDrive has no space, as it will be de")
+                                            #Pick an Outdrive from ReplotDenom
+                                            $replotDrives = Get-PlotoOutDrives -OutDriveDenom $ReplotDriveDenom
 
-                                    if ($OutDrive -eq $null)
-                                        {
+                                            #normal flow as we do not replot
+                                            $min = ($replotDrives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
+                                            $OutDrive = $replotDrives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
 
-                                        if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenNoOutDrivesAvailable -eq $true)
+                                            if ($OutDrive.Count -gt 1)
+                                                {
+                                                    #We have several OutDisks in our Array that could be the best OutDrive. Need to pick one!
+                                                    $OutDrive = $OutDrive[0]
+                                                }
+
+                                            #check if chosen outdrive has any plots
+    
+                                            if ($OutDrive -eq $null)
                                             {
-                                                #Create embed builder object via the [DiscordEmbed] class
-                                                $embedBuilder = [DiscordEmbed]::New(
-                                                                    'Sorry to bother you but we cant move on. No Outdrives available. ',
-                                                                    'I ran into trouble. I wanted to spawn a new plot, but it seems we either ran out of space on our OutDrives or I just cant find them. You sure you gave the right denominator for them? I stopped myself now. Please check your OutDrives, and if applicable, move some final plots away from it.'
-                                                                )
+                                                                                                                                                                                                                                                                                                
 
-                                                #Add purple color
-                                                $embedBuilder.WithColor(
-                                                    [DiscordColor]::New(
-                                                        'red'
+                                                if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenNoOutDrivesAvailable -eq $true)
+                                                {
+                                                    #Create embed builder object via the [DiscordEmbed] class
+                                                    $embedBuilder = [DiscordEmbed]::New(
+                                                                        'Sorry to bother you but we cant move on. No Outdrives available. ',
+                                                                        'I ran into trouble. I wanted to spawn a new plot, but it seems we either ran out of space on our OutDrives or I just cant find them. You sure you gave the right denominator for them? I stopped myself now. Please check your OutDrives, and if applicable, move some final plots away from it.'
+                                                                    )
+
+                                                    #Add purple color
+                                                    $embedBuilder.WithColor(
+                                                        [DiscordColor]::New(
+                                                            'red'
+                                                        )
                                                     )
-                                                )
 
-                                                $plotname = $config.PlotterName
-                                                $footie = "Ploto: "+$plotname
-                                                #Add a footer
-                                                $embedBuilder.AddFooter(
-                                                    [DiscordFooter]::New(
-                                                        $footie
+                                                    $plotname = $config.PlotterName
+                                                    $footie = "Ploto: "+$plotname
+                                                    #Add a footer
+                                                    $embedBuilder.AddFooter(
+                                                        [DiscordFooter]::New(
+                                                            $footie
+                                                        )
                                                     )
-                                                )
 
-                                                $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
+                                                    $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
 
-                                                Invoke-PsDsHook -CreateConfig $WebHookURL -Verbose:$false
-                                                Invoke-PSDsHook $embedBuilder -Verbose:$false
+                                                    Invoke-PsDsHook -CreateConfig $WebHookURL -Verbose:$false
+                                                    Invoke-PSDsHook $embedBuilder -Verbose:$false
                                     
-                                            }
+                                                }
                                 
-                                        Throw "Error: No outdrives found"
-                                        exit
-                                        
+                                                Throw "Error: No outdrives found"
+                                                exit
+                                            }
+                                            
+                                             
+                                        }
+                                    else
+                                        {
+                                            #normal flow as we do not replot
+                                            $PlottableOutDrives = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom | Where-Object {$_.IsPlottable -eq $true}
+
+                                            $min = ($PlottableOutDrives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
+                                            $OutDrive = $PlottableOutDrives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
+
+                                            if ($OutDrive.Count -gt 1)
+                                                {
+                                                    #We have several OutDisks in our Array that could be the best OutDrive. Need to pick one!
+                                                    $OutDrive = $OutDrive[0]
+                                                }
+
+                                            if ($OutDrive -eq $null)
+                                            {
+                                                                                                                                                                                                                                                                                                
+
+                                                if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenNoOutDrivesAvailable -eq $true)
+                                                {
+                                                    #Create embed builder object via the [DiscordEmbed] class
+                                                    $embedBuilder = [DiscordEmbed]::New(
+                                                                        'Sorry to bother you but we cant move on. No Outdrives available. ',
+                                                                        'I ran into trouble. I wanted to spawn a new plot, but it seems we either ran out of space on our OutDrives or I just cant find them. You sure you gave the right denominator for them? I stopped myself now. Please check your OutDrives, and if applicable, move some final plots away from it.'
+                                                                    )
+
+                                                    #Add purple color
+                                                    $embedBuilder.WithColor(
+                                                        [DiscordColor]::New(
+                                                            'red'
+                                                        )
+                                                    )
+
+                                                    $plotname = $config.PlotterName
+                                                    $footie = "Ploto: "+$plotname
+                                                    #Add a footer
+                                                    $embedBuilder.AddFooter(
+                                                        [DiscordFooter]::New(
+                                                            $footie
+                                                        )
+                                                    )
+
+                                                    $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
+
+                                                    Invoke-PsDsHook -CreateConfig $WebHookURL -Verbose:$false
+                                                    Invoke-PSDsHook $embedBuilder -Verbose:$false
+                                    
+                                                }
+                                
+                                                Throw "Error: No outdrives found"
+                                                exit
+                                            }
+                                           
                                         }
 
                                     $OutDriveLetter = $OutDrive.DriveLetter
@@ -730,6 +801,9 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                                         }
 
+
+
+                                    #finally launch chia exe
                                     try 
                                         {
                                             Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Launching chia.exe with params.")
@@ -1097,6 +1171,9 @@ function Start-PlotoSpawns
     $StartEarlyPhase = $config.JobConfig.StartEarlyPhase
     $EnableFy = $config.EnablePlotoFyOnStart
     $P2Singleton = $config.JobConfig.P2SingletonAdress
+    $ReplotDriveDenom = $config.DiskConfig.DenomForOutDrivesToReplotForPools
+    $Replot = $config.JobConfig.ReplotForPool
+    $ksize = $config.JobConfig.KSizeToPlot
 
 
     Write-Host "PlotoManager @"(Get-Date)": InputAmountToSpawn:" $InputAmountToSpawn
@@ -1105,6 +1182,30 @@ function Start-PlotoSpawns
     if ($EnableFy -eq "true")
         {
             Write-Host "PlotoManager @"(Get-Date)": PlotoFy is set to startup. Checking for active PlotoFy jobs..."
+
+            $bgjobs = Get-Job | Where-Object {$_.Name -like "*PlotoFy*"}
+            if ($bgjobs)
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": We have found active PlotoFy jobs. Stopping it and starting fresh..."
+                    $bgjobs | Stop-Job | Remove-Job
+                }
+            try 
+                {
+                    Start-PlotoFy
+                    Write-Host "PlotoManager @"(Get-Date)": Started PlotoFy successfully. Check your Discord" -ForegroundColor Green
+                }
+            catch
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Could not launch PlotoFy!" -ForegroundColor Red
+                }
+
+           Write-Host "---------------------------------------------------------------------------------"
+            
+        }
+
+    if ($Replot -eq "true")
+        {
+            Write-Host "PlotoManager @"(Get-Date)": Replotting is enabled. Checking for active Watchdog jobs..."
 
             $bgjobs = Get-Job | Where-Object {$_.Name -like "*PlotoFy*"}
             if ($bgjobs)
@@ -1139,11 +1240,11 @@ function Start-PlotoSpawns
 
         if ($verbose)
             {
-                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -P2Singleton $P2Singleton -Verbose
+                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -P2Singleton $P2Singleton -ReplotDriveDenom $ReplotDriveDenom -Replot $Replot -ksize $ksize -Verbose
             }
         else
             {
-                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -P2Singleton $P2Singleton
+                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -P2Singleton $P2Singleton -ReplotDriveDenom $ReplotDriveDenom -Replot $Replot -ksize $ksize
             }
         
         
@@ -1582,6 +1683,7 @@ if ($OutDrivesToScan)
                             FilePath     =  $FilePath
                             Name = $item.Name
                             Size = $Size
+                            CreationTime = $item.CreationTime
                             }
 
                             $collectionWithFinalPlots.Add($PlotToMove) | Out-Null
@@ -1721,6 +1823,57 @@ function Start-PlotoMove
     Until ($count -eq $endlessCount)
 }
 
+function Invoke-PlotoDeleteForReplot
+{
+
+	Param(
+		[parameter(Mandatory=$true)]
+		$ReplotDriveDenom
+		)
+
+    #Get active jobs in phase 3.
+    $activeJobs = Get-PlotoJobs | Where-Object {$_.Status -ge 3.9}
+    if ($activeJobs)
+        {
+            Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Found active jobs that are about to enter phase 4.")
+
+            foreach ($job in $activeJobs)
+                {
+                        Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Checking if selected ReplotDrive has enough space or oldest plot needs to be deleted..")
+                        #Check if we need to delete a plot on that OutDrive spacewise, with active jobs to it in mind.
+                        $OutDriveToCheck = Get-PlotoOutDrives -OutDriveDenom $ReplotDriveDenom | Where-Object {$_.DriveLetter -eq $job.OutDrive}
+
+                        if ($OutDriveToCheck.FreeSpace -lt 107 -and $OutDriveToCheck.AvailableAmountToPlot -le 1)
+                            {
+                                Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Not enough space available for new plot, need to delete oldest one for replotting... ")
+                                #pick oldest plottodel
+                                $plottoDel = (Get-PlotoPlots -OutDriveDenom $ReplotDriveDenom | sort creationtime)[0]
+                                Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Oldest Plot in ReplotDrive "+$OutDriveToCheck.DriveLetter+ " of job with id "+$job.JobId+" that is about to finish: "+$plottoDel.FilePath)
+
+                                $plotitemtodel = Get-ChildItem $plottoDel.FilePath
+                                try 
+                                    {
+                                       #$plotitemtodel | Remove-Item
+                                       Write-Host "deleteing..." -ForegroundColor Yellow
+                                    } 
+                                catch
+                                    {
+                                        throw 
+                                    }
+                            }
+                        else
+                            {
+                                Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Selected ReplotDrive (OutDrive of PlotJob) "+$OutDriveToCheck.DriveLetter+" has enough space. No deletion needed.")
+                            }
+                }
+
+        }
+    else
+        {
+            Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": No active jobs that are about to enter phase 4.")
+        }
+
+}
 
 function Get-PlotoFarmLog
 {
@@ -2111,7 +2264,7 @@ function Invoke-PlotoFyStatusReport
 function Request-PlotoFyStatusReport
 {
     $count = 0
-    for ($count -lt 1000000)
+    for ($count -lt 10000000)
         {
             try 
                 {
@@ -2142,7 +2295,7 @@ Function Start-PlotoFy
         {
              $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
              $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
-             Write-Verbose "Loaded Alarmcoinfig successfully"
+             Write-Verbose "Loaded Config successfully"
          }
      catch
          {
@@ -2155,6 +2308,55 @@ Function Start-PlotoFy
     Request-PlotoFyStatusReport -ErrorAction stop
     } -ArgumentList $PathToPloto, $PathToPloto -Name PlotoFy
 
+}
+
+function Request-CheckForDeletion
+{
+
+$PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
+
+try 
+    {
+        $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
+    }
+catch
+    {
+         Throw $_.Exception.Message
+         exit
+    } 
+
+$ReplotDriveDenom = $config.DiskConfig.DenomForOutDrivesToReplotForPools
+
+$count = 0
+    for ($count -lt 100000000000)
+        {
+           Invoke-PlotoDeleteForReplot -ReplotDriveDenom $ReplotDriveDenom
+           $count++
+           Start-Sleep 300 
+        }
+
+}
+
+function Start-ReplotWatchDog
+{
+
+    Start-Job -ScriptBlock {
+        try 
+            {
+                 $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
+                 $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
+                 Write-Verbose "Loaded Config successfully"
+             }
+         catch
+             {
+                 Throw $_.Exception.Message
+             } 
+
+       $PathToModule = $config.PlotoFyAlerts.PathToPloto
+       Unblock-File $PathToModule
+       Import-Module $PathToModule -Force
+       Request-CheckForDeletion
+    } -ArgumentList $PathToModule -Name ReplotWatchDog 
 }
 
 
