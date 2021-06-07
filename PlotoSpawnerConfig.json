@@ -3,7 +3,8 @@
   "EnableAlerts": "false",
   "EnablePlotoFyOnStart": "true",
   "ChiaWindowStyle": "normal",
-  
+  "PathToPloto": "C:/Users/Tydeno/Desktop/Ploto/Ploto.psm1",
+ 
 
   "DiskConfig": [
     {
@@ -11,21 +12,21 @@
       "Temp2Denom": "",
       "OutDriveDenom": "out",
       "EnableT2": "false",
-      "DenomForOutDrivesToReplot": "",
-      "Replot": "false"
+      "DenomForOutDrivesToReplotForPools": "replot"
     }
   ],
 
   "JobConfig": [
       {
         "KSizeToPlot": "32",
+        "ReplotForPool": "true",
         "IntervallToCheckInMinutes": "5",
         "InputAmountToSpawn": "100", 
         "WaitTimeBetweenPlotOnSeparateDisks": "15",
         "WaitTimeBetweenPlotOnSameDisk": "30",
         "MaxParallelJobsOnAllDisks": "8",
-        "MaxParallelJobsOnSameDisk": "3",
-        "MaxParallelJobsInPhase1OnAllDisks" : "10",
+        "MaxParallelJobsOnSameDisk": "2",
+        "MaxParallelJobsInPhase1OnAllDisks" : "4",
         "StartEarly": "true",
         "StartEarlyPhase": "4",
         "BufferSize": "3390",
@@ -33,7 +34,7 @@
         "Bitfield": "true",
         "FarmerKey": "",
         "PoolKey": "",
-        "P2SingletonAdress": ""
+        "P2SingletonAdress": "sisda78sd78sdauzida789hjsa7sa78saiou"
       }
     ],
 
@@ -49,8 +50,7 @@
   "PlotoFyAlerts": [
     {
       "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxx",
-      "PeriodOfReportInHours": "1",
-      "PathToPloto": "C:/Users/Tydeno/Desktop/Ploto/Ploto.psm1"
+      "PeriodOfReportInHours": "1"
     }
   ]
 }
