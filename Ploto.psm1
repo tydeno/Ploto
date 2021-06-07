@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.4.9.3
+Version: 1.0.9.4.9.4
 Author: Tydeno
 
 
@@ -1022,7 +1022,19 @@ function Start-PlotoSpawns
 
     Write-Host "PlotoManager @"(Get-Date)": Ploto Manager started."
 
+    Write-Host "PlotoManager @"(Get-Date)": Checking paths..."
 
+    $PathToPLotterFolder = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\plotter"
+
+    if (Test-Path $PathToPLotterFolder)
+        {
+            Write-Host "PlotoManager @"(Get-Date)": plotter folder available." -ForegroundColor Green
+        }
+    else
+        {
+           Write-Host "PlotoManager @"(Get-Date)": plotter folder NOT available. Creating now..." -ForegroundColor Yellow
+           New-Item -Path $env:HOMEDRIVE$env:HOMEPath"\.chia\mainnet\" -Name plotter -ItemType Directory | out-null
+        }
 
     Write-Host "PlotoManager @"(Get-Date)": Loading config from "$env:HOMEDRIVE$env:HOMEPath"\.chia\mainnet\config\PlotoSpawnerConfig.json..."
     $PathToConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
