@@ -1024,14 +1024,16 @@ function Start-PlotoSpawns
 
     Write-Host "PlotoManager @"(Get-Date)": Checking paths..."
 
-    if (Test-Path $env:HOMEDRIVE$env:HOMEPath+"\.chia\mainnet\plotter\")
+    $PathToPLotterFolder = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\plotter"
+
+    if (Test-Path $PathToPLotterFolder)
         {
             Write-Host "PlotoManager @"(Get-Date)": plotter folder available." -ForegroundColor Green
         }
     else
         {
            Write-Host "PlotoManager @"(Get-Date)": plotter folder NOT available. Creating now..." -ForegroundColor Yellow
-           New-Item -Path $env:HOMEDRIVE$env:HOMEPath"\.chia\mainnet\" -Name plotter -ItemType Directory
+           New-Item -Path $env:HOMEDRIVE$env:HOMEPath"\.chia\mainnet\" -Name plotter -ItemType Directory | out-null
         }
 
     Write-Host "PlotoManager @"(Get-Date)": Loading config from "$env:HOMEDRIVE$env:HOMEPath"\.chia\mainnet\config\PlotoSpawnerConfig.json..."
