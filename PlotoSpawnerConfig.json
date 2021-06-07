@@ -10,12 +10,15 @@
       "TempDriveDenom": "plot",
       "Temp2Denom": "",
       "OutDriveDenom": "out",
-      "EnableT2": "false"
+      "EnableT2": "false",
+      "DenomForOutDrivesToReplot": "",
+      "Replot": "false"
     }
   ],
 
   "JobConfig": [
       {
+        "KSizeToPlot": "32",
         "IntervallToCheckInMinutes": "5",
         "InputAmountToSpawn": "100", 
         "WaitTimeBetweenPlotOnSeparateDisks": "15",
