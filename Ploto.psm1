@@ -2302,7 +2302,7 @@ Function Start-PlotoFy
              Throw $_.Exception.Message
          } 
  
-    $PathToPloto = $config.PlotoFyAlerts.PathToPloto 
+    $PathToPloto = $config.PathToPloto 
     Unblock-File $PathToPloto
     Import-Module $PathToPloto -Force
     Request-PlotoFyStatusReport -ErrorAction stop
@@ -2352,7 +2352,7 @@ function Start-ReplotWatchDog
                  Throw $_.Exception.Message
              } 
 
-       $PathToModule = $config.PlotoFyAlerts.PathToPloto
+       $PathToModule = $config.PathToPloto
        Unblock-File $PathToModule
        Import-Module $PathToModule -Force
        Request-CheckForDeletion
