@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.4.9.6
+Version: 1.0.9.4.9.7
 Author: Tydeno
 
 
@@ -517,119 +517,71 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
 
                                     #Building ArgumentList for chia.exe
-                                    if ($Replot -eq "true")
+                                    if ($Replot -eq "true" -and $ReplotDriveDenom -ne "")
                                         {
-                                            Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Replotting enabled. Will delete existing plots shortly upon before a job enters phase 4. Also ignoring the fact that an OutDrive has no space, as it will be de")
+                                            Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Replotting enabled. Will delete existing plots shortly upon before a job enters phase 4. Also ignoring the fact that an OutDrive has no space, as a plot will be deleted to make space for new one.")
                                             #Pick an Outdrive from ReplotDenom
                                             $replotDrives = Get-PlotoOutDrives -OutDriveDenom $ReplotDriveDenom
 
-                                            #normal flow as we do not replot
                                             $min = ($replotDrives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
                                             $OutDrive = $replotDrives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
-
-                                            if ($OutDrive.Count -gt 1)
-                                                {
-                                                    #We have several OutDisks in our Array that could be the best OutDrive. Need to pick one!
-                                                    $OutDrive = $OutDrive[0]
-                                                }
-
-                                            #check if chosen outdrive has any plots
-    
-                                            if ($OutDrive -eq $null)
-                                            {
-                                                                                                                                                                                                                                                                                                
-
-                                                if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenNoOutDrivesAvailable -eq $true)
-                                                {
-                                                    #Create embed builder object via the [DiscordEmbed] class
-                                                    $embedBuilder = [DiscordEmbed]::New(
-                                                                        'Sorry to bother you but we cant move on. No Outdrives available. ',
-                                                                        'I ran into trouble. I wanted to spawn a new plot, but it seems we either ran out of space on our OutDrives or I just cant find them. You sure you gave the right denominator for them? I stopped myself now. Please check your OutDrives, and if applicable, move some final plots away from it.'
-                                                                    )
-
-                                                    #Add purple color
-                                                    $embedBuilder.WithColor(
-                                                        [DiscordColor]::New(
-                                                            'red'
-                                                        )
-                                                    )
-
-                                                    $plotname = $config.PlotterName
-                                                    $footie = "Ploto: "+$plotname
-                                                    #Add a footer
-                                                    $embedBuilder.AddFooter(
-                                                        [DiscordFooter]::New(
-                                                            $footie
-                                                        )
-                                                    )
-
-                                                    $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
-
-                                                    Invoke-PsDsHook -CreateConfig $WebHookURL -Verbose:$false
-                                                    Invoke-PSDsHook $embedBuilder -Verbose:$false
-                                    
-                                                }
-                                
-                                                Throw "Error: No outdrives found"
-                                                exit
-                                            }
-                                            
-                                             
+  
                                         }
                                     else
                                         {
+                                            
                                             #normal flow as we do not replot
                                             $PlottableOutDrives = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom | Where-Object {$_.IsPlottable -eq $true}
 
                                             $min = ($PlottableOutDrives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
                                             $OutDrive = $PlottableOutDrives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
-
-                                            if ($OutDrive.Count -gt 1)
-                                                {
-                                                    #We have several OutDisks in our Array that could be the best OutDrive. Need to pick one!
-                                                    $OutDrive = $OutDrive[0]
-                                                }
-
-                                            if ($OutDrive -eq $null)
-                                            {
-                                                                                                                                                                                                                                                                                                
-
-                                                if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenNoOutDrivesAvailable -eq $true)
-                                                {
-                                                    #Create embed builder object via the [DiscordEmbed] class
-                                                    $embedBuilder = [DiscordEmbed]::New(
-                                                                        'Sorry to bother you but we cant move on. No Outdrives available. ',
-                                                                        'I ran into trouble. I wanted to spawn a new plot, but it seems we either ran out of space on our OutDrives or I just cant find them. You sure you gave the right denominator for them? I stopped myself now. Please check your OutDrives, and if applicable, move some final plots away from it.'
-                                                                    )
-
-                                                    #Add purple color
-                                                    $embedBuilder.WithColor(
-                                                        [DiscordColor]::New(
-                                                            'red'
-                                                        )
-                                                    )
-
-                                                    $plotname = $config.PlotterName
-                                                    $footie = "Ploto: "+$plotname
-                                                    #Add a footer
-                                                    $embedBuilder.AddFooter(
-                                                        [DiscordFooter]::New(
-                                                            $footie
-                                                        )
-                                                    )
-
-                                                    $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
-
-                                                    Invoke-PsDsHook -CreateConfig $WebHookURL -Verbose:$false
-                                                    Invoke-PSDsHook $embedBuilder -Verbose:$false
-                                    
-                                                }
-                                
-                                                Throw "Error: No outdrives found"
-                                                exit
-                                            }
                                            
                                         }
+
+                                    if ($OutDrive.Count -gt 1)
+                                        {
+                                            #We have several OutDisks in our Array that could be the best OutDrive. Need to pick one!
+                                            $OutDrive = $OutDrive[0]
+                                        }
+
+                                    if ($OutDrive -eq $null)
+                                        {
+                                                                                                                                                                                                                                                                                               
+                                            if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenNoOutDrivesAvailable -eq $true)
+                                            {
+                                                #Create embed builder object via the [DiscordEmbed] class
+                                                $embedBuilder = [DiscordEmbed]::New(
+                                                                    'Sorry to bother you but we cant move on. No Outdrives available. ',
+                                                                    'I ran into trouble. I wanted to spawn a new plot, but it seems we either ran out of space on our OutDrives or I just cant find them. You sure you gave the right denominator for them? I stopped myself now. Please check your OutDrives, and if applicable, move some final plots away from it.'
+                                                                )
+
+                                                #Add purple color
+                                                $embedBuilder.WithColor(
+                                                    [DiscordColor]::New(
+                                                        'red'
+                                                    )
+                                                )
+
+                                                $plotname = $config.PlotterName
+                                                $footie = "Ploto: "+$plotname
+                                                #Add a footer
+                                                $embedBuilder.AddFooter(
+                                                    [DiscordFooter]::New(
+                                                        $footie
+                                                    )
+                                                )
+
+                                                $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
+
+                                                Invoke-PsDsHook -CreateConfig $WebHookURL -Verbose:$false
+                                                Invoke-PSDsHook $embedBuilder -Verbose:$false
+                                    
+                                            }
+                                
+                                            Throw "Error: No outdrives found"
+                                            exit
+                                        }
+
 
                                     $OutDriveLetter = $OutDrive.DriveLetter
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Best Outdrive most least jobs: "+$OutDriveLetter)
@@ -654,10 +606,23 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Calculated LogStatName "+$logstatName)
 
                                     $logPath1 = (New-Item -Path $PlotterBaseLogPath -Name $logstatName).FullName
+
+
+
                                     Add-Content -Path $LogPath1 -Value "PlotoSpawnerJobId: $PlotoSpawnerJobId"
                                     Add-Content -Path $LogPath1 -Value "OutDrive: $OutDrive"
                                     Add-Content -Path $LogPath1 -Value "TempDrive: $PlottableTempDrive"
                                     Add-Content -Path $LogPath1 -Value "StartTime: $StartTime"
+
+                                    if ($Replot -eq "true" -and $ReplotDriveDenom -ne "")
+                                        {
+                                            Add-Content -Path $LogPath1 -Value "IsReplot: true"
+                                        }
+                                    else
+                                        {
+                                            Add-Content -Path $LogPath1 -Value "IsReplot: false"
+                                        }
+
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Created LogStat file and passed values along.")
 
                                     if ($EnableBitfield -eq $true -or $EnableBitfield -eq "true")
@@ -762,46 +727,45 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                 }
                                            }
 
-                                    if ($FarmerKey -ne "" -or $FarmerKey -ne " ")
+
+                                    if ($P2Singleton -ne "")
                                         {
-                                            #Lets check if its a Key
-                                            $CharArray = $FarmerKey.ToCharArray()
-                                            if ($CharArray.Count -eq 96)
+     
+                                            $ExpandedArgs = "-c "+$P2Singleton
+                                            $ArgumentList = $ArgumentList+" "+$ExpandedArgs
+                                            Add-Content -Path $LogPath1 -Value "IsPoolablePlot: true"
+                                            Add-Content -Path $LogPath1 -Value "P2SingletonAdress: $P2Singleton"
+ 
+                                        }
+                                    else
+                                        {
+                                            if ($FarmerKey -ne "" -or $FarmerKey -ne " ")
                                                 {
-                                                    Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": This looks like a valid key based on its length")
-                                                    $ExpandedArgs = "-f "+$FarmerKey
-                                                    $ArgumentList = $ArgumentList+" "+$ExpandedArgs
+                                                    #Lets check if its a Key
+                                                    $CharArray = $FarmerKey.ToCharArray()
+                                                    if ($CharArray.Count -eq 96)
+                                                        {
+                                                            Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": This looks like a valid key based on its length")
+                                                            $ExpandedArgs = "-f "+$FarmerKey
+                                                            $ArgumentList = $ArgumentList+" "+$ExpandedArgs
+                                                        }
                                                 }
 
-                                        }
-
-                                    if ($PoolKey -ne "" -or $PoolKey -ne " ")
-                                        {
-                                            #Lets check if its a Key
-                                            $CharArray = $PoolKey.ToCharArray()
-                                            if ($CharArray.Count -eq 96)
+                                            if ($PoolKey -ne "" -or $PoolKey -ne " ")
                                                 {
-                                                    Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": This looks like a valid key based on its length")
-                                                    $ExpandedArgs = "-p "+$PoolKey
-                                                    $ArgumentList = $ArgumentList+" "+$ExpandedArgs
-                                                }
-
+                                                    #Lets check if its a Key
+                                                    $CharArray = $PoolKey.ToCharArray()
+                                                    if ($CharArray.Count -eq 96)
+                                                        {
+                                                            Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": This looks like a valid key based on its length")
+                                                            $ExpandedArgs = "-p "+$PoolKey
+                                                            $ArgumentList = $ArgumentList+" "+$ExpandedArgs
+                                                        }
+                                                }  
+                                                                                          
+                                            Add-Content -Path $LogPath1 -Value "IsPoolablePlot: false"
+                                            Add-Content -Path $LogPath1 -Value "P2SingletonAdress: none"
                                         }
-
-                                     if ($P2Singleton -ne "" -or $P2Singleton -ne " ")
-                                        {
-                                            #Lets check if its a Key
-                                            $CharArray = $P2Singleton.ToCharArray()
-                                            if ($CharArray.Count -gt 61)
-                                                {
-                                                    Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": This looks like a valid key based on its length")
-                                                    $ExpandedArgs = "-c "+$P2Singleton
-                                                    $ArgumentList = $ArgumentList+" "+$ExpandedArgs
-                                                }
-
-                                        }
-
-
 
                                     #finally launch chia exe
                                     try 
@@ -1207,20 +1171,20 @@ function Start-PlotoSpawns
         {
             Write-Host "PlotoManager @"(Get-Date)": Replotting is enabled. Checking for active Watchdog jobs..."
 
-            $bgjobs = Get-Job | Where-Object {$_.Name -like "*PlotoFy*"}
+            $bgjobs = Get-Job | Where-Object {$_.Name -like "*ReplotWatchDog*"}
             if ($bgjobs)
                 {
-                    Write-Host "PlotoManager @"(Get-Date)": We have found active PlotoFy jobs. Stopping it and starting fresh..."
+                    Write-Host "PlotoManager @"(Get-Date)": We have found active ReplotWatchdog jobs. Stopping it and starting fresh..."
                     $bgjobs | Stop-Job | Remove-Job
                 }
             try 
                 {
-                    Start-PlotoFy
-                    Write-Host "PlotoManager @"(Get-Date)": Started PlotoFy successfully. Check your Discord" -ForegroundColor Green
+                    Start-ReplotWatchDog
+                    Write-Host "PlotoManager @"(Get-Date)": Started ReplotWatchDog successfully." -ForegroundColor Green
                 }
             catch
                 {
-                    Write-Host "PlotoManager @"(Get-Date)": Could not launch PlotoFy!" -ForegroundColor Red
+                    Write-Host "PlotoManager @"(Get-Date)": Could not launch ReplotWatchDog!" -ForegroundColor Red
                 }
 
            Write-Host "---------------------------------------------------------------------------------"
@@ -1343,7 +1307,7 @@ foreach ($log in $logs)
 
                     if ($SearchStat -eq $SearchChia)
                         {
-                           $pattern2 = @("OutDrive", "TempDrive", "PID","PlotoSpawnerJobId", "StartTime", "ArgumentList", "T2Drive" , "Time for phase 1", "Time for phase 2", "Time for phase 3", "Time for phase 4" )
+                           $pattern2 = @("OutDrive", "TempDrive", "PID","PlotoSpawnerJobId", "StartTime", "ArgumentList", "T2Drive" , "Time for phase 1", "Time for phase 2", "Time for phase 3", "Time for phase 4", "IsPoolablePlot", "P2SingletonAdress", "IsReplot" )
                            $loggerRead = Get-Content ($PlotterBaseLogPath+"\"+$logger.Name) | Select-String -Pattern $pattern2
                            $OutDrive = ($loggerRead -match "OutDrive").line.Split("=").split(";")[1]
                            $tempDrive = ($loggerRead -match "TempDrive").line.Split("=").split(";")[1]
@@ -1353,7 +1317,9 @@ foreach ($log in $logs)
                            $StartTimeSplitted = ($loggerRead -match "StartTime").line.Split(":")
                            $StartTime = ($StartTimeSplitted[1]+":" + $StartTimeSplitted[2]+":" + $StartTimeSplitted[3]).TrimStart(" ")
                            $ArgumentList = ($loggerRead -match "ArgumentList").line.TrimStart("ArgumentList: ")
-
+                           $IsPoolablePlot = ($loggerRead -match "IsPoolablePlot").line.TrimStart("IsPoolablePlot: ")
+                           $P2Adress = ($loggerRead -match "P2SingletonAdress").line.TrimStart("P2SingletonAdress: ")
+                           $IsReplot = ($loggerRead -match "IsReplot").line.TrimStart("IsReplot: ")
 
                            if ($t2drive -eq "2")
                             {$t2drive = ""}
@@ -1428,6 +1394,20 @@ foreach ($log in $logs)
                     $StatusReturn = "Error: Check Logs of job"
                 }
 
+            if ($IsPoolablePlot -ne "true")
+                {
+                    $IsPoolablePlot = "false"
+                }
+            if ($IsReplot -eq "rue" -or $IsReplot -eq "true")
+                {
+                    $IsReplot = "true"
+                }
+            else
+                {
+                    $IsReplot = "false"
+                }
+
+
             if ($PerfCounter)
                 {
                     #Getting Plot Object Ready
@@ -1452,6 +1432,10 @@ foreach ($log in $logs)
                     CompletionTimeP2 = $CompletionTimeP2
                     CompletionTimeP3 = $CompletionTimeP3
                     CompletionTimeP4 = $CompletionTimeP4
+                    EndDate = $EndDate
+                    IsPoolablePlot = $IsPoolablePlot
+                    P2SingletonAdress = $P2Adress
+                    IsReplot = $IsReplot
                     }
                 
                 }
@@ -1479,12 +1463,13 @@ foreach ($log in $logs)
                     CompletionTimeP3 = $CompletionTimeP3
                     CompletionTimeP4 = $CompletionTimeP4
                     EndDate = $EndDate
+                    IsPoolablePlot = $IsPoolablePlot
+                    P2SingletonAdress = $P2Adress
+                    IsReplot = $IsReplot
                     }
 
                 }
       
-
-
         if ($PerfCounter -and $StatusReturn -eq "Completed")
             {
                 
@@ -1494,8 +1479,10 @@ foreach ($log in $logs)
                 $collectionWithPlotJobsOut.Add($PlotJobOut) | Out-Null
             }
 
-
         #Clear values from former iteration
+        $IsReplot = $null
+        $P2Adress = $null
+        $IsPoolablePlot = $null
         $StatusReturn = $null
         $t2drive = $null
         $tempDrive = $null
@@ -1832,10 +1819,10 @@ function Invoke-PlotoDeleteForReplot
 		)
 
     #Get active jobs in phase 3.
-    $activeJobs = Get-PlotoJobs | Where-Object {$_.Status -ge 3.9}
+    $activeJobs = Get-PlotoJobs | Where-Object {$_.Status -ge 1.2} | Where-Object {$_.IsReplot -eq "true"}
     if ($activeJobs)
         {
-            Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Found active jobs that are about to enter phase 4.")
+            Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Found active jobs that are about to enter phase 1.4")
 
             foreach ($job in $activeJobs)
                 {
@@ -1843,7 +1830,9 @@ function Invoke-PlotoDeleteForReplot
                         #Check if we need to delete a plot on that OutDrive spacewise, with active jobs to it in mind.
                         $OutDriveToCheck = Get-PlotoOutDrives -OutDriveDenom $ReplotDriveDenom | Where-Object {$_.DriveLetter -eq $job.OutDrive}
 
-                        if ($OutDriveToCheck.FreeSpace -lt 107 -and $OutDriveToCheck.AvailableAmountToPlot -le 1)
+                        #Check if this drive only holds replots
+
+                        if ($OutDriveToCheck.FreeSpace -lt 400 <#-and $OutDriveToCheck.AvailableAmountToPlot -le 1#>)
                             {
                                 Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Not enough space available for new plot, need to delete oldest one for replotting... ")
                                 #pick oldest plottodel
@@ -1855,10 +1844,11 @@ function Invoke-PlotoDeleteForReplot
                                     {
                                        #$plotitemtodel | Remove-Item
                                        Write-Host "deleteing..." -ForegroundColor Yellow
+                                       Start-Sleep 30
                                     } 
                                 catch
                                     {
-                                        throw 
+                                        throw "Error"
                                     }
                             }
                         else
@@ -1899,7 +1889,6 @@ $output = Get-content ($LogPath) | Select-String -Pattern $pattern
 
 return $output
 }
-
 
 function Invoke-PlotoFyStatusReport
 {
@@ -2362,7 +2351,6 @@ function Start-ReplotWatchDog
 
 #Helpers here. Would have loved to correctly used the module as a dependency. Just doesnt work when using with classes. Got to use the using module statement, which needs to be at the very beginning of a module or script.
 #I just load locally, this means we cannot use in the functions we call. The classes and functions wont be available within functions, thats why I baked them in directly. Massive credits to Mike Roberts! -> https://github.com/gngrninja
-
 
 
 class DiscordImage {    
