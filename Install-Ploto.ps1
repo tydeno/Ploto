@@ -1,57 +1,78 @@
 
 
-
 #Get Path of Ploto (from where Script is run)
 #Set-ExecutionPolicy
 #Import Ploto
 #Help to define config
 
+Write-Host "InstallPloto @"(Get-Date)": Hello there! My Name is Ploto. This script guides you trough the setup of myself"
+
 $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
+
+Write-Host "InstallPloto @"(Get-Date)": Path I got launched from:" $scriptPath 
+
 $PathToPloto = $scriptPath+"\Ploto.psm1"
 
-Write-Host "Getting execpolicy..."
+Write-Host "InstallPloto @"(Get-Date)": Path I calculated for where Ploto Module has to be:" $scriptPath 
+
+
+
+Write-Host "InstallPloto @"(Get-Date)": Lets check the current set Execution Policy..."
 $ExecPolicy = Get-ExecutionPolicy
+Write-Host "InstallPloto @"(Get-Date)": Execution Policy is set to: "$ExecPolicy
+
 
 #get ExecPolicy
 if (!($ExecPolicy -ne "RemoteSigned" -or "Bypass"))
     {
-        Write-Host "Exec Policy does not allow import, need to change..." -ForegroundColor Yellow
-
+        Write-Host "InstallPloto @"(Get-Date)": Alright, ExecutionPolicy is NOT RemoteSigned or Bypass. Need to adjust..." -ForegroundColor Yellow
         try
             {
                 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+                Write-Host "InstallPloto @"(Get-Date)": I set Execution Policy to RemoteSigned."
             }
         catch
             {
+                
                 Write-Host $_.Exception.Message -ForegroundColor red
-                Write-Host "Could not alter ExecutionPolicy!" -ForegroundColor Yellow
+                Write-Host "InstallPloto @"(Get-Date)": I ran into trouble setting RemoteSigned. Trying to set Bypass." -ForegroundColor Yellow
 
-                try {Set-ExecutionPolicy -ExecutionPolicy Bypass}
-                catch {Write-Host $_.Exception.Message -ForegroundColor red }
-        
+                try 
+                    {
+                        Set-ExecutionPolicy -ExecutionPolicy Bypass
+                        Write-Host "InstallPloto @"(Get-Date)": I set Execution Policy to Bypass."
+                    }
+                catch 
+                    {
+                        Write-Host "InstallPloto @"(Get-Date)": I ran into trouble setting RemoteSigned and Bypass. Aorting. Maybe launch Script as Admin." -ForegroundColor Red
+                        throw $_.Exception.Message
+                    }
             }        
     }
 
 try 
     {
         Import-Module $PathToPloto
-        Write-Host "Successfully imported Ploto Module" -ForegroundColor Green
+        Write-Host "InstallPloto @"(Get-Date)": Wooho! I've managed to imort the Ploto Module!" -ForegroundColor Green
     }
 catch
     {
-       Write-Host $_.Exception.Message -ForegroundColor red 
-       Write-Host "Could not import Ploto Module due to an error" -ForegroundColor Red
+       Write-Host "InstallPloto @"(Get-Date)": Aww... I ran into trouble importing the Module. See below for details." -ForegroundColor Red
+       throw $_.Exception.Message
      
     }
 
 #Get config 
     try 
         {
-            
+            Write-Host "InstallPloto @"(Get-Date)": Okay, next step is getting the config and setting it together with you..."
             $PathToConfig = $scriptPath+"\PlotoSpawnerConfig.json"
+            Write-Host "InstallPloto @"(Get-Date)": Config must be here: "$PathToConfig
 
-            $config = Get-Content -raw -Path $PathToConfig | ConvertFrom-Json
-            Write-Host "Read config successfully."
+
+            $config = Get-Content -raw -Path $PathToConfig | ConvertFrom-Json -ErrorAction Stop
+
+            Write-Host "InstallPloto @"(Get-Date)": Wuepa! We could grab the config! Next up is setting its values with you." -ForegroundColor Green
         }
     catch
         {
@@ -94,7 +115,7 @@ if ($config.PathToPloto -eq "C:/Users/Tydeno/Desktop/Ploto/Ploto.psm1" -or $conf
     }
 
 
-
+Write-Host "-------------------------------------"
 $PlotterName = Read-Host -Prompt "Enter the name of your plotter (eg: SirNotPlotAlot)"
 $config.PlotterName = $PlotterName
 
@@ -120,6 +141,8 @@ else
     }
 
 $WindowStyle = Read-Host -Prompt "Do you want to the plot jobs in background? (eg: Yes or No)"
+
+Write-Host "-------------------------------------"
 
 Write-Host "Lets go over to the disk config..."
 
@@ -156,7 +179,7 @@ if ($replot -eq "Yes" -or $replot -eq "yes" -or $replot -eq "y")
 
         $config.DiskConfig | % {$_.DenomForOutDrivesToReplotForPools = $replotDenom}
         $config.JobConfig | % {$_.P2SingletonAdress = $P2}
-
+        l
     }
 else
     {
@@ -175,6 +198,9 @@ else
         $config.ChiaWindowStyle = "normal"
     }
 
+
+Write-Host "-------------------------------------"
+Write-Host "Lets go over to the job config..."
 
 $InputAmountToSpawn = Read-Host -Prompt "How many plots do you want to be spawned overall? (eg: 1000)"
 $config.JobConfig | % {$_.InputAmounttoSpawn  = $InputAmountToSpawn}
@@ -244,14 +270,34 @@ if ($P2 -eq "" -or $P2 -eq " ")
     $config.JobConfig | % {$_.PoolKey = $pk}
     $config.JobConfig | % {$_.FarmerKey = $fk}
 }
+Write-Host "--------------------------"
 
 
+try 
+    {
+        Write-Host "InstallPloto @"(Get-Date)": Updating the config with your values..." 
+        $config | ConvertTo-Json -Depth 32 | Set-Content $PathToConfig
+        Write-Host "InstallPloto @"(Get-Date)": Updated config successfully." -ForegroundColor Green
+    }
+
+catch 
+    {
+       Write-Host "InstallPloto @"(Get-Date)": Could not update config. See below for details." -ForegroundColor Red
+       throw $_.Exception.Message
+    }
 
 
-$config | ConvertTo-Json -Depth 32 | Set-Content $PathToConfig
+try 
+    {
+        #$destination = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\"
+        $destination = "C:\Users\i604757\Desktop\Ploto\NewCFG"
+        Copy-Item -Path $PathToConfig -Destination $destination
+        Write-Host "InstallPloto @"(Get-Date)": Copied config successfully to: " $destination -ForegroundColor Green
+        Write-Host "InstallPloto @"(Get-Date)": Okay, we are finally ready to roll!" -ForegroundColor Green
 
-#copy config
-
-$destination = "C:\Users\i604757\Desktop\Ploto\NewCFG"
-
-Copy-Item -Path $PathToConfig -Destination $destination
+    }
+catch 
+    {
+       Write-Host "InstallPloto @"(Get-Date)": Could not copy config to: "$destination -ForegroundColor Red
+       throw $_.Exception.Message
+    }
