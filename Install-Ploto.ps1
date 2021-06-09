@@ -7,10 +7,6 @@ Author: Tydeno
 
 .DESCRIPTION
 "Installs" Ploto from your downloaded clone of Ploto. 
-1.) Checks ExecutionPolicy and adjusts if needed
-2.) 
-
-
 A basic Windows PowerShell based Chia Plotting Manager. Cause I was tired of spawning them myself. Basically spawns and moves Plots around.
 https://github.com/tydeno/Ploto
 #>
