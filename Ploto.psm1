@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.4.9.7
+Version: 1.0.9.4.9.9
 Author: Tydeno
 
 
@@ -1828,8 +1828,8 @@ function Invoke-PlotoDeleteForReplot
 		$ReplotDriveDenom
 		)
 
-    #Get active jobs in phase 3.
-    $activeJobs = Get-PlotoJobs | Where-Object {$_.Status -ge 1.2} | Where-Object {$_.IsReplot -eq "true"}
+    #Get active jobs entering phase 4.
+    $activeJobs = Get-PlotoJobs | Where-Object {$_.Status -ge 4} | Where-Object {$_.IsReplot -eq "true"}
     if ($activeJobs)
         {
             Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Found active jobs that are about to enter phase 1.4")
@@ -1842,7 +1842,7 @@ function Invoke-PlotoDeleteForReplot
 
                         #Check if this drive only holds replots
 
-                        if ($OutDriveToCheck.FreeSpace -lt 400 <#-and $OutDriveToCheck.AvailableAmountToPlot -le 1#>)
+                        if ($OutDriveToCheck.FreeSpace -lt 107 -and $OutDriveToCheck.AvailableAmountToPlot -le 1)
                             {
                                 Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Not enough space available for new plot, need to delete oldest one for replotting... ")
                                 #pick oldest plottodel
@@ -1852,13 +1852,13 @@ function Invoke-PlotoDeleteForReplot
                                 $plotitemtodel = Get-ChildItem $plottoDel.FilePath
                                 try 
                                     {
-                                       #$plotitemtodel | Remove-Item
-                                       Write-Host "deleteing..." -ForegroundColor Yellow
+                                       $plotitemtodel | Remove-Item
                                        Start-Sleep 30
                                     } 
                                 catch
                                     {
-                                        throw "Error"
+                                        Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": ERROR: Could not delete Plot! See below for details. ") -ForegroundColor Red
+                                        Write-Host $_.Exception.Message -ForegroundColor Red
                                     }
                             }
                         else
@@ -1866,7 +1866,6 @@ function Invoke-PlotoDeleteForReplot
                                 Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Selected ReplotDrive (OutDrive of PlotJob) "+$OutDriveToCheck.DriveLetter+" has enough space. No deletion needed.")
                             }
                 }
-
         }
     else
         {
