@@ -1829,18 +1829,16 @@ function Invoke-PlotoDeleteForReplot
 		)
 
     #Get active jobs entering phase 4.
-    $activeJobs = Get-PlotoJobs | Where-Object {$_.Status -ge 4} | Where-Object {$_.IsReplot -eq "true"}
+    $activeJobs = Get-PlotoJobs | Where-Object {$_.Status -ge 3.9} | Where-Object {$_.IsReplot -eq "true"}
     if ($activeJobs)
         {
-            Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Found active jobs that are about to enter phase 1.4")
+            Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Found active jobs that are about to enter phase 4")
 
             foreach ($job in $activeJobs)
                 {
                         Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Checking if selected ReplotDrive has enough space or oldest plot needs to be deleted..")
                         #Check if we need to delete a plot on that OutDrive spacewise, with active jobs to it in mind.
                         $OutDriveToCheck = Get-PlotoOutDrives -OutDriveDenom $ReplotDriveDenom | Where-Object {$_.DriveLetter -eq $job.OutDrive}
-
-                        #Check if this drive only holds replots
 
                         if ($OutDriveToCheck.FreeSpace -lt 107 -and $OutDriveToCheck.AvailableAmountToPlot -le 1)
                             {
