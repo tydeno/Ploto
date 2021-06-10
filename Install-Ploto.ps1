@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 0.3
+Version: 0.4
 Author: Tydeno
 
 
@@ -12,7 +12,7 @@ https://github.com/tydeno/Ploto
 #>
 
 
-Write-Host "InstallPloto @"(Get-Date)": Hello there! My Name is Ploto. This script guides you trough the setup of myself."
+Write-Host "InstallPloto @"(Get-Date)": Hello there! My Name is Ploto. This script guides you trough the setup of myself." -ForegroundColor Magenta
 
 $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 
@@ -23,56 +23,85 @@ Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Found available temp drives.")
 
 Write-Verbose ("InstallPloto @"+(Get-Date)+": Path I calculated for where Ploto Module has to be:"+$scriptPath)
 
-
 Write-Verbose ("InstallPloto @"+(Get-Date)+": Stitching together Module form source...")
 
 #Get Version of ploto in source for folder name (posh structure)
 $Pattern = "Version:"
 $PlotoVersionInSource = (Get-Content $PathToPloto | Select-String $pattern).Line.Trimstart("Version: ")
 
-Write-Host "InstallPloto @"(Get-Date)": Installing Version: $PlotoVersionInSource of Ploto on this machine."
+Write-Host "InstallPloto @"(Get-Date)": Installing Version: $PlotoVersionInSource of Ploto on this machine." 
  
 $DestinationForModule = $Env:ProgramFiles+"\WindowsPowerShell\Modules\"
 $DestinationContainer = $Env:ProgramFiles+"\WindowsPowerShell\Modules\Ploto"
 $DestinationFullPathForModule = $Env:ProgramFiles+"\WindowsPowerShell\Modules\Ploto.psm1"
 
-Write-Host "InstallPloto @"(Get-Date)": Lets check if a version of Ploto is installed in:"$Env:ProgramFiles"\WindowsPowerShell\Modules" 
-
-if (Test-Path $DestinationFullPathForModule)
-    {
-        Remove-Item -Path $DestinationFullPathForModule -Force
-    }
+Write-Host "InstallPloto @"(Get-Date)": Lets check if a version of Ploto is installed in:"$Env:ProgramFiles"\WindowsPowerShell\Modules" -ForegroundColor Cyan
 
 If (Test-Path $DestinationContainer)
     {
-        Write-Host "InstallPloto @"(Get-Date)": There is a version of Ploto installed in:"$Env:ProgramFiles"\WindowsPowerShell\Modules" 
-        Write-Host "InstallPloto @"(Get-Date)": Starting update of Module... deleteing old version..."
-        try {Get-Item -Path $DestinationContainer | Remove-Item -Recurse -Force}
-        catch 
+        Write-Host "InstallPloto @"(Get-Date)": There is a version of Ploto installed in:"$Env:ProgramFiles"\WindowsPowerShell\Modules" -ForegroundColor Cyan
+
+        #Lets get version of Script
+        $PlotoVersionInstalled = (Get-Content $DestinationContainer"\Ploto.psm1" | Select-String $pattern).Line.Trimstart("Version: ")
+        
+        Write-Host "InstallPloto @"(Get-Date)": Current version installed:"$PlotoVersionInstalled -ForegroundColor Cyan
+
+        If ($PlotoVersionInstalled -le $PlotoVersionInSource)
             {
-                Write-Host "InstallPloto @"(Get-Date)": Could not update version." -ForegroundColor Red
-                break
+                Write-Host "InstallPloto @"(Get-Date)": Version in downloaded Source is newer or the same as installed Version." -ForegroundColor Yellow
+                $Update = Read-Host -Prompt "InstallPloto: Do you want to update your existing version?"
+
+                if ($Update -eq "Yes" -or $Update -eq "y")
+                    {
+                        Write-Host "InstallPloto @"(Get-Date)": Starting update of Module..." -ForegroundColor Cyan
+                        try 
+                            {
+                                Write-Host "InstallPloto @"(Get-Date)": Deleting old version in:"$DestinationContainer -ForegroundColor Cyan
+                                Get-Item -Path $DestinationContainer | Remove-Item -Recurse -Force -ErrorAction Stop
+                                Write-Host "InstallPloto @"(Get-Date)": Successfully removed previous version of Ploto in:"$DestinationContainer  -ForegroundColor Green
+                            }
+                        catch 
+                            {
+                                Write-Host "InstallPloto @"(Get-Date)": Could not remove older version." -ForegroundColor Red
+                                break
+                            }
+                        try 
+                            {
+        
+                                Copy-Item -Path $scriptPath -Destination $DestinationForModule -Force -Recurse
+                                Write-Host "InstallPloto @"(Get-Date)": Copied Module successfully to:"$DestinationForModule -ForegroundColor Green
+                            }
+
+                        catch 
+                            {
+                                Write-Host "InstallPloto @"(Get-Date)": Could not install Module in:"$Env:ProgramFiles"\WindowsPowerShell\Modules" -ForegroundColor Red
+                                Write-Host $_.Exception.Message -ForegroundColor Red
+                                break 
+                            }
+                    }
+                else
+                    {
+                        Write-Host "InstallPloto @"(Get-Date)": We skipped updating. Using currently installed version of Ploto:"$PlotoVersionInSource -ForegroundColor Yellow
+                    }
             }
-         
     }
 else
     {
-        Write-Host "InstallPloto @"(Get-Date)": There is no version of Ploto installed in:"$Env:ProgramFiles"\WindowsPowerShell\Modules"
+        Write-Host "InstallPloto @"(Get-Date)": There is no version of Ploto installed in:"$Env:ProgramFiles"\WindowsPowerShell\Modules" -ForegroundColor Cyan
         Write-Host "InstallPloto @"(Get-Date)": Starting copy of Module..."
-    }
-
-try 
-    {
+        try 
+            {
         
-        Copy-Item -Path $scriptPath -Destination $DestinationForModule -Force -Recurse
-        Write-Host "InstallPloto @"(Get-Date)": Copied Module successfully to:"$DestinationForModule -ForegroundColor Green
-    }
+                Copy-Item -Path $scriptPath -Destination $DestinationForModule -Force -Recurse
+                Write-Host "InstallPloto @"(Get-Date)": Copied Module successfully to:"$DestinationForModule -ForegroundColor Green
+            }
 
-catch 
-    {
-        Write-Host "InstallPloto @"(Get-Date)": Could not install Module in:"$Env:ProgramFiles"\WindowsPowerShell\Modules" -ForegroundColor Red
-        Write-Host $_.Exception.Message -ForegroundColor Red
-        break 
+        catch 
+            {
+                Write-Host "InstallPloto @"(Get-Date)": Could not install Module in:"$Env:ProgramFiles"\WindowsPowerShell\Modules" -ForegroundColor Red
+                Write-Host $_.Exception.Message -ForegroundColor Red
+                break 
+            }
     }
 
 
@@ -342,7 +371,7 @@ Write-Host "--------------------------"
 try 
     {
         Write-Host "ConfigurePloto @"(Get-Date)": Saving the config in this folder (where Ploto is stored) with your values..." 
-        $config | ConvertTo-Json -Depth 32 | Set-Content $PathToConfig -Force -Confirm
+        $config | ConvertTo-Json -Depth 32 | Set-Content $PathToConfig -Force
         Write-Host "InstallPloto @"(Get-Date)": Saved config successfully." -ForegroundColor Green
     }
 
@@ -383,3 +412,6 @@ else
     {
       Write-Host "InstallPloto @"(Get-Date)": We skipped setting the config. Only updated Ploto Module." -ForegroundColor Yellow  
     }
+
+Write-Host "InstallPloto @"(Get-Date)": Ploto was installed correctly on this System." -ForegroundColor Green
+Write-Host "InstallPloto @"(Get-Date)": To launch it, start a PowerShell Session and run 'Start-PlotoSpawns'" 
