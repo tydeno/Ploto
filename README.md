@@ -8,8 +8,6 @@ And if you like, you may define an Intervall upon which Plotofy sends you notifi
 
 ![image](https://user-images.githubusercontent.com/83050419/119401060-4536a180-bcdb-11eb-8bb5-fa587b229d59.png)
 
-
-
 ![image](https://user-images.githubusercontent.com/83050419/118192418-662f0500-b446-11eb-9340-e919234d3d5f.png)
 ![image](https://user-images.githubusercontent.com/83050419/118396387-a57c7200-b64f-11eb-8ef5-0526bd8cb3c6.png)
 ![image](https://user-images.githubusercontent.com/83050419/118396379-9eedfa80-b64f-11eb-9a83-1262a6625f3a.png)
@@ -23,14 +21,8 @@ If you find any bugs, do not hesitate to create or update an issue directly here
 * ### [Ploto Discord](https://discord.gg/NgEsMDWWT5)
 
 ## How you can support this project
-There are several things you can do:
-* Use Ploto and provide feedback about what works, what not, and what features you'd like to see
-* Spread the word, so that more people use and test it 
-* If you can and want to you're of course also invited to contribute your pieces of PowerShell to the module by submitting pull requests
-
 In case you'd like to to support the development of Ploto in a monetary way, you may donate in the currencies below with the according wallet adresses:
 * XCH Adress: xch19ddu8lxgq2g6ssnk7kmexmwxazapvdt7fp8cekeun0cdm9jt6vxsqg30yt
-* BTC Adress: 36JQnBmN4XLuS4gHEkAFfoQVjkjnpqGuo3
 
 ## Is it safe to use? 
 We've seen some horrific stuff happening with 3rd Party Tools around a Chia. For instance
@@ -54,20 +46,25 @@ When and where Plots are spawned is defined by PlotoSpawnerConfig.json which loo
 
 ```
 {
+    "PlotterName": "SirNotPlotAlot",    | The Name of your plotter
     "EnableAlerts": "false",            | Enable JobSpawned Alerts (Webhook config in PlotoAlertsConfig.json)
     "ChiaWindowStyle": "hidden",        | Determines Window Style of chia.exe (Allowed Values: normal, hidden, maximized, minimized)
+    "PathToPloto": "C:/Users/Tydeno/Desktop/Ploto/Ploto.psm1", | Absolute path to the module as the background jobs needs to load it again
 
     "DiskConfig": [
       {
         "TempDriveDenom": "plot",      | The common denominator for all your TempDrives
 	"Temp2Denom": "t2",	       | The common denominator for all your Temp2Drives
         "OutDriveDenom": "out",        | The common denominator for all your OutDrives
-	"EnableT2": "true"             | Determines if Ploto uses Temp2 drives. Must be set to true along with temp2denom defined
+	"EnableT2": "true",            | Determines if Ploto uses Temp2 drives. Must be set to true along with temp2denom defined
+	"DenomForOutDrivesToReplotForPools": "replot" | The common denominator for all your Drives with final plots you want to replot
       }
     ],
 
     "JobConfig": [
         {
+	  "KSizeToPlot": "32",
+          "ReplotForPool": "true",                    | If enabled, ReplotWatchDog will be started and all Jobs will use the drives defined by replotdrivedenom as OutDrives
 	  "IntervallToCheckInMinutes": "5",   	      | Defines the time Ploto waits between each iteration to check for available tempd drives again 
     	  "InputAmountToSpawn": "100",                | Amount of jobs maximal to be spawned in this launch of ploto
           "WaitTimeBetweenPlotOnSeparateDisks": "15", | Wait time in minutes Ploto waits until a new job on another disk is spawned
@@ -80,7 +77,8 @@ When and where Plots are spawned is defined by PlotoSpawnerConfig.json which loo
           "StartEarlyPhase": "3",                     | Defines when a job should be early started. If a job completes phase 3 in this example, it is not considered an active                                                           job anymore and makes room for another to spawn early.
           "BufferSize": "1000",
           "Thread": "1",
-          "Bitfield": "true"
+          "Bitfield": "true",
+	  "P2SingletonAdress": "sisda78sd78sdauzida789hjsa7sa78saiou" | Your P2Singletonadress used to create portable plot. Do not specify together with -p and -f!
         }
       ]
     "SpawnerAlerts": [
@@ -95,8 +93,7 @@ When and where Plots are spawned is defined by PlotoSpawnerConfig.json which loo
 	  "PlotoFyAlerts": [
 	    {
 	      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxx",    | EndpointURL of your discord Webhook 
-	      "PeriodOfReportInHours": "1",                                              | Period the report is send out and covering
-	      "PathToPloto": "C:/Users/me/Desktop/Ploto/Ploto.psm1"                      | Absolute path to the module as the background jobs needs to load it again
+	      "PeriodOfReportInHours": "1",                                              | Period the report is send out and covering    
 	    }
 	  ]
 }
@@ -108,7 +105,7 @@ When there is one available, Ploto determines the best OutDrive (most free space
 Ploto iterates once through all available TempDrives and spawns a plot per each TempDrive (as long as enough OutDrive space is given).
 After that, Ploto checks if amount Spawned is equal as defined as input. If not, Ploto keeps going until it is.
 
-## Understanding Plot and OutDrives
+### Understanding Plot and OutDrives
 PlotoSpawner identifies your drives for temping and storing plots by a common denominator you specify. 
 This means that all drives that match that denominator, will be used as either Temp or OutDrive.
 
@@ -185,28 +182,34 @@ And creates two log files for each job with the following notation:
 
 ### Alright, I saw that Discord Bot picture, how do I use that?
 You can control whether you want to receive and what kind of alerts in a handy config file.
-This config file belongs in the following folder: C:\Users\YourUsserName\.chia\mainnet\config. Make sure you copy it there, as Ploto expects to find it at that location.
 Now change the WebhookUrl to match the URL of your Discord Servers Webhook and enable/disable alert notifications as you wish. [How to create a Discord Webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks). 
 
 Set the Name for your plotter, as it allows you to distinguish between alerts for each plotter. You may also use several Webhooks in different Discord Channels.
 
 When you Start Ploto, make sure you also specified the Parameter "EnableAlerts" in the config. If not specified, your Disocrd remains silent.
 
-## Plotting with your Pool & Farmer Key
+### Plotting with your Pool & Farmer Key
 If your keys are not the present on the machine you want to plot, you need to specify -p (PoolKey) and -f (FarmerKey) param of your farm, in order to farm these plots correctly.
 If no -pf and -f param are specified, it uses the available keys.
 
-## Plotting for pools
+### Plotting for pools
 Ploto now supports pool plotting, since we know the needed commands. 
 Be advises that this in BETA mode right now.
 
 To create portable pool plots, we need to use the param "P2Singleton" in the config. 
 Therefore we need to create a singleton that points to a pool first, and then we can start plotting. 
-
 If you want to plot portable pools, make sure FarmerKey and PoolKey are NOT specified in the config, as this will mess thing up
 
 
-# Prereqs
+### About replotting
+Ploto now supports the ability to replot existing drives. This assumes you have one or more drives with final plots that are actively being farmed.
+If you now launch Ploto with 'Replot: "true"' and your denom for your ReplotDrives (drives you want to replot), the following will happen:
+1.) Ploto launches a Watchdog that looks for jobs that are about to enter phase 4 and have property "IsReplot=True"
+2.) If there is a job entering phase 4 with "IsReplot=True", it deletes the oldest plot on the drive, the replotJob uses as OutDrive.
+
+All ReplotJobs launchd, will use the the drives as OutDrive, that match the ReplotDriveDenom. So if you replot, make sure you set the InputAmountToSpawn to exactly the number of Plots you want to Replot. Currently Ploto does not know with which keys/singletons a Plot was plotted. So it keeps going and potentially deletes already replotted jobs, if InputAmountToSpawn is too high. This can lead to unneccesary wear & tear.
+
+## Prereqs
 The following prereqs need to be met in order for Ploto to function properly:
 * chia.exe is installed (version is determined automatically) 
 * You may need to change PowerShell Execution Policy to allow the script to be imported.
@@ -222,20 +225,14 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 Set-ExecutionPolicy Bypass -Scope CurrentUser
 ```
 
-# How to
-If you want to use Ploto follow along.
-
-## Spawn Plots
+## How to Install Ploto
 1. Make sure your Out and TempDrives are named accordingly
-2. If you start to use Ploto and you have Logs created by GUI or any other manager in C:\Users\me.chia\mainnet\plotter\, Get-PlotoJobs wont the able to read the status.
-Make sure you delete/move all existing Logs in said path. 
-3. Download Ploto as .ZIP from [here](https://github.com/tydeno/Ploto/archive/refs/heads/main.zip)
-4. Get the PlotoSpawnerConfig.json, adjust it to your needs and make sure its stored in C:\Users\Tydeno\.chia\mainnet\config (adjust Tydeno to your username)
-5. Import-Module "Ploto" (make sure you change the path to Ploto.psm1 to reflect your situation)
-```powershell
-Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
-```
-4. Launch PlotoSpawner
+2. Download Ploto as .ZIP from [here](https://github.com/tydeno/Ploto/archive/refs/heads/main.zip)
+3. Launch `Install-Ploto.ps1` (If your User does not have Admin right, run it as Admin)
+4. Let the Script run trough and if you do not have a config yet, let the Script create one for you
+
+## How to Spawn Plots
+1. Launch PlotoSpawner
 ```powershell
 Start-PlotoSpawns
 ```
@@ -253,63 +250,9 @@ StartTime         : 4/30/2021 3:19:13 AM
 PlotoManager @ 4/30/2021 3:49:13 AM : Amount of spawned Plots in this iteration: 6
 PlotoManager @ 4/30/2021 3:49:13 AM : Overall spawned Plots since start of script: 6
 ```
+2. Leave the PowerShell Session open (can be minimized)
 
-5. Leave the PowerShell Session open (can be minimized)
-
-## Setup Discord Alerts for spawned Jobs
-To start with your Discord Alerts, the first step is to get the PlotoAlertConfig.json file and edit it to your wishes.
-
-1. Edit PlotoSpawnerConfig.json
-2. Set WebhookURL (Your Discord Servers Webhook)
-3. Set PlotterName (A freely choosen name for your plotter, to be sent in the notification)
-4. Set your config of alerts. Disable/Enable the alerts your interested with true/false.
-5. Make sure you copy/move the edited .json to the folder: C:\Users\YourUserName\.chia\mainnet\config. If its not there, it wont work.
-6. Open a PowerShell Session
-7. Edit PlotoSpawnerConfig to EnableAlerts = true
-8. Import-Module "C:\Users\me\desktop\Ploto\Ploto.psm1" (make sure you change the path to Ploto.psm1 to reflect your situation)
-9. Launch Start-PlotoSpawns:
-```powershell
-Start-PlotoSpawns 
-```
-## Setup Discord Alerts for periodical summary of jobs completed and in progress
-To configure the behaviour of periodical summary reports in discord, we also use the PlotoAlertConfig.json stored in C:\Users\YourUserName\.chia\mainnet\config.
-
-1. Edit PlotoSpawnerConfig.json
-2. Set WebhookURL (Your Discord Servers Webhook). You may use the same or a different WebhookURL than what PlotoSpawner Alerts uses. This allows you to separate channels in Discord for various alerts. I use this separate for each plotter I habve:
-![image](https://user-images.githubusercontent.com/83050419/118396604-892d0500-b650-11eb-8b5a-f05939a292b3.png)
-3. Set the intervall upon which you would like to receive the summary. This also affects the period PlotoFy uses to check for events. For example: If 1 is specified (1hr), PlotoFy will each hour lookup jobs that were copleted in the last hours, and all active jobs in progress and wrap this in a notification.
-If there are no jobs completed within the period, PlotoFy will only send the notification for the jobs in progress. If there are no completed and no jobs in progress, PlotoFy tells you with a notification, that Ploto seems not running.
-4. Set the Path to Ploto Module (where its stored right now)
-5. Make sure you copy/move the edited .json to the folder: C:\Users\YourUserName\.chia\mainnet\config. If its not there, it wont work.
-6. Open a new PowerShell Session.
-7. Import-Module "C:\Users\me\desktop\Ploto\Ploto.psm1" (make sure you change the path to Ploto.psm1 to reflect your situation)
-8. Launch PlotoFy using the cmd below:
-```powershell
-Start-PlotoFy
-```
-As PlotoFy launched a backgroundJob that continously calls "Request-PlotoFySummaryReport", for almost infinity, you may wont to stop that job at some point. To do this, you can use the following commands:
-
-1. Get-Job to get the current running PowerShell Jobs:
-```powershell
-Get-Job
-```
-```
-Id     Name            PSJobTypeName   State         HasMoreData     Location             Command
---     ----            -------------   -----         -----------     --------             -------
-1      Job1            BackgroundJob   Running       True            localhost            ...
-```
-
-2. Stop the Job, using Stop-Job
-```powershell
-Stop-Job -Id 1
-```
-
-3. And to clean up, we need to deleted the stopped job.
-```powershell
-Get-Job | where-object {$_.State -eq "Stopped"} | Remove-Job
-```
-
-## Get Jobs
+## How to get Jobs
 1. Open another PowerShell session 
 2. Import-Module "Ploto" 
 ```powershell
@@ -401,7 +344,7 @@ See below for a definition of what phase coe is associated with which chia.exe l
 "Renamed final file*" {$StatusReturn = "Completed"}
 ```
 
-## Stop Jobs
+## How to Stop Jobs
 1. Open a PowerShell session and import Module "Ploto" or use an existing one.
 2. Get PlotJobSpawnerId of Job you want to stop by calling "Get-PlotJobs"
 3. Stop the process:
@@ -414,7 +357,7 @@ or if you want to Stop all Jobs that are aborted:
 Remove-AbortedPlotoJobs
 ```
 
-## Move Plots
+## How to Move Plots
 As you may have noticed in my ref setup: I have little OutDrive storage capacity (1TTB roughly).
 This is only possible as I continously move the final Plots to my farming machine with lots of big drives. 
 
@@ -449,7 +392,7 @@ Move-PlotoPlots -DestinationDrive "\\Desktop-xxxxx\d" -OutDriveDenom "out" -Tran
 
 Please be aware that if you use UNC paths as Destination, PlotoMover cannot grab the free space there and just fires off.
 
-## Check Farm Logs
+## How to Check Farm Logs
 If you want to peek at your farm logs you can use Check-PLotoFarmLogs:
 1. Launch a PowerShell session and Import Ploto Module
 2. Launch Check-PlotoFarmLogs with your desired LogLevel. It accepts EligiblePlots, Error and Warning.
@@ -471,7 +414,6 @@ concurrent.futures._base.CancelledError
 2021-05-03T23:35:15.360 full_node full_node_server        : ERROR    Exception:  <class 'concurrent.futures._base.CancelledError'>, closing connection {'host': '127.0.0.1', 'port': 8449}. Traceback (most recent call last):
 concurrent.futures._base.CancelledError
 ```
-
 # FAQ
 > Can I shut down the script when I dont want Ploto to spawn more Plots?
 
