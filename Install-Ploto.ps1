@@ -16,20 +16,21 @@ Write-Host "InstallPloto @"(Get-Date)": Hello there! My Name is Ploto. This scri
 
 $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 
-Write-Host "InstallPloto @"(Get-Date)": Path I got launched from:" $scriptPath 
+Write-Verbose ("InstallPloto @"+(Get-Date)+": Path I got launched from: "+$scriptPath)
 
 $PathToPloto = $scriptPath+"\Ploto.psm1"
+Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Found available temp drives.")
 
-Write-Host "InstallPloto @"(Get-Date)": Path I calculated for where Ploto Module has to be:" $scriptPath 
+Write-Verbose ("InstallPloto @"+(Get-Date)+": Path I calculated for where Ploto Module has to be:"+$scriptPath)
 
 
-Write-Host "InstallPloto @"(Get-Date)": Stitching together Module form source..."
+Write-Verbose ("InstallPloto @"+(Get-Date)+": Stitching together Module form source...")
 
 #Get Version of ploto in source for folder name (posh structure)
 $Pattern = "Version:"
-$PlotoVersionInSource = (Get-Content $PathToPloto | Select-String $pattern).Line.TRimstart("Version: ")
+$PlotoVersionInSource = (Get-Content $PathToPloto | Select-String $pattern).Line.Trimstart("Version: ")
 
-Write-Host "InstallPloto @"(Get-Date)": Installing Version:$PlotoVersionInSource of Ploto on this machine."
+Write-Host "InstallPloto @"(Get-Date)": Installing Version: $PlotoVersionInSource of Ploto on this machine."
  
 $DestinationForModule = $Env:ProgramFiles+"\WindowsPowerShell\Modules\"
 $DestinationContainer = $Env:ProgramFiles+"\WindowsPowerShell\Modules\Ploto"
@@ -62,12 +63,14 @@ else
 
 try 
     {
+        
         Copy-Item -Path $scriptPath -Destination $DestinationForModule -Force -Recurse
+        Write-Host "InstallPloto @"(Get-Date)": Copied Module successfully to:"$DestinationForModule -ForegroundColor Green
     }
 
 catch 
     {
-        Write-Host "InstallPloto @"(Get-Date)": Could not install Module in:"$Env:ProgramFiles"\WindowsPowerShell\Modules"
+        Write-Host "InstallPloto @"(Get-Date)": Could not install Module in:"$Env:ProgramFiles"\WindowsPowerShell\Modules" -ForegroundColor Red
         Write-Host $_.Exception.Message -ForegroundColor Red
         break 
     }
@@ -120,19 +123,21 @@ catch
      
     }
 
-#Get config 
-    try 
-        {
-            Write-Host "InstallPloto @"(Get-Date)": Okay, next step is getting the config and setting it together with you..."
-            $PathToConfig = $scriptPath+"\PlotoSpawnerConfig.json"
-            Write-Host "InstallPloto @"(Get-Date)": Config must be here: "$PathToConfig
+Write-Host "InstallPloto @"(Get-Date)": Okay, next step is getting the config and setting it together with you..."
+$SkipCFG = Read-Host "InstallPloto: Do you want to set the config? If not, we skip that, because you alreay have one in place (eg. Yes or y)"
 
+If ($SkipCFG -eq "Yes" -or $SkipCFG -eq "y")
+    {
+ try 
+        {
+
+            $PathToConfig = $scriptPath+"\PlotoSpawnerConfig.json"
 
             $config = Get-Content -raw -Path $PathToConfig | ConvertFrom-Json -ErrorAction Stop
 
             Write-Host "InstallPloto @"(Get-Date)": Wuepa! We could grab the config! Next up is setting its values with you." -ForegroundColor Green
         }
-    catch
+ catch
         {
              
             Write-Host "PlotoManager @"(Get-Date)": Could not read Config. Check your config with the hints below and on https://jsonformatter.org/ for validation. If you cant get it to run, join Ploto Discord for help.  " -ForegroundColor Red
@@ -371,4 +376,10 @@ if ($consent -eq "Yes" -or $consent -eq "y")
 else
     {
         Write-Host "InstallPloto @"(Get-Date)": Did not copy saved config to production." 
+    }
+        
+    }
+else
+    {
+      Write-Host "InstallPloto @"(Get-Date)": We skipped setting the config. Only updated Ploto Module." -ForegroundColor Yellow  
     }
