@@ -730,7 +730,17 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                                     if ($P2Singleton -ne "")
                                         {
+
+                                            #Lets check if its a Key
+                                            $CharArray = $FarmerKey.ToCharArray()
+                                            if ($CharArray.Count -eq 96)
+                                                {
+                                                    Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": This looks like a valid key based on its length")
+                                                    $ExpandedArgs = "-f "+$FarmerKey
+                                                    $ArgumentList = $ArgumentList+" "+$ExpandedArgs
+                                                }
      
+                                            $ExpandedArgs1 = 
                                             $ExpandedArgs = "-c "+$P2Singleton
                                             $ArgumentList = $ArgumentList+" "+$ExpandedArgs
                                             Add-Content -Path $LogPath1 -Value "IsPoolablePlot: true"
