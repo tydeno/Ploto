@@ -609,8 +609,6 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                                     $logPath1 = (New-Item -Path $PlotterBaseLogPath -Name $logstatName).FullName
 
-
-
                                     Add-Content -Path $LogPath1 -Value "PlotoSpawnerJobId: $PlotoSpawnerJobId"
                                     Add-Content -Path $LogPath1 -Value "OutDrive: $OutDrive"
                                     Add-Content -Path $LogPath1 -Value "TempDrive: $PlottableTempDrive"
@@ -814,6 +812,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                             ChiaVersionUsed = $ChiaVersion
                                             LogPath = $LogPath
                                             StartTime = $StartTime
+                                            PlotterUsed = "Chia Official"
                                             }
 
                                             $AmountOfJobsSpawned = $AmountOfJobsSpawned++
@@ -826,7 +825,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                
 
                                             if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenJobSpawned -eq "true")
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        {
+                                                {
                                                 Write-Host "PlotoSpawner @"(Get-Date)": Event notification in config defined. Sending Discord Notification about spawned job..."
 
                                                 try 
@@ -1029,10 +1028,146 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                             Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Launching chia_plot.exe with params.")
                                             Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Using ArgumentList:"+$ArgumentList)
                                             Add-Content -Path $LogPath1 -Value "ArgumentList: $ArgumentList"
-                                            Add-Content -Path $LogPath1 -Value "PlotterUsed: Stotik"
-                                            
-                                            $pathtochiaplotexe = $PathToUnofficialPlotter
+                                            Add-Content -Path $LogPath1 -Value "PlotterUsed: Stotik"                                          
 
+                                            $chiaplotexe = Start-Process $PathToUnofficialPlotter -ArgumentList $ArgumentList -RedirectStandardOutput $LogPath -PassThru -WindowStyle $WindowStyle
+                                            $procid = $chiaplotexe
+
+                                            Add-Content -Path $LogPath1 -Value "PID: $procid" -Force
+                                            Write-Verbose ("PlotoSpawner @"+(Get-Date)+": Added PID to LogStatFile.")
+
+                                            $counter = $counter+1
+
+                                            #Getting Plot Object Ready
+                                            $PlotJob = [PSCustomObject]@{
+                                            JobId = $PlotoSpawnerJobId
+                                            ProcessID = $chiaplotexe.Id
+                                            OutDrive     =  $OutDriveLetter
+                                            TempDrive = $PlottableTempDrive.DriveLetter
+                                            T2Drive = $t2driveletter
+                                            ArgumentsList = $ArgumentList
+                                            ChiaVersionUsed = $ChiaVersion
+                                            LogPath = $LogPath
+                                            StartTime = $StartTime
+                                            PlotterUsed = "Stotik Madmax"
+                                            }
+
+                                            $AmountOfJobsSpawned = $AmountOfJobsSpawned++
+                                
+                                            $collectionWithPlotJobs.Add($PlotJob) | Out-Null
+
+                                            Write-Host "PlotoSpawner @"(Get-Date)": Spawned the following plot Job:" -ForegroundColor Green
+                                            $PlotJob | Out-Host
+                                            Write-Host "--------------------------------------------------------------------"
+                               
+
+                                            if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenJobSpawned -eq "true")
+                                                {
+                                                Write-Host "PlotoSpawner @"(Get-Date)": Event notification in config defined. Sending Discord Notification about spawned job..."
+
+                                                try 
+                                                    {
+                                                        #Create embed builder object via the [DiscordEmbed] class
+                                                        $embedBuilder = [DiscordEmbed]::New(
+                                                                            'New Job Spawned',
+                                                                            'Hei its Ploto here. I spawned a new plot job for you.'
+                                                                        )
+
+                                                        #Create the field and then add it to the embed. The last value ($true) is if you want it to be in-line or not
+                                                        $embedBuilder.AddField(
+                                                            [DiscordField]::New(
+                                                                'JobId', 
+                                                                $PlotoSpawnerJobId, 
+                                                                $true
+                                                            )
+                                                        )
+
+                                                        $embedBuilder.AddField(
+                                                            [DiscordField]::New(
+                                                                'StartTime',
+                                                                $StartTime, 
+                                                                $true
+                                                            )
+                                                        )
+
+                                                        $embedBuilder.AddField(
+                                                            [DiscordField]::New(
+                                                                'ProcessId',
+                                                                $procid, 
+                                                                $true
+                                                            )
+                                                        )
+
+                                                        $tempdriveoutp = $PlottableTempDrive.DriveLetter
+                                                        $embedBuilder.AddField(
+                                                            [DiscordField]::New(
+                                                                'TempDrive',
+                                                                $tempdriveoutp, 
+                                                                $true
+                                                            )
+                                                        )
+
+
+                                                        $embedBuilder.AddField(
+                                                            [DiscordField]::New(
+                                                                'OutDrive',
+                                                                $OutDriveLetter, 
+                                                                $true
+                                                            )
+                                                        )
+
+                                                        $embedBuilder.AddField(
+                                                            [DiscordField]::New(
+                                                                'ArgumentList',
+                                                                $ArgumentList, 
+                                                                $true
+                                                            )
+                                                        )
+
+                                                        $embedBuilder.AddField(
+                                                            [DiscordField]::New(
+                                                                'Max parallel Jobs in progress allowed',
+                                                                $MaxParallelJobsOnAllDisks, 
+                                                                $true
+                                                            )
+                                                        )
+
+
+
+                                                        #Add purple color
+                                                        $embedBuilder.WithColor(
+                                                            [DiscordColor]::New(
+                                                                'blue'
+                                                            )
+                                                        )
+
+
+                                                        $plotname = $config.PlotterName
+                                                        $footie = "Ploto: "+$plotname
+
+                                                        #Add a footer
+                                                        $embedBuilder.AddFooter(
+                                                            [DiscordFooter]::New(
+                                                                $footie
+                                                            )
+                                                        )
+
+                                                        $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
+
+                                                        Invoke-PsDsHook -CreateConfig $WebHookURL -Verbose:$false | Out-Null
+                                                        Invoke-PSDsHook $embedBuilder -Verbose:$false | Out-Null 
+                                                    }
+                                                catch
+                                                    {
+                                                        Write-Host "PlotoSpawner @"(Get-Date)": ERROR! Could not send Discord API Call or received Bad request" -ForegroundColor Red
+                                                        Write-Host "PlotoSpawner @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
+                                                    }
+
+                                            }
+
+                                            #Deduct 106GB from OutDrive Capacity in Var
+                                            $DeductionOutDrive = ($OutDrive.FreeSpace - 106)
+                                            $OutDrive.FreeSpace="$DeductionOutDrive"
 
 
                                         }
