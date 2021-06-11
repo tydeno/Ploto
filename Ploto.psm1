@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.4.9.9
+Version: 1.0.9.5.1
 Author: Tydeno
 
 
@@ -386,7 +386,9 @@ function Invoke-PlotoJob
         $P2Singleton,
         $ReplotDriveDenom, 
         $Replot,
-        $ksize
+        $ksize,
+        $Plotter,
+        $PathToUnofficialPlotter
 		)
 
  if($verbose) {
@@ -778,11 +780,21 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                         }
 
                                     #finally launch chia exe
+
+                                    if ($Plotter -eq "" -or $Plotter -eq " ")
+                                        {
+                                            $Plotter = "Chia"
+                                        }
+
+                                    if ($Plotter -eq "Chia")
+                                    {
+
                                     try 
                                         {
                                             Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Launching chia.exe with params.")
                                             Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Using ArgumentList:"+$ArgumentList)
                                             Add-Content -Path $LogPath1 -Value "ArgumentList: $ArgumentList"
+                                            Add-Content -Path $LogPath1 -Value "PlotterUsed: Chia Official"
 
 
                                             $chiaexe = Start-Process $PathToChia -ArgumentList $ArgumentList -RedirectStandardOutput $LogPath -PassThru -WindowStyle $WindowStyle
@@ -1009,7 +1021,23 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                 Invoke-PSDsHook $embedBuilder -Verbose:$false | Out-Null
                                     
                                             }
-                                        }                 
+                                        }  
+                                    }
+
+                                    if ($Plotter -eq "Stotik")
+                                        {
+                                            Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Launching chia_plot.exe with params.")
+                                            Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Using ArgumentList:"+$ArgumentList)
+                                            Add-Content -Path $LogPath1 -Value "ArgumentList: $ArgumentList"
+                                            Add-Content -Path $LogPath1 -Value "PlotterUsed: Stotik"
+                                            
+                                            $pathtochiaplotexe = $PathToUnofficialPlotter
+
+
+
+                                        }
+                                        
+                                                       
                                     }
 
                                      if ($Counter -ge $InputAmountToSpawn)
@@ -1148,6 +1176,8 @@ function Start-PlotoSpawns
     $ReplotDriveDenom = $config.DiskConfig.DenomForOutDrivesToReplotForPools
     $Replot = $config.JobConfig.ReplotForPool
     $ksize = $config.JobConfig.KSizeToPlot
+    $Plotter = $config.PlotterUsed
+    $PathToUnofficialPlotter = $config.PathToUnofficialPlotter
 
 
     Write-Host "PlotoManager @"(Get-Date)": InputAmountToSpawn:" $InputAmountToSpawn
@@ -1214,11 +1244,11 @@ function Start-PlotoSpawns
 
         if ($verbose)
             {
-                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -P2Singleton $P2Singleton -ReplotDriveDenom $ReplotDriveDenom -Replot $Replot -ksize $ksize -Verbose
+                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -P2Singleton $P2Singleton -ReplotDriveDenom $ReplotDriveDenom -Replot $Replot -ksize $ksize -Plotter $Plotter -PathToUnofficialPlotter $PathToUnofficialPlotter -Verbose
             }
         else
             {
-                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -P2Singleton $P2Singleton -ReplotDriveDenom $ReplotDriveDenom -Replot $Replot -ksize $ksize
+                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -P2Singleton $P2Singleton -ReplotDriveDenom $ReplotDriveDenom -Replot $Replot -ksize $ksize -Plotter $Plotter -PathToUnofficialPlotter $PathToUnofficialPlotter
             }
         
         
