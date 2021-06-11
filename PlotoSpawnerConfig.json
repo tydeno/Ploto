@@ -1,5 +1,6 @@
 {
   "PlotterName": "SirNotPlotAlot",
+  "PlotterUsed": "chia",
   "EnableAlerts": "false",
   "EnablePlotoFyOnStart": "true",
   "ChiaWindowStyle": "normal",
