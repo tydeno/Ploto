@@ -33,6 +33,7 @@
         "StartEarlyPhase": "4",
         "BufferSize": "3390",
         "Thread": "4",
+        "Buckets": "128",
         "Bitfield": "true",
         "FarmerKey": "",
         "PoolKey": "",
