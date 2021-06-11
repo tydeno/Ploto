@@ -1,18 +1,18 @@
 {
-  "PlotterName": "SirNotPlotAlot",
-  "EnableAlerts": "false",
-  "EnablePlotoFyOnStart": "true",
-  "ChiaWindowStyle": "normal",
-  "PathToPloto": "C:/Users/Tydeno/Desktop/Ploto/Ploto.psm1",
+  "PlotterName": "",
+  "EnableAlerts": "",
+  "EnablePlotoFyOnStart": "",
+  "ChiaWindowStyle": "",
+  "PathToPloto": "",
  
 
   "DiskConfig": [
     {
-      "TempDriveDenom": "plot",
+      "TempDriveDenom": "",
       "Temp2Denom": "",
-      "OutDriveDenom": "out",
+      "OutDriveDenom": "",
       "EnableT2": "false",
-      "DenomForOutDrivesToReplotForPools": "replot"
+      "DenomForOutDrivesToReplotForPools": ""
     }
   ],
 
@@ -34,7 +34,7 @@
         "Bitfield": "true",
         "FarmerKey": "",
         "PoolKey": "",
-        "P2SingletonAdress": "sisda78sd78sdauzida789hjsa7sa78saiou"
+        "P2SingletonAdress": ""
       }
     ],
 
