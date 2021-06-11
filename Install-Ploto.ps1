@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 0.4
+Version: 0.5
 Author: Tydeno
 
 
@@ -105,7 +105,7 @@ else
     }
 
 
-Write-Host "InstallPloto @"(Get-Date)": Lets check the current set Execution Policy..."
+Write-Host "InstallPloto @"(Get-Date)": Lets check the current set Execution Policy..." -ForegroundColor Cyan
 $ExecPolicy = Get-ExecutionPolicy
 Write-Host "InstallPloto @"(Get-Date)": Execution Policy is set to: "$ExecPolicy
 
@@ -209,7 +209,7 @@ if ($config.PathToPloto -eq "C:/Users/Tydeno/Desktop/Ploto/Ploto.psm1" -or $conf
 
 
 Write-Host "-------------------------------------"
-Write-Host "ConfigurePloto: Lets go over to the basic config..."
+Write-Host "ConfigurePloto: Lets go over to the basic config..." -ForegroundColor Cyan
 
 $PlotterName = Read-Host -Prompt "ConfigurePloto: Enter the name of your plotter (eg: SirNotPlotAlot)"
 $config.PlotterName = $PlotterName
@@ -268,21 +268,46 @@ $config.DiskConfig | % {$_.Temp2Denom = $t2denom}
 $replot = Read-Host -Prompt "ConfigurePloto: Do you want to replot existing plots? (eg: Yes or No)"
 if ($replot -eq "Yes" -or $replot -eq "yes" -or $replot -eq "y")
      {
+        Write-Host "ConfigurePloto: Will be replotting." -ForegroundColor Magenta
         $config.JobConfig | % {$_.ReplotForPool = "true"}
         $replotDenom = Read-Host "Define your replot Denom (eg: redeploy)"
-        $P2 = Read-Host "ConfigurePloto: Enter your P2SingletonAdress to be used by the plots (eg: 76x8s9s89sjhsdsshdsi)"
-
         $config.DiskConfig | % {$_.DenomForOutDrivesToReplotForPools = $replotDenom}
-        $config.JobConfig | % {$_.P2SingletonAdress = $P2}
+
         
     }
 else
     {
-        $config.DiskConfig | % {$_.DenomForOutDrivesToReplotForPools = ""}
-        $config.JobConfig | % {$_.P2SingletonAdress = ""}       
+        Write-Host "ConfigurePloto: Will not be replotting." -ForegroundColor Magenta
+        $config.DiskConfig | % {$_.DenomForOutDrivesToReplotForPools = ""}   
         $config.JobConfig | % {$_.ReplotForPool = "false"}
     }
+    
+$PlotForPools = Read-Host "ConfigurePloto: Do you want to create poolable, portable plots? (eg: Yes or No)"
+if ($P2 -eq "" -or $P2 -eq " ")
+    {
+        $config.JobConfig | % {$_.PoolKey = $pk}
+        $config.JobConfig | % {$_.FarmerKey = $fk}
+    }
 
+
+
+if ($PlotForPools -eq "Yes" -or $PlotForPools -eq "y")
+    {
+        $P2 = Read-Host "ConfigurePloto: Enter your P2SingletonAdress to be used by the plots (eg: 76x8s9s89sjhsdsshdsi)"
+        $fk = Read-host -Prompt "ConfigurePloto: Define your farmer key (eg: dskofsjfias09eidaoufoj...)"
+        $config.JobConfig | % {$_.P2SingletonAdress = $P2} 
+        $config.JobConfig | % {$_.FarmerKey = $fk}
+    }
+else
+    {
+    $pfkeys = Read-Host -Prompt "ConfigurePloto: Do you want to specify -p and -f keys for plotting? DO NOT DO THIS IF YOU WANT PORTABLE POOL PLOTS! (eg: Yes or No)"
+
+    if ($pfkeys -eq "Yes" -or $pfkeys -eq "y")
+        {
+            $pk = Read-host -Prompt "ConfigurePloto: Define your pool key (eg: 982192183012830173jdi832...)"
+            $fk = Read-host -Prompt "ConfigurePloto: Define your farmer key (eg: dskofsjfias09eidaoufoj...)"
+        }    
+    }
 
 if ($WindowStyle -eq "Yes" -or $WindowStyle -eq "yes" -or $WindowStyle -eq "y")
     {
@@ -295,7 +320,25 @@ else
 
 
 Write-Host "-------------------------------------"
-Write-Host "ConfigurePloto: Lets go over to the job config..."
+Write-Host "ConfigurePloto: Lets go over to the job config..." -ForegroundColor Cyan
+
+$PlotterToUse = Read-Host -Prompt "ConfigurePloto: Which Plotter do you want to use? Enter 'Stotik' for Madmax Stotik or enter 'Chia' for official Chia plotter"
+
+if ($PlotterToUse -eq "Stotik" -or $PlotterToUse -eq "stotik")
+    {
+        
+        Write-Host "ConfigurePloto: We will be using MadMax plotter. Pay attention when configuring the JobConfig that you take into consideration how madmax/stotik work" -ForegroundColor Magenta
+        $config | % {$_.PlotterUsed  = $PlotterToUse}
+        $PathtoStotik = Read-Host -Prompt "ConfigurePloto: Enter fullpath to chia_plots.exe"
+        $config | % {$_.PathToUnofficialPlotter  = $PathtoStotik}
+    }
+else
+    {
+         Write-Host "ConfigurePloto: We will be using official Chia Plotter." -ForegroundColor Magenta
+         $PlotterToUse = "Chia"
+         $config | % {$_.PlotterUsed  = $PlotterToUse}
+    }
+
 
 $InputAmountToSpawn = Read-Host -Prompt "ConfigurePloto: How many plots do you want to be spawned overall? (eg: 1000)"
 $config.JobConfig | % {$_.InputAmounttoSpawn  = $InputAmountToSpawn}
@@ -329,14 +372,19 @@ else
         $config.JobConfig | % {$_.StartEarly = "false"} 
     }
 
-$bSize = Read-Host -Prompt "ConfigurePloto: Define BufferSize for jobs (eg: 3390)"
-$config.JobConfig | % {$_.BufferSize = $bSize} 
+if ($PlotterToUse -ne "Stotik" -or $PlotterToUse -ne "stotik")
+    {
+        $bSize = Read-Host -Prompt "ConfigurePloto: Define BufferSize for jobs (eg: 3390)"
+        $config.JobConfig | % {$_.BufferSize = $bSize} 
+    }
 
+$buckets = Read-Host -Prompt "ConfigurePloto: Define amount of buckets (eg: 128)"
+$config.JobConfig | % {$_.Buckets = $buckets} 
 
 $ts = Read-Host -Prompt "ConfigurePloto: Define amount of Threads for jobs (eg: 4)"
-$config.JobConfig | % {$_.Thread= $ts} 
+$config.JobConfig | % {$_.Thread = $ts} 
 
-$bf = Read-Host -Prompt "ConfigurePloto: Do you want to disable Bitfield? (eg. Yes or No)"
+$bf = Read-Host -Prompt "ConfigurePloto: Do you want to disable Bitfield? NOT RECOMMENDED TO DISABLE! (eg. Yes or No)"
 
 if ($bf = "Yes" -or $bf -eq "yes" -or $bf -eq "y")
     {
@@ -347,24 +395,6 @@ else
         $config.JobConfig | % {$_.Bitfield = "true"}
     }
 
-
-if ($P2 -eq "" -or $P2 -eq " ")
-{
-    $pfkeys = Read-Host -Prompt "ConfigurePloto: Do you want to specify -p and -f keys for plotting? DO NOT DO THIS IF YOU WANT PORTABLE POOL PLOTS! (eg: Yes or No)"
-    if ($pfkeys -eq "true")
-        {
-            $pk = Read-host -Prompt "ConfigurePloto: Define your pool key (eg: 982192183012830173jdi832...)"
-            $fk = Read-host -Prompt "ConfigurePloto: Define your farmer key (eg: dskofsjfias09eidaoufoj...)"
-        }
-    else
-        {
-            $pk = ""
-            $fk = ""
-        }
-
-    $config.JobConfig | % {$_.PoolKey = $pk}
-    $config.JobConfig | % {$_.FarmerKey = $fk}
-}
 Write-Host "--------------------------"
 
 
