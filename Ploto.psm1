@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.5.1
+Version: 1.0.9.5.2
 Author: Tydeno
 
 
@@ -1050,7 +1050,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                             ChiaVersionUsed = $ChiaVersion
                                             LogPath = $LogPath
                                             StartTime = $StartTime
-                                            PlotterUsed = "Stotik Madmax"
+                                            PlotterUsed = "Stotik"
                                             }
 
                                             $AmountOfJobsSpawned = $AmountOfJobsSpawned++
@@ -1171,9 +1171,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                             $OutDrive.FreeSpace="$DeductionOutDrive"
 
 
-                                        }
-                                        
-                                                       
+                                        }                 
                                     }
 
                                      if ($Counter -ge $InputAmountToSpawn)
@@ -1427,51 +1425,136 @@ $pattern = @("OutDrive", "TempDrive", "Starting plotting progress into temporary
 $collectionWithPlotJobsOut = New-Object System.Collections.ArrayList
 
 foreach ($log in $logs)
-    {        
-        $status = get-content ($PlotterBaseLogPath+"\"+$log.name) | Select-String -Pattern $pattern
-        $ErrorActionPreference = "SilentlyContinue"
-        $CurrentStatus = $status[($status.count-1)]
+    {   
+        $PlotterUsed = ($loggerRead -match "PlotterUsed").line.TrimStart("PlotterUsed: ")
+
+        If ($PlotterUsed -eq "Chia")
+        {
+            $status = get-content ($PlotterBaseLogPath+"\"+$log.name) | Select-String -Pattern $pattern
+            $ErrorActionPreference = "SilentlyContinue"
+            $CurrentStatus = $status[($status.count-1)]
   
-        $CompletionTimeP1 = (($status -match "Time for phase 1").line.Split("=")[1]).TrimStart(" ")
-        $CompletionTimeP2 = (($status -match "Time for phase 2").line.Split("=")[1]).TrimStart(" ")
-        $CompletionTimeP3 = (($status -match "Time for phase 3").line.Split("=")[1]).TrimStart(" ")
-        $CompletionTimeP4 = (($status -match "Time for phase 4").line.Split("=")[1]).TrimStart(" ")
+            $CompletionTimeP1 = (($status -match "Time for phase 1").line.Split("=")[1]).TrimStart(" ")
+            $CompletionTimeP2 = (($status -match "Time for phase 2").line.Split("=")[1]).TrimStart(" ")
+            $CompletionTimeP3 = (($status -match "Time for phase 3").line.Split("=")[1]).TrimStart(" ")
+            $CompletionTimeP4 = (($status -match "Time for phase 4").line.Split("=")[1]).TrimStart(" ")
 
-        $plotId = ($status -match "ID").line.Split(" ")[1]
+            $plotId = ($status -match "ID").line.Split(" ")[1]
 
-        switch -Wildcard ($CurrentStatus)
+            switch -Wildcard ($CurrentStatus)
+                {
+                    "Starting plotting progress into temporary dirs:*" {$StatusReturn = "Initializing"}
+                    "Starting phase 1/4*" {$StatusReturn = "1.0"}
+                    "Computing table 1" {$StatusReturn = "1.1"}
+                    "F1 complete, time*" {$StatusReturn = "1.2"}
+                    "Computing table 2" {$StatusReturn = "1.3"}
+                    "Computing table 3" {$StatusReturn = "1.4"}
+                    "Computing table 4" {$StatusReturn = "1.5"}
+                    "Computing table 5" {$StatusReturn = "1.6"}
+                    "Computing table 6" {$StatusReturn = "1.7"}
+                    "Computing table 7" {$StatusReturn = "1.8"}
+                    "Starting phase 2/4*" {$StatusReturn = "2.0"}
+                    "Backpropagating on table 7" {$StatusReturn = "2.1"}
+                    "Backpropagating on table 6" {$StatusReturn = "2.2"}
+                    "Backpropagating on table 5" {$StatusReturn = "2.3"}
+                    "Backpropagating on table 4" {$StatusReturn = "2.4"}
+                    "Backpropagating on table 3" {$StatusReturn = "2.5"}
+                    "Backpropagating on table 2" {$StatusReturn = "2.6"}
+                    "Starting phase 3/4*" {$StatusReturn = "3.0"}
+                    "Compressing tables 1 and 2" {$StatusReturn = "3.1"}
+                    "Compressing tables 2 and 3" {$StatusReturn = "3.2"}
+                    "Compressing tables 3 and 4" {$StatusReturn = "3.3"}
+                    "Compressing tables 4 and 5" {$StatusReturn = "3.4"}
+                    "Compressing tables 5 and 6" {$StatusReturn = "3.5"}
+                    "Compressing tables 6 and 7" {$StatusReturn = "3.6"}
+                    "Starting phase 4/4*" {$StatusReturn = "4.0"}
+                    "Writing C2 table*" {$StatusReturn = "4.1"}
+                    "Time for phase 4*" {$StatusReturn = "4.2"}
+                    "Renamed final file*" {$StatusReturn = "4.3"}
+                    "Could not copy*" {$StatusReturn = "ResumableError"}
+
+                    default {$StatusReturn = "Could not fetch Status"}
+                }
+        }
+
+        If ($PlotterUsed -eq "Stotik")
             {
-                "Starting plotting progress into temporary dirs:*" {$StatusReturn = "Initializing"}
-                "Starting phase 1/4*" {$StatusReturn = "1.0"}
-                "Computing table 1" {$StatusReturn = "1.1"}
-                "F1 complete, time*" {$StatusReturn = "1.2"}
-                "Computing table 2" {$StatusReturn = "1.3"}
-                "Computing table 3" {$StatusReturn = "1.4"}
-                "Computing table 4" {$StatusReturn = "1.5"}
-                "Computing table 5" {$StatusReturn = "1.6"}
-                "Computing table 6" {$StatusReturn = "1.7"}
-                "Computing table 7" {$StatusReturn = "1.8"}
-                "Starting phase 2/4*" {$StatusReturn = "2.0"}
-                "Backpropagating on table 7" {$StatusReturn = "2.1"}
-                "Backpropagating on table 6" {$StatusReturn = "2.2"}
-                "Backpropagating on table 5" {$StatusReturn = "2.3"}
-                "Backpropagating on table 4" {$StatusReturn = "2.4"}
-                "Backpropagating on table 3" {$StatusReturn = "2.5"}
-                "Backpropagating on table 2" {$StatusReturn = "2.6"}
-                "Starting phase 3/4*" {$StatusReturn = "3.0"}
-                "Compressing tables 1 and 2" {$StatusReturn = "3.1"}
-                "Compressing tables 2 and 3" {$StatusReturn = "3.2"}
-                "Compressing tables 3 and 4" {$StatusReturn = "3.3"}
-                "Compressing tables 4 and 5" {$StatusReturn = "3.4"}
-                "Compressing tables 5 and 6" {$StatusReturn = "3.5"}
-                "Compressing tables 6 and 7" {$StatusReturn = "3.6"}
-                "Starting phase 4/4*" {$StatusReturn = "4.0"}
-                "Writing C2 table*" {$StatusReturn = "4.1"}
-                "Time for phase 4*" {$StatusReturn = "4.2"}
-                "Renamed final file*" {$StatusReturn = "4.3"}
-                "Could not copy*" {$StatusReturn = "ResumableError"}
 
-                default {$StatusReturn = "Could not fetch Status"}
+            $patternStotik = @(
+            "[P1] Table 1",
+            "[P1] Table 2",
+            "[P1] Table 3",
+            "[P1] Table 4", 
+            "[P1] Table 5", 
+            "[P1] Table 6", 
+            "[P1] Table 7", 
+            "Phase 1 took", 
+            "[P2] Table 7 rewrite",
+            "[P2] Table 6 rewrite",
+            "[P2] Table 5 rewrite",
+            "[P2] Table 4 rewrite",
+            "[P2] Table 3 rewrite",
+            "[P2] Table 2 rewrite",
+            "[P2] Phase 2 took",
+            "[P3-2] Table 2 rewrite took",
+            "[P3-2] Table 3 rewrite took",  
+            "[P3-2] Table 4 rewrite took",  
+            "[P3-2] Table 5 rewrite took",  
+            "[P3-2] Table 6 rewrite took",  
+            "[P3-2] Table 7 rewrite took", 
+            "Phase 3 took",, 
+            "[P4] Finished writing C2 table",
+            "Phase 4 took",
+            "Plot Name"   
+            )
+
+            $status = get-content ($PlotterBaseLogPath+"\"+$log.name) | Select-String -Pattern $patternStotik
+            $ErrorActionPreference = "SilentlyContinue"
+            $CurrentStatus = $status[($status.count-1)]
+  
+            $CompletionTimeP1 = ($status -match "Phase 1 took").TrimStart("Phase 1 took  ")
+            $CompletionTimeP2 = ($status -match "Phase 2 took").TrimStart("Phase 2 took  ")
+            $CompletionTimeP3 = ($status -match "Phase 3 took").TrimStart("Phase 3 took  ")
+            $CompletionTimeP4 = ($status -match "Phase 4 took").TrimStart("Phase 4 took  ")
+
+            $plotId = ($status -match "Plot Name:").line
+
+            switch -Wildcard ($CurrentStatus)
+                {
+                    "Starting plotting progress into temporary dirs:*" {$StatusReturn = "Initializing"}
+                    "Starting phase 1/4*" {$StatusReturn = "1.0"}
+                    "Computing table 1" {$StatusReturn = "1.1"}
+
+                    "[P1] Table 1*" {$StatusReturn = "1.2"}
+                    "[P1] Table 2*" {$StatusReturn = "1.3"}
+                    "[P1] Table 3*" {$StatusReturn = "1.4"}
+                    "[P1] Table 4*" {$StatusReturn = "1.5"}
+                    "[P1] Table 5*" {$StatusReturn = "1.6"}
+                    "[P1] Table 6*" {$StatusReturn = "1.7"}
+                    "[P1] Table 7*" {$StatusReturn = "1.8"}
+                    "Phase 1 took*" {$StatusReturn = "2.0"}
+                    "[P2] Table 7 rewrite*" {$StatusReturn = "2.1"}
+                    "[P2] Table 6 rewrite*" {$StatusReturn = "2.2"}
+                    "[P2] Table 5 rewrite*" {$StatusReturn = "2.3"}
+                    "[P2] Table 4 rewrite*" {$StatusReturn = "2.4"}
+                    "[P2] Table 3 rewrite*" {$StatusReturn = "2.5"}
+                    "[P2] Table 2 rewrite*" {$StatusReturn = "2.6"}
+                    "Phase 2 took*" {$StatusReturn = "3.0"}
+                    "[P3-2] Table 2 rewrite took*" {$StatusReturn = "3.1"}
+                    "[P3-2] Table 3 rewrite took*" {$StatusReturn = "3.2"}
+                    "[P3-2] Table 4 rewrite took*" {$StatusReturn = "3.3"}
+                    "[P3-2] Table 5 rewrite took*" {$StatusReturn = "3.4"}
+                    "[P3-2] Table 6 rewrite took*" {$StatusReturn = "3.5"}
+                    "[P3-2] Table 7 rewrite took*" {$StatusReturn = "3.6"}
+                    "Phase 3 took*" {$StatusReturn = "4.0"}
+                    "[P4] Finished writing C2 table*" {$StatusReturn = "4.1"}
+                    "Phase 4 took*" {$StatusReturn = "4.2"}
+                    "Total plot creation*" {$StatusReturn = "4.3"}
+                    "Could not copy*" {$StatusReturn = "Error"}
+
+                    default {$StatusReturn = "Could not fetch Status"}
+                }
+
             }
 
             $Logstatfiles = Get-ChildItem $PlotterBaseLogPath | Where-Object {$_.Name -like "*@Stat*"}
@@ -1482,22 +1565,20 @@ foreach ($log in $logs)
 
                     if ($SearchStat -eq $SearchChia)
                         {
-                           $pattern2 = @("OutDrive", "TempDrive", "PID","PlotoSpawnerJobId", "StartTime", "ArgumentList", "T2Drive" , "Time for phase 1", "Time for phase 2", "Time for phase 3", "Time for phase 4", "IsPoolablePlot", "P2SingletonAdress", "IsReplot" )
-                           $loggerRead = Get-Content ($PlotterBaseLogPath+"\"+$logger.Name) | Select-String -Pattern $pattern2
-                           $OutDrive = ($loggerRead -match "OutDrive").line.Split("=").split(";")[1]
-                           $tempDrive = ($loggerRead -match "TempDrive").line.Split("=").split(";")[1]
-                           $t2drive = ($loggerRead -match "T2Drive").line.Split("=").split(";")[1]
-                           $chiaPid = ($loggerRead -match "PID").line.Split(" ")[1]
-                           $PlotoSpawnerJobId = ($loggerRead -match "PlotoSpawnerJobId").line.Split(" ")[1]
-                           $StartTimeSplitted = ($loggerRead -match "StartTime").line.Split(":")
-                           $StartTime = ($StartTimeSplitted[1]+":" + $StartTimeSplitted[2]+":" + $StartTimeSplitted[3]).TrimStart(" ")
-                           $ArgumentList = ($loggerRead -match "ArgumentList").line.TrimStart("ArgumentList: ")
-                           $IsPoolablePlot = ($loggerRead -match "IsPoolablePlot").line.TrimStart("IsPoolablePlot: ")
-                           $P2Adress = ($loggerRead -match "P2SingletonAdress").line.TrimStart("P2SingletonAdress: ")
-                           $IsReplot = ($loggerRead -match "IsReplot").line.TrimStart("IsReplot: ")
+                            $pattern2 = @("OutDrive", "TempDrive", "PID","PlotoSpawnerJobId", "StartTime", "ArgumentList", "T2Drive" , "Time for phase 1", "Time for phase 2", "Time for phase 3", "Time for phase 4", "IsPoolablePlot", "P2SingletonAdress", "IsReplot" )
+                            $loggerRead = Get-Content ($PlotterBaseLogPath+"\"+$logger.Name) | Select-String -Pattern $pattern2
+                            $OutDrive = ($loggerRead -match "OutDrive").line.Split("=").split(";")[1]
+                            $tempDrive = ($loggerRead -match "TempDrive").line.Split("=").split(";")[1]
+                            $t2drive = ($loggerRead -match "T2Drive").line.Split("=").split(";")[1]
+                            $chiaPid = ($loggerRead -match "PID").line.Split(" ")[1]
+                            $PlotoSpawnerJobId = ($loggerRead -match "PlotoSpawnerJobId").line.Split(" ")[1]
+                            $StartTimeSplitted = ($loggerRead -match "StartTime").line.Split(":")
+                            $StartTime = ($StartTimeSplitted[1]+":" + $StartTimeSplitted[2]+":" + $StartTimeSplitted[3]).TrimStart(" ")
+                            $ArgumentList = ($loggerRead -match "ArgumentList").line.TrimStart("ArgumentList: ")
+                            $IsPoolablePlot = ($loggerRead -match "IsPoolablePlot").line.TrimStart("IsPoolablePlot: ")
+                            $P2Adress = ($loggerRead -match "P2SingletonAdress").line.TrimStart("P2SingletonAdress: ")
+                            $IsReplot = ($loggerRead -match "IsReplot").line.TrimStart("IsReplot: ")
 
-                           if ($t2drive -eq "2")
-                            {$t2drive = ""}
 
                            $StatLogPath = $logger.FullName
                                   
