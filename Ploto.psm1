@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.4.9.4
+Version: 1.0.9.4.9.9
 Author: Tydeno
 
 
@@ -383,7 +383,10 @@ function Invoke-PlotoJob
         $MaxParallelJobsInPhase1OnAllDisks,
         $StartEarly,
         $StartEarlyPhase,
-        $P2Singleton
+        $P2Singleton,
+        $ReplotDriveDenom, 
+        $Replot,
+        $ksize
 		)
 
  if($verbose) {
@@ -405,7 +408,6 @@ $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSp
 try 
     {
         $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
-        Write-Verbose "Loaded Alarmconfig successfully"
     }
 catch
     {
@@ -512,8 +514,29 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                         exit
                                     } 
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": -MaxParallelJobsOnAllDisks and -MaxParallelJobsOnSameDisk allow spawning")
-                                    $min = ($PlottableOutDrives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
-                                    $OutDrive = $PlottableOutDrives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
+
+
+                                    #Building ArgumentList for chia.exe
+                                    if ($Replot -eq "true" -and $ReplotDriveDenom -ne "")
+                                        {
+                                            Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Replotting enabled. Will delete existing plots shortly upon before a job enters phase 4. Also ignoring the fact that an OutDrive has no space, as a plot will be deleted to make space for new one.")
+                                            #Pick an Outdrive from ReplotDenom
+                                            $replotDrives = Get-PlotoOutDrives -OutDriveDenom $ReplotDriveDenom
+
+                                            $min = ($replotDrives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
+                                            $OutDrive = $replotDrives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
+  
+                                        }
+                                    else
+                                        {
+                                            
+                                            #normal flow as we do not replot
+                                            $PlottableOutDrives = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom | Where-Object {$_.IsPlottable -eq $true}
+
+                                            $min = ($PlottableOutDrives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
+                                            $OutDrive = $PlottableOutDrives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
+                                           
+                                        }
 
                                     if ($OutDrive.Count -gt 1)
                                         {
@@ -523,8 +546,8 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                                     if ($OutDrive -eq $null)
                                         {
-
-                                        if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenNoOutDrivesAvailable -eq $true)
+                                                                                                                                                                                                                                                                                               
+                                            if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenNoOutDrivesAvailable -eq $true)
                                             {
                                                 #Create embed builder object via the [DiscordEmbed] class
                                                 $embedBuilder = [DiscordEmbed]::New(
@@ -555,10 +578,10 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                     
                                             }
                                 
-                                        Throw "Error: No outdrives found"
-                                        exit
-                                        
+                                            Throw "Error: No outdrives found"
+                                            exit
                                         }
+
 
                                     $OutDriveLetter = $OutDrive.DriveLetter
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Best Outdrive most least jobs: "+$OutDriveLetter)
@@ -583,10 +606,23 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Calculated LogStatName "+$logstatName)
 
                                     $logPath1 = (New-Item -Path $PlotterBaseLogPath -Name $logstatName).FullName
+
+
+
                                     Add-Content -Path $LogPath1 -Value "PlotoSpawnerJobId: $PlotoSpawnerJobId"
                                     Add-Content -Path $LogPath1 -Value "OutDrive: $OutDrive"
                                     Add-Content -Path $LogPath1 -Value "TempDrive: $PlottableTempDrive"
                                     Add-Content -Path $LogPath1 -Value "StartTime: $StartTime"
+
+                                    if ($Replot -eq "true" -and $ReplotDriveDenom -ne "")
+                                        {
+                                            Add-Content -Path $LogPath1 -Value "IsReplot: true"
+                                        }
+                                    else
+                                        {
+                                            Add-Content -Path $LogPath1 -Value "IsReplot: false"
+                                        }
+
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Created LogStat file and passed values along.")
 
                                     if ($EnableBitfield -eq $true -or $EnableBitfield -eq "true")
@@ -691,8 +727,10 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                 }
                                            }
 
-                                    if ($FarmerKey -ne "" -or $FarmerKey -ne " ")
+
+                                    if ($P2Singleton -ne "")
                                         {
+
                                             #Lets check if its a Key
                                             $CharArray = $FarmerKey.ToCharArray()
                                             if ($CharArray.Count -eq 96)
@@ -701,35 +739,45 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                     $ExpandedArgs = "-f "+$FarmerKey
                                                     $ArgumentList = $ArgumentList+" "+$ExpandedArgs
                                                 }
-
+     
+                                            $ExpandedArgs1 = 
+                                            $ExpandedArgs = "-c "+$P2Singleton
+                                            $ArgumentList = $ArgumentList+" "+$ExpandedArgs
+                                            Add-Content -Path $LogPath1 -Value "IsPoolablePlot: true"
+                                            Add-Content -Path $LogPath1 -Value "P2SingletonAdress: $P2Singleton"
+ 
                                         }
-
-                                    if ($PoolKey -ne "" -or $PoolKey -ne " ")
+                                    else
                                         {
-                                            #Lets check if its a Key
-                                            $CharArray = $PoolKey.ToCharArray()
-                                            if ($CharArray.Count -eq 96)
+                                            if ($FarmerKey -ne "" -or $FarmerKey -ne " ")
                                                 {
-                                                    Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": This looks like a valid key based on its length")
-                                                    $ExpandedArgs = "-p "+$PoolKey
-                                                    $ArgumentList = $ArgumentList+" "+$ExpandedArgs
+                                                    #Lets check if its a Key
+                                                    $CharArray = $FarmerKey.ToCharArray()
+                                                    if ($CharArray.Count -eq 96)
+                                                        {
+                                                            Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": This looks like a valid key based on its length")
+                                                            $ExpandedArgs = "-f "+$FarmerKey
+                                                            $ArgumentList = $ArgumentList+" "+$ExpandedArgs
+                                                        }
                                                 }
 
-                                        }
-
-                                     if ($P2Singleton -ne "" -or $P2Singleton -ne " ")
-                                        {
-                                            #Lets check if its a Key
-                                            $CharArray = $P2Singleton.ToCharArray()
-                                            if ($CharArray.Count -gt 61)
+                                            if ($PoolKey -ne "" -or $PoolKey -ne " ")
                                                 {
-                                                    Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": This looks like a valid key based on its length")
-                                                    $ExpandedArgs = "-c "+$P2Singleton
-                                                    $ArgumentList = $ArgumentList+" "+$ExpandedArgs
-                                                }
-
+                                                    #Lets check if its a Key
+                                                    $CharArray = $PoolKey.ToCharArray()
+                                                    if ($CharArray.Count -eq 96)
+                                                        {
+                                                            Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": This looks like a valid key based on its length")
+                                                            $ExpandedArgs = "-p "+$PoolKey
+                                                            $ArgumentList = $ArgumentList+" "+$ExpandedArgs
+                                                        }
+                                                }  
+                                                                                          
+                                            Add-Content -Path $LogPath1 -Value "IsPoolablePlot: false"
+                                            Add-Content -Path $LogPath1 -Value "P2SingletonAdress: none"
                                         }
 
+                                    #finally launch chia exe
                                     try 
                                         {
                                             Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Launching chia.exe with params.")
@@ -1097,6 +1145,9 @@ function Start-PlotoSpawns
     $StartEarlyPhase = $config.JobConfig.StartEarlyPhase
     $EnableFy = $config.EnablePlotoFyOnStart
     $P2Singleton = $config.JobConfig.P2SingletonAdress
+    $ReplotDriveDenom = $config.DiskConfig.DenomForOutDrivesToReplotForPools
+    $Replot = $config.JobConfig.ReplotForPool
+    $ksize = $config.JobConfig.KSizeToPlot
 
 
     Write-Host "PlotoManager @"(Get-Date)": InputAmountToSpawn:" $InputAmountToSpawn
@@ -1126,6 +1177,30 @@ function Start-PlotoSpawns
             
         }
 
+    if ($Replot -eq "true")
+        {
+            Write-Host "PlotoManager @"(Get-Date)": Replotting is enabled. Checking for active Watchdog jobs..."
+
+            $bgjobs = Get-Job | Where-Object {$_.Name -like "*ReplotWatchDog*"}
+            if ($bgjobs)
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": We have found active ReplotWatchdog jobs. Stopping it and starting fresh..."
+                    $bgjobs | Stop-Job | Remove-Job
+                }
+            try 
+                {
+                    Start-ReplotWatchDog
+                    Write-Host "PlotoManager @"(Get-Date)": Started ReplotWatchDog successfully." -ForegroundColor Green
+                }
+            catch
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Could not launch ReplotWatchDog!" -ForegroundColor Red
+                }
+
+           Write-Host "---------------------------------------------------------------------------------"
+            
+        }
+
     $SpawnedCountOverall = 0 
 
     Do
@@ -1139,11 +1214,11 @@ function Start-PlotoSpawns
 
         if ($verbose)
             {
-                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -P2Singleton $P2Singleton -Verbose
+                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -P2Singleton $P2Singleton -ReplotDriveDenom $ReplotDriveDenom -Replot $Replot -ksize $ksize -Verbose
             }
         else
             {
-                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -P2Singleton $P2Singleton
+                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -P2Singleton $P2Singleton -ReplotDriveDenom $ReplotDriveDenom -Replot $Replot -ksize $ksize
             }
         
         
@@ -1242,7 +1317,7 @@ foreach ($log in $logs)
 
                     if ($SearchStat -eq $SearchChia)
                         {
-                           $pattern2 = @("OutDrive", "TempDrive", "PID","PlotoSpawnerJobId", "StartTime", "ArgumentList", "T2Drive" , "Time for phase 1", "Time for phase 2", "Time for phase 3", "Time for phase 4" )
+                           $pattern2 = @("OutDrive", "TempDrive", "PID","PlotoSpawnerJobId", "StartTime", "ArgumentList", "T2Drive" , "Time for phase 1", "Time for phase 2", "Time for phase 3", "Time for phase 4", "IsPoolablePlot", "P2SingletonAdress", "IsReplot" )
                            $loggerRead = Get-Content ($PlotterBaseLogPath+"\"+$logger.Name) | Select-String -Pattern $pattern2
                            $OutDrive = ($loggerRead -match "OutDrive").line.Split("=").split(";")[1]
                            $tempDrive = ($loggerRead -match "TempDrive").line.Split("=").split(";")[1]
@@ -1252,7 +1327,9 @@ foreach ($log in $logs)
                            $StartTimeSplitted = ($loggerRead -match "StartTime").line.Split(":")
                            $StartTime = ($StartTimeSplitted[1]+":" + $StartTimeSplitted[2]+":" + $StartTimeSplitted[3]).TrimStart(" ")
                            $ArgumentList = ($loggerRead -match "ArgumentList").line.TrimStart("ArgumentList: ")
-
+                           $IsPoolablePlot = ($loggerRead -match "IsPoolablePlot").line.TrimStart("IsPoolablePlot: ")
+                           $P2Adress = ($loggerRead -match "P2SingletonAdress").line.TrimStart("P2SingletonAdress: ")
+                           $IsReplot = ($loggerRead -match "IsReplot").line.TrimStart("IsReplot: ")
 
                            if ($t2drive -eq "2")
                             {$t2drive = ""}
@@ -1327,6 +1404,20 @@ foreach ($log in $logs)
                     $StatusReturn = "Error: Check Logs of job"
                 }
 
+            if ($IsPoolablePlot -ne "true")
+                {
+                    $IsPoolablePlot = "false"
+                }
+            if ($IsReplot -eq "rue" -or $IsReplot -eq "true")
+                {
+                    $IsReplot = "true"
+                }
+            else
+                {
+                    $IsReplot = "false"
+                }
+
+
             if ($PerfCounter)
                 {
                     #Getting Plot Object Ready
@@ -1351,6 +1442,10 @@ foreach ($log in $logs)
                     CompletionTimeP2 = $CompletionTimeP2
                     CompletionTimeP3 = $CompletionTimeP3
                     CompletionTimeP4 = $CompletionTimeP4
+                    EndDate = $EndDate
+                    IsPoolablePlot = $IsPoolablePlot
+                    P2SingletonAdress = $P2Adress
+                    IsReplot = $IsReplot
                     }
                 
                 }
@@ -1378,12 +1473,13 @@ foreach ($log in $logs)
                     CompletionTimeP3 = $CompletionTimeP3
                     CompletionTimeP4 = $CompletionTimeP4
                     EndDate = $EndDate
+                    IsPoolablePlot = $IsPoolablePlot
+                    P2SingletonAdress = $P2Adress
+                    IsReplot = $IsReplot
                     }
 
                 }
       
-
-
         if ($PerfCounter -and $StatusReturn -eq "Completed")
             {
                 
@@ -1393,8 +1489,10 @@ foreach ($log in $logs)
                 $collectionWithPlotJobsOut.Add($PlotJobOut) | Out-Null
             }
 
-
         #Clear values from former iteration
+        $IsReplot = $null
+        $P2Adress = $null
+        $IsPoolablePlot = $null
         $StatusReturn = $null
         $t2drive = $null
         $tempDrive = $null
@@ -1582,6 +1680,7 @@ if ($OutDrivesToScan)
                             FilePath     =  $FilePath
                             Name = $item.Name
                             Size = $Size
+                            CreationTime = $item.CreationTime
                             }
 
                             $collectionWithFinalPlots.Add($PlotToMove) | Out-Null
@@ -1721,6 +1820,57 @@ function Start-PlotoMove
     Until ($count -eq $endlessCount)
 }
 
+function Invoke-PlotoDeleteForReplot
+{
+
+	Param(
+		[parameter(Mandatory=$true)]
+		$ReplotDriveDenom
+		)
+
+    #Get active jobs entering phase 4.
+    $activeJobs = Get-PlotoJobs | Where-Object {$_.Status -ge 3.9} | Where-Object {$_.IsReplot -eq "true"}
+    if ($activeJobs)
+        {
+            Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Found active jobs that are about to enter phase 4")
+
+            foreach ($job in $activeJobs)
+                {
+                        Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Checking if selected ReplotDrive has enough space or oldest plot needs to be deleted..")
+                        #Check if we need to delete a plot on that OutDrive spacewise, with active jobs to it in mind.
+                        $OutDriveToCheck = Get-PlotoOutDrives -OutDriveDenom $ReplotDriveDenom | Where-Object {$_.DriveLetter -eq $job.OutDrive}
+
+                        if ($OutDriveToCheck.FreeSpace -lt 107 -and $OutDriveToCheck.AvailableAmountToPlot -le 1)
+                            {
+                                Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Not enough space available for new plot, need to delete oldest one for replotting... ")
+                                #pick oldest plottodel
+                                $plottoDel = (Get-PlotoPlots -OutDriveDenom $ReplotDriveDenom | sort creationtime)[0]
+                                Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Oldest Plot in ReplotDrive "+$OutDriveToCheck.DriveLetter+ " of job with id "+$job.JobId+" that is about to finish: "+$plottoDel.FilePath)
+
+                                $plotitemtodel = Get-ChildItem $plottoDel.FilePath
+                                try 
+                                    {
+                                       $plotitemtodel | Remove-Item
+                                       Start-Sleep 30
+                                    } 
+                                catch
+                                    {
+                                        Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": ERROR: Could not delete Plot! See below for details. ") -ForegroundColor Red
+                                        Write-Host $_.Exception.Message -ForegroundColor Red
+                                    }
+                            }
+                        else
+                            {
+                                Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Selected ReplotDrive (OutDrive of PlotJob) "+$OutDriveToCheck.DriveLetter+" has enough space. No deletion needed.")
+                            }
+                }
+        }
+    else
+        {
+            Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": No active jobs that are about to enter phase 4.")
+        }
+
+}
 
 function Get-PlotoFarmLog
 {
@@ -1746,7 +1896,6 @@ $output = Get-content ($LogPath) | Select-String -Pattern $pattern
 
 return $output
 }
-
 
 function Invoke-PlotoFyStatusReport
 {
@@ -2111,7 +2260,7 @@ function Invoke-PlotoFyStatusReport
 function Request-PlotoFyStatusReport
 {
     $count = 0
-    for ($count -lt 1000000)
+    for ($count -lt 10000000)
         {
             try 
                 {
@@ -2142,14 +2291,14 @@ Function Start-PlotoFy
         {
              $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
              $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
-             Write-Verbose "Loaded Alarmcoinfig successfully"
+             Write-Verbose "Loaded Config successfully"
          }
      catch
          {
              Throw $_.Exception.Message
          } 
  
-    $PathToPloto = $config.PlotoFyAlerts.PathToPloto 
+    $PathToPloto = $config.PathToPloto 
     Unblock-File $PathToPloto
     Import-Module $PathToPloto -Force
     Request-PlotoFyStatusReport -ErrorAction stop
@@ -2157,10 +2306,58 @@ Function Start-PlotoFy
 
 }
 
+function Request-CheckForDeletion
+{
+
+$PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
+
+try 
+    {
+        $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
+    }
+catch
+    {
+         Throw $_.Exception.Message
+         exit
+    } 
+
+$ReplotDriveDenom = $config.DiskConfig.DenomForOutDrivesToReplotForPools
+
+$count = 0
+    for ($count -lt 100000000000)
+        {
+           Invoke-PlotoDeleteForReplot -ReplotDriveDenom $ReplotDriveDenom
+           $count++
+           Start-Sleep 300 
+        }
+
+}
+
+function Start-ReplotWatchDog
+{
+
+    Start-Job -ScriptBlock {
+        try 
+            {
+                 $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
+                 $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
+                 Write-Verbose "Loaded Config successfully"
+             }
+         catch
+             {
+                 Throw $_.Exception.Message
+             } 
+
+       $PathToModule = $config.PathToPloto
+       Unblock-File $PathToModule
+       Import-Module $PathToModule -Force
+       Request-CheckForDeletion
+    } -ArgumentList $PathToModule -Name ReplotWatchDog 
+}
+
 
 #Helpers here. Would have loved to correctly used the module as a dependency. Just doesnt work when using with classes. Got to use the using module statement, which needs to be at the very beginning of a module or script.
 #I just load locally, this means we cannot use in the functions we call. The classes and functions wont be available within functions, thats why I baked them in directly. Massive credits to Mike Roberts! -> https://github.com/gngrninja
-
 
 
 class DiscordImage {    
