@@ -160,7 +160,7 @@ Write-Host "InstallPloto @"(Get-Date)": Checking if we have new properties in co
 
 $pathtolchech = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
  $sourcecfg = Get-Content -raw -Path $scriptPath"\PlotoSpawnerConfig.json" | ConvertFrom-Json
-if (Test-Path $pathtolchech  -eq $true)
+if (Test-Path $pathtolchech)
     {
         $installedcfg = Get-Content -raw -Path $env:HOMEDRIVE$env:HOMEPath"\.chia\mainnet\config\PlotoSpawnerConfig.json" | ConvertFrom-Json
         $contentEqual = ($sourcecfg | ConvertTo-Json -Depth 32 -Compress) -eq 
