@@ -1,12 +1,11 @@
 {
   "PlotterName": "SirNotPlotAlot",
-  "PlotterUsed": "chia",
-  "PathToUnofficialPlotter": "somepath",
+  "PlotterUsed": "Stotik",
+  "PathToUnofficialPlotter": "...\\chia_plot.exe",
   "EnableAlerts": "false",
   "EnablePlotoFyOnStart": "true",
   "ChiaWindowStyle": "normal",
   "PathToPloto": "C:/Users/Tydeno/Desktop/Ploto/Ploto.psm1",
- 
 
   "DiskConfig": [
     {
@@ -14,13 +13,13 @@
       "Temp2Denom": "",
       "OutDriveDenom": "out",
       "EnableT2": "false",
-      "DenomForOutDrivesToReplotForPools": "replot"
+      "DenomForOutDrivesToReplotForPools": ""
     }
   ],
 
   "SpawnerConfig": [
       {
-        "ReplotForPool": "true",
+        "ReplotForPool": "false",
         "IntervallToCheckInMinutes": "5",
         "InputAmountToSpawn": "100", 
         "WaitTimeBetweenPlotOnSeparateDisks": "15",
@@ -30,13 +29,13 @@
         "MaxParallelJobsInPhase1OnAllDisks" : "4",
         "StartEarly": "true",
         "StartEarlyPhase": "4"
-          }
+      }
     ],
 
   "JobConfig": [
       {
         "KSizeToPlot": "32",
-        "BufferSize": "3390",
+        "BufferSize": "",
         "Thread": "4",
         "Buckets": "128",
         "Bitfield": "true",
