@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.5.6.9.3.9.1
+Version: 1.0.9.5.6.9.5.3
 Author: Tydeno
 
 
@@ -585,6 +585,8 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                                     $OutDriveLetter = $OutDrive.DriveLetter
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Best Outdrive most least jobs: "+$OutDriveLetter)
+                                    Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Using FarmerKey: "+$FarmerKey)
+                                    Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": using PoolKey: "+$PoolKey)
 
                                     $PlotoSpawnerJobId = ([guid]::NewGuid()).Guid
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": GUID for PlotoSpawnerID: "+$PlotoSpawnerJobId)
@@ -937,6 +939,11 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                                         catch
                                             {
+
+                                            if ($procid -eq $null)
+                                                {
+                                                    Add-Content -Path $LogPath1 -Value "PID: None" -Force
+                                                }
                                             Write-Host "PlotoSpawner @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
                                             Write-Verbose ("PlotoSpawner @"+(Get-Date)+": ERROR! Could not launch chia.exe. Check chiapath and arguments (make sure version is set correctly!). Arguments used: "+$ArgumentList)
 
@@ -1171,6 +1178,10 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
                                             catch
                                                 {
+                                                    if ($procid -eq $null)
+                                                        {
+                                                            Add-Content -Path $LogPath1 -Value "PID: None" -Force
+                                                        }
                                                     Write-Host "PlotoSpawner @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
                                                     Write-Verbose ("PlotoSpawner @"+(Get-Date)+": ERROR! Could not launch chia_plot.exe. Check chiapath and arguments (make sure version is set correctly!). Arguments used: "+$ArgumentList)
 
@@ -1344,7 +1355,7 @@ function Start-PlotoSpawns
     try 
         {
             $config = Get-Content -raw -Path $PathToConfig | ConvertFrom-Json
-            Write-Verbose "Loaded config successfully."
+            Write-Host "PlotoManager @"(Get-Date)": Loaded config successfully" -ForegroundColor Green
         }
     catch
         {
@@ -1388,7 +1399,6 @@ function Start-PlotoSpawns
     [int]$MaxParallelJobsOnSameDisk = $config.SpawnerConfig.MaxParallelJobsOnSameDisk
     [int]$WaitTimeBetweenPlotOnSeparateDisks = $config.SpawnerConfig.WaitTimeBetweenPlotOnSeparateDisks
     [int]$WaitTimeBetweenPlotOnSameDisk = $config.SpawnerConfig.WaitTimeBetweenPlotOnSameDisk
-    $MaxParallelJobsInPhase1OnSameDisk = $config.SpawnerConfig.MaxParallelJobsInPhase1OnSameDisk
     $MaxParallelJobsInPhase1OnAllDisks = $config.SpawnerConfig.MaxParallelJobsInPhase1OnAllDisks
     $StartEarly = $config.SpawnerConfig.StartEarly
     $StartEarlyPhase = $config.SpawnerConfig.StartEarlyPhase
@@ -1408,8 +1418,47 @@ function Start-PlotoSpawns
     $ksize = $config.JobConfig.KSizeToPlot
     $Buckets = $config.JobConfig.Buckets
 
-    Write-Host "PlotoManager @"(Get-Date)": InputAmountToSpawn:" $InputAmountToSpawn
-    Write-Host "PlotoManager @"(Get-Date)": Intervall to wait:" $IntervallToWait
+
+    Write-Host "PlotoManager @"(Get-Date)": BaseConfig:" -ForegroundColor Cyan
+
+    Write-Host "PlotoManager @"(Get-Date)": AlertsEnabled:"$EnableAlerts -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": WindowStyle:"$WindowStyle -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": EnableAlertWatchdogOnStartUp:"$EnableFy -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": UsingPlotter:"$Plotter -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": CustomPlotterPath"$PathToUnofficialPlotter -ForegroundColor Cyan
+
+    Write-Host "--------------------------------------------------------------------------------------------------"
+
+    Write-Host "PlotoManager @"(Get-Date)": SpawnerConfig" -ForegroundColor Magenta
+    Write-Host "PlotoManager @"(Get-Date)": Total amount of Plots to generate: "$InputAmountToSpawn -ForegroundColor Magenta
+    Write-Host "PlotoManager @"(Get-Date)": Intervall to check between possible Spawns in Minutes: "$IntervallToWait -ForegroundColor Magenta
+    Write-Host "PlotoManager @"(Get-Date)": Max parallel Jobs across all Disks allowed: "$MaxParallelJobsOnAllDisks -ForegroundColor Magenta
+    Write-Host "PlotoManager @"(Get-Date)": Max parallel Jobs across one single Disk allowed: "$MaxParallelJobsOnSameDisk -ForegroundColor Magenta
+    Write-Host "PlotoManager @"(Get-Date)": Max parallel Jobs across all disks in Phase 1 allowed: "$MaxParallelJobsInPhase1OnAllDisks -ForegroundColor Magenta
+    Write-Host "PlotoManager @"(Get-Date)": Stagger time in minutes to wait between jobs on the same disk: "$WaitTimeBetweenPlotOnSameDisk -ForegroundColor Magenta
+    Write-Host "PlotoManager @"(Get-Date)": Stagger time in minutes to wait between jobs on another disk: "$WaitTimeBetweenPlotOnSeparateDisks -ForegroundColor Magenta
+    Write-Host "PlotoManager @"(Get-Date)": Start a new job when another finished starts phase 4: "$StartEarly -ForegroundColor Magenta
+    Write-Host "PlotoManager @"(Get-Date)": Replotting is enabled (delete a Plot when on matching drive if a new one enter phase 4): "$Replot -ForegroundColor Magenta
+
+    Write-Host "--------------------------------------------------------------------------------------------------"
+
+    Write-Host "PlotoManager @"(Get-Date)": DiskConfig" -ForegroundColor Gray
+    Write-Host "PlotoManager @"(Get-Date)": Common denominator for temp drives (name of logical volume): "$TempDriveDenom -ForegroundColor Gray
+    Write-Host "PlotoManager @"(Get-Date)": Common denominator for -2 drives (name of logical volume): "$t2denom -ForegroundColor Gray
+    Write-Host "PlotoManager @"(Get-Date)": Common denominator for destination drives (name of logical volume): "$OutDriveDenom -ForegroundColor Gray
+    Write-Host "PlotoManager @"(Get-Date)": Common denominator for destination drives to replot (name of logical volume): "$ReplotDriveDenom -ForegroundColor Gray
+
+    Write-Host "--------------------------------------------------------------------------------------------------"
+
+    Write-Host "PlotoManager @"(Get-Date)": JobConfig" -ForegroundColor DarkYellow
+    Write-Host "PlotoManager @"(Get-Date)": ThreadCount:"$Thread -ForegroundColor DarkYellow
+    Write-Host "PlotoManager @"(Get-Date)": BufferSize:"$BufferSize -ForegroundColor DarkYellow
+    Write-Host "PlotoManager @"(Get-Date)": Buckets:"$Buckets -ForegroundColor DarkYellow
+    Write-Host "PlotoManager @"(Get-Date)": kSize:"$ksize -ForegroundColor DarkYellow
+    Write-Host "PlotoManager @"(Get-Date)": EnableBitfield:"$EnableBitfield -ForegroundColor DarkYellow
+    Write-Host "PlotoManager @"(Get-Date)": PoolKey:"$PoolKey -ForegroundColor DarkYellow
+    Write-Host "PlotoManager @"(Get-Date)": FarmerKey:"$FarmerKey -ForegroundColor DarkYellow
+    Write-Host "PlotoManager @"(Get-Date)": P2Singleton: "$P2Singleton  -ForegroundColor DarkYellow
 
     if ($EnableFy -eq "true")
         {
@@ -1531,7 +1580,12 @@ foreach ($log in $logs)
                 Write-Host "Get-PlotoJobs @"(Get-Date)": This Job has 'PlotterUsed' not set in LogStat. Was created using an old version." -ForegroundColor Yellow
                 Write-Host "Get-PlotoJobs @"(Get-Date)": Setting PlotterUsed in logstat to 'Chia'" -ForegroundColor Yellow
                 Add-Content -Path $StatLogToCheck -Value "PlotterUsed: Chia"
+                $PlotterUsed = "Chia"
 
+            }
+        else
+            {
+                $PlotterUsed = $loggerPlotter.line.TrimStart("PlotterUsed: ")
             }
 
         If ($PlotterUsed -eq "Chia" -or $PlotterUsed -eq "chia")
@@ -1581,6 +1635,7 @@ foreach ($log in $logs)
 
                     default {$StatusReturn = "Could not fetch Status"}
                 }
+
         }
 
         If ($PlotterUsed -eq "Stotik" -or $PlotterUsed -eq "stotik")
@@ -1591,6 +1646,7 @@ foreach ($log in $logs)
             $status = get-content ($PlotterBaseLogPath+"\"+$log.name) | Select-String -Pattern $patternStotik
             $ErrorActionPreference = "SilentlyContinue"
             $CurrentStatus = $status[($status.count-1)]
+
   
             $CompletionTimeP1 = ($status -match "Phase 1 took").TrimStart("Phase 1 took  ")
             $CompletionTimeP2 = ($status -match "Phase 2 took").TrimStart("Phase 2 took  ")
@@ -1729,9 +1785,6 @@ foreach ($log in $logs)
                         }
                 }
 
-            #split off "plots create" for output
-
-            $ArgumentList = $ArgumentList.TrimStart("plots create ")
 
             #Set certian properties when is Complete
             if ($StatusReturn -eq "4.3")
@@ -1744,10 +1797,16 @@ foreach ($log in $logs)
                     $chiaPid = "None"
 
                 }
+  
+            if ($StatusReturn -eq "Could not fetch Status")
+                {
+
+                    $StatusReturn = "Aborted"
+                    $TimeToCompleteCalcInh = "None"
+                    $chiaPid = "None"   
+                }
             else
                 {
-                    #check if is aborted
-
                     $ChiaProc = Get-Process -Id $chiaPid
 
                     if ($ChiaProc -eq $null)
@@ -1759,7 +1818,8 @@ foreach ($log in $logs)
                     else
                         {
                             $TimeToCompleteCalcInh = "Still in progress"
-                        }
+                        }                        
+
                 }
 
 
@@ -2005,6 +2065,14 @@ function Remove-AbortedPlotoJobs
     $collectionWithJobsToReport= New-Object System.Collections.ArrayList
     foreach ($job in $JobsToAbort)
         {
+            if ($job.CompletionTime -eq "None")
+                {
+                    $completiontime = 0
+                }
+            else
+                {
+                    $completiontime = $job.CompletionTime
+                }
 
             $JobToReport = [PSCustomObject]@{
             JobId     =  $job.jobid
@@ -2018,7 +2086,7 @@ function Remove-AbortedPlotoJobs
             CompletionTimeP2 = $job.CompletionTimeP2
             CompletionTimeP3 = $job.CompletionTimeP3
             CompletionTimeP4 = $job.CompletionTimeP4
-            EndDate = (Get-Date $job.StartTime).AddHours($job.CompletionTime)
+            EndDate = (Get-Date $job.StartTime).AddHours($completiontime)
             }
 
             #Send notification about spotted Job that is aborted
@@ -2027,7 +2095,7 @@ function Remove-AbortedPlotoJobs
                 #Create embed builder object via the [DiscordEmbed] class
                 $embedBuilder = [DiscordEmbed]::New(
                                     'A job in progress was aborted.',
-                                    'Sorry to bother you but I want to let you know that I found an aborted Job. Claning it now.'
+                                    'Just letting you know that I found an aborted Job. Claning it now.'
                                 )
                 $StaId = "ArgumentList"
                 $JobDetailsStartTimeMsg = $job.ArgumentList
@@ -2052,7 +2120,7 @@ function Remove-AbortedPlotoJobs
                 #Add purple color
                 $embedBuilder.WithColor(
                     [DiscordColor]::New(
-                        'red'
+                        'yellow'
                     )
                 )
 
@@ -2067,13 +2135,11 @@ function Remove-AbortedPlotoJobs
 
                 $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
 
-                Invoke-PsDsHook -CreateConfig $WebHookURL -Verbose:$false
-                Invoke-PSDsHook $embedBuilder -Verbose:$false
+                Invoke-PsDsHook -CreateConfig $WebHookURL -Verbose:$false | Out-Null 
+                Invoke-PSDsHook $embedBuilder -Verbose:$false | Out-Null 
                                     
             }
            
-           
-            
             Stop-PlotoJob -JobId $job.jobid
             Write-Host "-----------------------------------------------------------------------"
             $count++
@@ -2364,7 +2430,6 @@ function Invoke-PlotoFyStatusReport
             $CompletionTimeConverted = (Get-Date $job.EndDate)
             if ($CompletionTimeConverted -gt $PeriodToCheck) 
                 {
-                    Write-Host "Thats a job do check: "$job.jobid
 
                     $JobToReport = [PSCustomObject]@{
                         JobId     =  $job.jobid
