@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.5.6.9.3.7
+Version: 1.0.9.5.6.9.3.8
 Author: Tydeno
 
 
@@ -1522,10 +1522,16 @@ foreach ($log in $logs)
         $StatLogToCheck = (($PlotterBaseLogPath+$log.Name).Replace(".txt", "@Stat")+".txt")
         $patternPlotter = @("PlotterUsed")
         $loggerPlotter = Get-Content $StatLogToCheck | Select-String -Pattern $patternPlotter
-        $PlotterUsed = ($loggerPlotter.ToString()).TrimStart("PlotterUsed: ")
 
+        if ($loggerPlotter -eq $null)
+            {
+                Write-Host "Get-PlotoJobs @"(Get-Date)": This Job has 'PlotterUsed' not set in LogStat. Was created using an old version." -ForegroundColor Yellow
+                Write-Host "Get-PlotoJobs @"(Get-Date)": Setting PlotterUsed in logstat to 'Chia'" -ForegroundColor Yellow
+                Add-Content -Path $StatLogToCheck -Value "PlotterUsed: Chia"
 
-        If ($PlotterUsed -eq "Chia")
+            }
+
+        If ($PlotterUsed -eq "Chia" -or $PlotterUsed -eq "chia")
         {
             $status = get-content ($PlotterBaseLogPath+"\"+$log.name) | Select-String -Pattern $pattern
             $ErrorActionPreference = "SilentlyContinue"
@@ -1644,9 +1650,49 @@ foreach ($log in $logs)
                             $StartTimeSplitted = ($loggerRead -match "StartTime").line.Split(":")
                             $StartTime = ($StartTimeSplitted[1]+":" + $StartTimeSplitted[2]+":" + $StartTimeSplitted[3]).TrimStart(" ")
                             $ArgumentList = ($loggerRead -match "ArgumentList").line.TrimStart("ArgumentList: ")
-                            $IsPoolablePlot = ($loggerRead -match "IsPoolablePlot").line.TrimStart("IsPoolablePlot: ")
-                            $P2Adress = ($loggerRead -match "P2SingletonAdress").line.TrimStart("P2SingletonAdress: ")
-                            $IsReplot = ($loggerRead -match "IsReplot").line.TrimStart("IsReplot: ")
+
+                            $IsPoolablePlot = ($loggerRead -match "IsPoolablePlot")
+                            if ($IsPoolablePlot -eq $null)
+                                {
+                                    Write-Host "Get-PlotoJobs @"(Get-Date)": This Job has 'IsPoolablePlot' not set in LogStat. Was created using an old version." -ForegroundColor Yellow
+                                    Write-Host "Get-PlotoJobs @"(Get-Date)": Setting IsPoolablePlot in logstat to 'false'" -ForegroundColor Yellow
+                                    Add-Content -Path $StatLogToCheck -Value "PlotterUsed: false"
+                                    $IsPoolablePlot = "false"
+                                }
+                            else
+                                {
+                                    $IsPoolablePlot = $IsPoolablePlot.line.TrimStart("IsPoolablePlot: ")
+                                }
+
+                            
+                            $P2Adress = ($loggerRead -match "P2SingletonAdress")
+
+                            if ($P2Adress -eq $null)
+                                {
+                                    Write-Host "Get-PlotoJobs @"(Get-Date)": This Job has 'P2SingletonAdress' not set in LogStat. Was created using an old version." -ForegroundColor Yellow
+                                    Write-Host "Get-PlotoJobs @"(Get-Date)": Setting IsPoolablePlot in logstat to 'none'" -ForegroundColor Yellow
+                                    Add-Content -Path $StatLogToCheck -Value "P2SingletonAdress: none"
+                                    $P2Adress = "none"
+                                }
+                            else
+                                {
+                                    $P2Adress = $P2Adress.line.TrimStart("P2SingletonAdress: ")
+                                }
+                                
+                                
+                           $IsReplot = ($loggerRead -match "IsReplot")
+                           if ($IsReplot -eq $null)
+                                {
+                                    Write-Host "Get-PlotoJobs @"(Get-Date)": This Job has 'ISReplot' not set in LogStat. Was created using an old version." -ForegroundColor Yellow
+                                    Write-Host "Get-PlotoJobs @"(Get-Date)": Setting IsReplot in logstat to 'false'" -ForegroundColor Yellow
+                                    Add-Content -Path $StatLogToCheck -Value "IsReplot: false"
+                                    $IsReplot = "false"                                
+                                }
+
+                            else
+                                {
+                                    $IsReplot = $IsReplot.line.TrimStart("IsReplot: ")
+                                }
 
 
                            $StatLogPath = $logger.FullName
