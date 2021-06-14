@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.5.6.9.3.8
+Version: 1.0.9.5.6.9.3.9
 Author: Tydeno
 
 
@@ -1998,8 +1998,79 @@ function Remove-AbortedPlotoJobs
     Write-Host "PlotoRemoveAbortedJobs @"(Get-Date)": Found aborted Jobs to be deleted:"$JobsToAbort.JobId
     Write-Host "PlotoRemoveAbortedJobs @"(Get-Date)": Cleaning up..."
     $count = 0
+
+    $collectionWithJobsToReport= New-Object System.Collections.ArrayList
     foreach ($job in $JobsToAbort)
         {
+
+            $JobToReport = [PSCustomObject]@{
+            JobId     =  $job.jobid
+            StartTime = $job.Starttime
+            PlotId = $job.PlotId
+            ArgumentList = $job.ArgumentList
+            TempDrive = $job.TempDrive
+            OutDrive = $job.OutDrive
+            CompletionTime = $job.CompletionTime
+            CompletionTimeP1 = $job.CompletionTimeP1
+            CompletionTimeP2 = $job.CompletionTimeP2
+            CompletionTimeP3 = $job.CompletionTimeP3
+            CompletionTimeP4 = $job.CompletionTimeP4
+            EndDate = (Get-Date $job.StartTime).AddHours($job.CompletionTime)
+            }
+
+            #Send notification about spotted Job that is aborted
+            if ($EnableAlerts -eq $true)
+            {
+                #Create embed builder object via the [DiscordEmbed] class
+                $embedBuilder = [DiscordEmbed]::New(
+                                    'A job in progress was aborted.',
+                                    'Sorry to bother you but I want to let you know that I found an aborted Job. Claning it now.'
+                                )
+                $StaId = "ArgumentList"
+                $JobDetailsStartTimeMsg = $job.ArgumentList
+                $embedBuilder.AddField(
+                    [DiscordField]::New(
+                        $StaId,
+                        $JobDetailsStartTimeMsg, 
+                        $true
+                    )
+                )
+
+                $StaId = "StartTime"
+                $JobDetailsStartTimeMsg = $job.StartTime
+                $embedBuilder.AddField(
+                    [DiscordField]::New(
+                        $StaId,
+                        $JobDetailsStartTimeMsg, 
+                        $true
+                    )
+                )
+
+                #Add purple color
+                $embedBuilder.WithColor(
+                    [DiscordColor]::New(
+                        'red'
+                    )
+                )
+
+                $plotname = $config.PlotterName
+                $footie = "Ploto: "+$plotname
+                #Add a footer
+                $embedBuilder.AddFooter(
+                    [DiscordFooter]::New(
+                        $footie
+                    )
+                )
+
+                $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
+
+                Invoke-PsDsHook -CreateConfig $WebHookURL -Verbose:$false
+                Invoke-PSDsHook $embedBuilder -Verbose:$false
+                                    
+            }
+           
+           
+            
             Stop-PlotoJob -JobId $job.jobid
             Write-Host "-----------------------------------------------------------------------"
             $count++
