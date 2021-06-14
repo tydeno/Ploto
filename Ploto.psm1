@@ -1355,7 +1355,7 @@ function Start-PlotoSpawns
     try 
         {
             $config = Get-Content -raw -Path $PathToConfig | ConvertFrom-Json
-            Write-Host "PlotoManager @"(Get-Date)": Loaded config successfully" -ForegroundColor Green
+            Write-Host "PlotoManager @"(Get-Date)": Loaded config successfully." -ForegroundColor Green
         }
     catch
         {
@@ -1417,7 +1417,7 @@ function Start-PlotoSpawns
     $P2Singleton = $config.JobConfig.P2SingletonAdress
     $ksize = $config.JobConfig.KSizeToPlot
     $Buckets = $config.JobConfig.Buckets
-
+    Write-Host "--------------------------------------------------------------------------------------------------"
 
     Write-Host "PlotoManager @"(Get-Date)": BaseConfig:" -ForegroundColor Cyan
 
@@ -1459,6 +1459,7 @@ function Start-PlotoSpawns
     Write-Host "PlotoManager @"(Get-Date)": PoolKey:"$PoolKey -ForegroundColor DarkYellow
     Write-Host "PlotoManager @"(Get-Date)": FarmerKey:"$FarmerKey -ForegroundColor DarkYellow
     Write-Host "PlotoManager @"(Get-Date)": P2Singleton: "$P2Singleton  -ForegroundColor DarkYellow
+    Write-Host "--------------------------------------------------------------------------------------------------"
 
     if ($EnableFy -eq "true")
         {
