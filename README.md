@@ -14,6 +14,31 @@ And if you like, you may define an Intervall upon which Plotofy sends you notifi
 
 ![image](https://user-images.githubusercontent.com/83050419/118398002-f479d580-b656-11eb-82f7-a92a4a0af4a9.png)
 
+
+
+# Table of content
+* [Contact](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#contact)
+* [How you can support this project](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#how-you-can-support-this-project)
+* [Is it safe to use?](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#is-it-safe-to-use)
+* [How it works](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#plotospawn)
+   * [Understanding Plot and OutDrives](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#understanding-plot-and-outdrives)
+   * [About -2 drives](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#about--2-drives)
+   * [About parallelization on separate disks](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#about-parallelization-on-separate-disks)
+   * [About parallelization on the same disk](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#about-parallelization-on-the-same-disk)
+   * [About DIscord webhooks](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#alright-i-saw-that-discord-bot-picture-how-do-i-use-that)
+   * [Plotting with your Pool & Farmer Key](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#plotting-with-your-pool--farmer-key)
+   * [Plotting for pools](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#plotting-for-pools)
+   * [About replotting](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#about-replotting)
+   * [About running custom plotters](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#about-running-custom-plotters)
+   * [Status Codes and their meaning (Chia official plotter)]()
+   * [Status Codes and their meaning (madmax/stotik custom plotter)]()
+* [How to](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#prereqs)
+ 	* [Install Ploto](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#how-to-install-ploto)
+ 	* [Spawn Plots](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#how-to-spawn-plots)
+ 	* [Get Jobs](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#how-to-get-jobs)
+ 	* [Move Plots](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#how-to-move-plots)
+* [FAQ](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#faq)
+
 ## Contact
 For general chatting, issues and support of how to use Ploto, you may join the Discord below.
 If you find any bugs, do not hesitate to create or update an issue directly here in GitHub.
@@ -25,7 +50,6 @@ In case you'd like to to support the development of Ploto in a monetary way, you
 * XCH Adress: xch19ddu8lxgq2g6ssnk7kmexmwxazapvdt7fp8cekeun0cdm9jt6vxsqg30yt
 
 Or trough my [GitHub Sponsoring page](https://github.com/sponsors/tydeno)
-
 
 ## Is it safe to use? 
 We've seen some horrific stuff happening with 3rd Party Tools around a Chia. For instance
@@ -323,7 +347,7 @@ PID  Status       TempDrive OutDrive cpuUsagePercent memUsageMB PlotSizeOnDisk
 5444 3.6          Q:        D:                  3.29       2676 48.03 GB
 ```
 
-### Status Codes and their meaning
+### Status Codes and their meaning (Chia official plotter)
 See below for a definition of what phase coe is associated with which chia.exe log output.
 ```powershell
 "Starting plotting progress into temporary dirs:*" {$StatusReturn = "Initializing"}
@@ -354,6 +378,39 @@ See below for a definition of what phase coe is associated with which chia.exe l
 "Writing C2 table*" {$StatusReturn = "4.1"}
 "Time for phase 4*" {$StatusReturn = "4.2"}
 "Renamed final file*" {$StatusReturn = "Completed"}
+```
+
+### Status Codes and their meaning (madmax/stotik custom plotter)
+See below for a definition of what phase coe is associated with which chia.exe log output.
+```powershell
+"Process ID*" {$StatusReturn = "Initializing"}
+"Plot Name*" {$StatusReturn = "1.1"}
+"*P1] Table 1*" {$StatusReturn = "1.2"}
+"*P1] Table 2*" {$StatusReturn = "1.3"}
+"*P1] Table 3*" {$StatusReturn = "1.4"}
+"*P1] Table 4*" {$StatusReturn = "1.5"}
+"*P1] Table 5*" {$StatusReturn = "1.6"}
+"*P1] Table 6*" {$StatusReturn = "1.7"}
+"*P1] Table 7*" {$StatusReturn = "1.8"}
+"Phase 1 took*" {$StatusReturn = "2.0"}
+"*P2] Table 7 rewrite*" {$StatusReturn = "2.1"}
+"*P2] Table 6 rewrite*" {$StatusReturn = "2.2"}
+"*P2] Table 5 rewrite*" {$StatusReturn = "2.3"}
+"*P2] Table 4 rewrite*" {$StatusReturn = "2.4"}
+"*P2] Table 3 rewrite*" {$StatusReturn = "2.5"}
+"*P2] Table 2 rewrite*" {$StatusReturn = "2.6"}
+"Phase 2 took*" {$StatusReturn = "3.0"}
+"*P3-2] Table 2 rewrite took*" {$StatusReturn = "3.1"}
+"*P3-2] Table 3 rewrite took*" {$StatusReturn = "3.2"}
+"*P3-2] Table 4 rewrite took*" {$StatusReturn = "3.3"}
+"*P3-2] Table 5 rewrite took*" {$StatusReturn = "3.4"}
+"*P3-2] Table 6 rewrite took*" {$StatusReturn = "3.5"}
+"*P3-2] Table 7 rewrite took*" {$StatusReturn = "3.6"}
+"Phase 3 took*" {$StatusReturn = "4.0"}
+"*P4] Finished writing C2 table*" {$StatusReturn = "4.1"}
+"Phase 4 took*" {$StatusReturn = "4.2"}
+"Total plot creation*" {$StatusReturn = "4.2"}
+"Started copy*" {$StatusReturn = "4.3"}
 ```
 
 ## How to Stop Jobs
