@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 0.623
+Version: 0.625
 Author: Tydeno
 
 
@@ -158,34 +158,44 @@ Write-Host "InstallPloto @"(Get-Date)": Okay, next step is getting the config an
 
 Write-Host "InstallPloto @"(Get-Date)": Checking if we have new properties in config from new version..." -ForegroundColor Cyan
 
-    $installedcfg = Get-Content -raw -Path $env:HOMEDRIVE$env:HOMEPath"\.chia\mainnet\config\PlotoSpawnerConfig.json" | ConvertFrom-Json
-    $sourcecfg = Get-Content -raw -Path $scriptPath"\PlotoSpawnerConfig.json" | ConvertFrom-Json
+$pathtolchech = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
+ $sourcecfg = Get-Content -raw -Path $scriptPath"\PlotoSpawnerConfig.json" | ConvertFrom-Json
+if (Test-Path $pathtolchech  -eq $true)
+    {
+        $installedcfg = Get-Content -raw -Path $env:HOMEDRIVE$env:HOMEPath"\.chia\mainnet\config\PlotoSpawnerConfig.json" | ConvertFrom-Json
+        $contentEqual = ($sourcecfg | ConvertTo-Json -Depth 32 -Compress) -eq 
+                        ($installedcfg | ConvertTo-Json -Depth 32 -Compress)
 
-    $contentEqual = ($sourcecfg | ConvertTo-Json -Depth 32 -Compress) -eq 
-                    ($installedcfg | ConvertTo-Json -Depth 32 -Compress)
+        if ($contentEqual -eq $false)
+            {
+                $compare = Compare-Object (($sourcecfg | ConvertTo-Json -Depth 32) -split '\r?\n') `
+                        (($installedcfg | ConvertTo-Json -Depth 32) -split '\r?\n')
 
-    if ($contentEqual -eq $false)
-        {
-            $compare = Compare-Object (($sourcecfg | ConvertTo-Json -Depth 32) -split '\r?\n') `
-                    (($installedcfg | ConvertTo-Json -Depth 32) -split '\r?\n')
-
-            if ($compare -ne $null)
-                {
-                    Write-Host "InstallPloto @"(Get-Date)": We are missing some properties in installed config. Need to update." -ForegroundColor Yellow
-                    Write-Host "InstallPloto @"(Get-Date)": The following properties are missing in productive config:" -ForegroundColor Yellow         
+                if ($compare -ne $null)
+                    {
+                        Write-Host "InstallPloto @"(Get-Date)": We are missing some properties in installed config. Need to update." -ForegroundColor Yellow
+                        Write-Host "InstallPloto @"(Get-Date)": The following properties are missing in productive config:" -ForegroundColor Yellow         
                     
-                    foreach ($missingprop in $compare.inputobject)
-                        {
-                            Write-Host "InstallPloto @"(Get-Date)":"$missingprop -ForegroundColor Yellow
-                        }
+                        foreach ($missingprop in $compare.inputobject)
+                            {
+                                Write-Host "InstallPloto @"(Get-Date)":"$missingprop -ForegroundColor Yellow
+                            }
 
 
-                }
-            else
-                {
-                    Write-Host "InstallPloto @"(Get-Date)": We are NOT missing any properties in installed, productive config. NO need to update." -ForegroundColor Green 
-                }
-        }  
+                    }
+                else
+                    {
+                        Write-Host "InstallPloto @"(Get-Date)": We are NOT missing any properties in installed, productive config. NO need to update." -ForegroundColor Green 
+                    }
+            }  
+    }
+else
+    {
+         Write-Host "InstallPloto @"(Get-Date)": No productive config found among this usercontext."
+    }
+   
+
+
 
 $SkipCFG = Read-Host "InstallPloto: Do you want to set the config? If not, we skip that, because you alreay have one in place (eg. Yes or y)"
 
@@ -332,12 +342,6 @@ else
     }
     
 $PlotForPools = Read-Host "ConfigurePloto: Do you want to create poolable, portable plots? (eg: Yes or No)"
-if ($P2 -eq "" -or $P2 -eq " ")
-    {
-        $config.JobConfig | % {$_.PoolKey = $pk}
-        $config.JobConfig | % {$_.FarmerKey = $fk}
-    }
-
 
 
 if ($PlotForPools -eq "Yes" -or $PlotForPools -eq "y")
@@ -355,6 +359,8 @@ else
         {
             $pk = Read-host -Prompt "ConfigurePloto: Define your pool key (eg: 982192183012830173jdi832...)"
             $fk = Read-host -Prompt "ConfigurePloto: Define your farmer key (eg: dskofsjfias09eidaoufoj...)"
+            $config.JobConfig | % {$_.PoolKey = $pk}
+            $config.JobConfig | % {$_.FarmerKey = $fk}
         }    
     }
 
