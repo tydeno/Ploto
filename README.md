@@ -24,6 +24,9 @@ If you find any bugs, do not hesitate to create or update an issue directly here
 In case you'd like to to support the development of Ploto in a monetary way, you may donate in the currencies below with the according wallet adresses:
 * XCH Adress: xch19ddu8lxgq2g6ssnk7kmexmwxazapvdt7fp8cekeun0cdm9jt6vxsqg30yt
 
+Or trough my [GitHub Sponsoring page](https://github.com/sponsors/tydeno)
+
+
 ## Is it safe to use? 
 We've seen some horrific stuff happening with 3rd Party Tools around a Chia. For instance
 there was/is a PowerShell Script that should add some Introducers to your farm. It does that yes. But it also empties your wallet and sends your private keys home.
@@ -33,6 +36,8 @@ Never trust, always verify is the leading principle.
 
 So I encourage you to go trough the code in this repo, line by line to verify if it does something bad.
 If theres a line you don't understand do not hesitate to raise an issue and ask straight away.
+
+However, bear in mind that my identity is verified by Github trough the sponsoring program. They have my adress, tax and ID number and thus know exactly who I am. Doing bad things with my repo would be a very bad idea in that sense for myself.
 
 From a technical perspective, if you are cooncerned that your private keys and or wallet might be exposed to Ploto, you can mitigate that.
 Ploto only needs chia.exe to start PlotJobs. No private keys, no access to farmers/harvesters nor a wallet.
