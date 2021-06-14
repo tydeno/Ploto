@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.5.6.9.3.9
+Version: 1.0.9.5.6.9.3.9.1
 Author: Tydeno
 
 
@@ -1376,33 +1376,36 @@ function Start-PlotoSpawns
         } 
 
     #setting params from config 
-    [int]$IntervallToWait= $config.JobConfig.IntervallToCheckInMinutes
-    [int]$InputAmountToSpawn = $config.JobConfig.InputAmountToSpawn 
-    [int]$WaitTimeBetweenPlotOnSeparateDisks = $config.JobConfig.WaitTimeBetweenPlotOnSeparateDisks
-    [int]$WaitTimeBetweenPlotOnSameDisk = $config.JobConfig.WaitTimeBetweenPlotOnSameDisk
+    $EnableAlerts = $config.EnableAlerts
+    $WindowStyle = $config.ChiaWindowStyle
+    $EnableFy = $config.EnablePlotoFyOnStart
+    $Plotter = $config.PlotterUsed
+    $PathToUnofficialPlotter = $config.PathToUnofficialPlotter
+
+    [int]$IntervallToWait = $config.SpawnerConfig.IntervallToCheckInMinutes
+    [int]$InputAmountToSpawn = $config.SpawnerConfig.InputAmountToSpawn 
+    [int]$MaxParallelJobsOnAllDisks = $config.SpawnerConfig.MaxParallelJobsOnAllDisks
+    [int]$MaxParallelJobsOnSameDisk = $config.SpawnerConfig.MaxParallelJobsOnSameDisk
+    [int]$WaitTimeBetweenPlotOnSeparateDisks = $config.SpawnerConfig.WaitTimeBetweenPlotOnSeparateDisks
+    [int]$WaitTimeBetweenPlotOnSameDisk = $config.SpawnerConfig.WaitTimeBetweenPlotOnSameDisk
+    $MaxParallelJobsInPhase1OnSameDisk = $config.SpawnerConfig.MaxParallelJobsInPhase1OnSameDisk
+    $MaxParallelJobsInPhase1OnAllDisks = $config.SpawnerConfig.MaxParallelJobsInPhase1OnAllDisks
+    $StartEarly = $config.SpawnerConfig.StartEarly
+    $StartEarlyPhase = $config.SpawnerConfig.StartEarlyPhase
+    $Replot = $config.SpawnerConfig.ReplotForPool
+
     $OutDriveDenom = $config.DiskConfig.OutDriveDenom
     $TempDriveDenom = $config.DiskConfig.TempDriveDenom
     $t2denom = $config.DiskConfig.Temp2Denom
-    [int]$MaxParallelJobsOnAllDisks = $config.JobConfig.MaxParallelJobsOnAllDisks
-    [int]$MaxParallelJobsOnSameDisk = $config.JobConfig.MaxParallelJobsOnSameDisk
+    $ReplotDriveDenom = $config.DiskConfig.DenomForOutDrivesToReplotForPools
+
     [int]$BufferSize = $config.JobConfig.BufferSize
     [int]$Thread = $config.JobConfig.Thread
     $EnableBitfield = $config.JobConfig.Bitfield
-    $EnableAlerts = $config.EnableAlerts
-    $WindowStyle = $config.ChiaWindowStyle
     $FarmerKey = $config.JobConfig.FarmerKey
     $PoolKey = $config.JobConfig.PoolKey
-    $MaxParallelJobsInPhase1OnSameDisk = $config.JobConfig.MaxParallelJobsInPhase1OnSameDisk
-    $MaxParallelJobsInPhase1OnAllDisks = $config.JobConfig.MaxParallelJobsInPhase1OnAllDisks
-    $StartEarly = $config.JobConfig.StartEarly
-    $StartEarlyPhase = $config.JobConfig.StartEarlyPhase
-    $EnableFy = $config.EnablePlotoFyOnStart
     $P2Singleton = $config.JobConfig.P2SingletonAdress
-    $ReplotDriveDenom = $config.DiskConfig.DenomForOutDrivesToReplotForPools
-    $Replot = $config.JobConfig.ReplotForPool
     $ksize = $config.JobConfig.KSizeToPlot
-    $Plotter = $config.PlotterUsed
-    $PathToUnofficialPlotter = $config.PathToUnofficialPlotter
     $Buckets = $config.JobConfig.Buckets
 
     Write-Host "PlotoManager @"(Get-Date)": InputAmountToSpawn:" $InputAmountToSpawn
