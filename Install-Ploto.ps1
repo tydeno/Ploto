@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 0.5
+Version: 0.6
 Author: Tydeno
 
 
@@ -152,7 +152,41 @@ catch
      
     }
 
+
+
 Write-Host "InstallPloto @"(Get-Date)": Okay, next step is getting the config and setting it together with you..."
+
+Write-Host "InstallPloto @"(Get-Date)": Checking if we have new properties in config from new version..." -ForegroundColor Cyan
+
+    $installedcfg = Get-Content -raw -Path $env:HOMEDRIVE$env:HOMEPath"\.chia\mainnet\config\PlotoSpawnerConfig.json" | ConvertFrom-Json
+    $sourcecfg = Get-Content -raw -Path $scriptPath"\PlotoSpawnerConfig.json" | ConvertFrom-Json
+
+    $contentEqual = ($sourcecfg | ConvertTo-Json -Depth 32 -Compress) -eq 
+                    ($installedcfg | ConvertTo-Json -Depth 32 -Compress)
+
+    if ($contentEqual -eq $false)
+        {
+            $compare = Compare-Object (($sourcecfg | ConvertTo-Json -Depth 32) -split '\r?\n') `
+                    (($installedcfg | ConvertTo-Json -Depth 32) -split '\r?\n')
+
+            if ($compare -ne $null)
+                {
+                    Write-Host "InstallPloto @"(Get-Date)": We are missing some properties in installed config. Need to update." -ForegroundColor Yellow
+                    Write-Host "InstallPloto @"(Get-Date)": The following properties are missing in productive config:" -ForegroundColor Yellow         
+                    
+                    foreach ($missingprop in $compare.inputobject)
+                        {
+                            Write-Host "InstallPloto @"(Get-Date)":"$missingprop -ForegroundColor Yellow
+                        }
+
+
+                }
+            else
+                {
+                    Write-Host "InstallPloto @"(Get-Date)": We are NOT missing any properties in installed, productive config. NO need to update." -ForegroundColor Green 
+                }
+        }  
+
 $SkipCFG = Read-Host "InstallPloto: Do you want to set the config? If not, we skip that, because you alreay have one in place (eg. Yes or y)"
 
 If ($SkipCFG -eq "Yes" -or $SkipCFG -eq "y")
@@ -440,8 +474,10 @@ else
     }
 else
     {
-      Write-Host "InstallPloto @"(Get-Date)": We skipped setting the config. Only updated Ploto Module." -ForegroundColor Yellow  
+        Write-Host "InstallPloto @"(Get-Date)": We skipped setting the config. Only updated Ploto Module." -ForegroundColor Yellow
     }
+
+
 
 Write-Host "InstallPloto @"(Get-Date)": Ploto was installed correctly on this System." -ForegroundColor Green
 Write-Host "InstallPloto @"(Get-Date)": To launch it, start a PowerShell Session and run 'Start-PlotoSpawns'" 
