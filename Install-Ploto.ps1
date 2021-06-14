@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 0.6
+Version: 0.61
 Author: Tydeno
 
 
@@ -256,12 +256,12 @@ If ($EnableAlerts -eq "Yes" -or $EnableAlerts -eq "yes" -or $EnableAlerts -eq "y
 
         $WebhookURL = Read-Host -Prompt "Enter the WebhookURL of Discord where you want to receive alerts:"
         $config.SpawnerAlerts | % {$_.DiscordWebhookUrl = $WebhookURL}
-        $config.PlotoFyAlerts | % {$_.DiscordWebhookUrl = $WebhookURL}
 
         $PeriodToReport = Read-Host -Prompt "In what intervall in hours would you like to receive a summary? (eg: 0.5)"
         $config.SpawnerAlerts | % {$_.WhenJobSpawned = "true"}
         $config.SpawnerAlerts | % {$_.WhenNoOutDrivesAvailable = "true"}
         $config.SpawnerAlerts | % {$_.WhenJobCouldNotBeSpawned  = "true"}
+        $config.SpawnerAlerts | % {$_.PeriodOfReportInHours  = $PeriodToReport}
     }
 else
     {
@@ -303,7 +303,7 @@ $replot = Read-Host -Prompt "ConfigurePloto: Do you want to replot existing plot
 if ($replot -eq "Yes" -or $replot -eq "yes" -or $replot -eq "y")
      {
         Write-Host "ConfigurePloto: Will be replotting." -ForegroundColor Magenta
-        $config.JobConfig | % {$_.ReplotForPool = "true"}
+        $config.SpawnerConfig | % {$_.ReplotForPool = "true"}
         $replotDenom = Read-Host "Define your replot Denom (eg: redeploy)"
         $config.DiskConfig | % {$_.DenomForOutDrivesToReplotForPools = $replotDenom}
 
@@ -313,7 +313,7 @@ else
     {
         Write-Host "ConfigurePloto: Will not be replotting." -ForegroundColor Magenta
         $config.DiskConfig | % {$_.DenomForOutDrivesToReplotForPools = ""}   
-        $config.JobConfig | % {$_.ReplotForPool = "false"}
+        $config.SpawnerConfig | % {$_.ReplotForPool = "false"}
     }
     
 $PlotForPools = Read-Host "ConfigurePloto: Do you want to create poolable, portable plots? (eg: Yes or No)"
@@ -375,35 +375,35 @@ else
 
 
 $InputAmountToSpawn = Read-Host -Prompt "ConfigurePloto: How many plots do you want to be spawned overall? (eg: 1000)"
-$config.JobConfig | % {$_.InputAmounttoSpawn  = $InputAmountToSpawn}
+$config.SpawnerConfig | % {$_.InputAmounttoSpawn  = $InputAmountToSpawn}
 
 $IntervallToCheckIn = Read-Host -Prompt "ConfigurePloto: In what intervall do you want to check for new jobs in minutes? (eg: 5)"
-$config.JobConfig | % {$_.IntervallToCheckInMinutes = $IntervallToCheckIn}
+$config.SpawnerConfig | % {$_.IntervallToCheckInMinutes = $IntervallToCheckIn}
 
 $WaitSep = Read-Host -Prompt "ConfigurePloto: What stagger time do you want between jobs on separate disks in minutes? (eg. 15)"
-$config.JobConfig | % {$_.WaitTimeBetweenPlotOnSeparateDisks = $WaitSep}
+$config.SpawnerConfig | % {$_.WaitTimeBetweenPlotOnSeparateDisks = $WaitSep}
 
 $WaitSame = Read-Host -Prompt "ConfigurePloto: What stagger time do you want between jobs on same disks in minutes? (eg. 45)"
-$config.JobConfig | % {$_.WaitTimeBetweenPlotOnSameDisk = $WaitSame}
+$config.SpawnerConfig | % {$_.WaitTimeBetweenPlotOnSameDisk = $WaitSame}
 
 $MaxPa = Read-Host -Prompt "ConfigurePloto: How many Jobs do you want to be run max in parallel? (eg: 15)"
-$config.JobConfig | % {$_.MaxParallelJobsOnAllDisks = $MaxPa}
+$config.SpawnerConfig | % {$_.MaxParallelJobsOnAllDisks = $MaxPa}
 
 $MaxPaSame = Read-Host -Prompt "ConfigurePloto: How many Jobs do you want to be run max in parallel on the same disk? (eg: 3)"
-$config.JobConfig | % {$_.MaxParallelJobsOnSameDisk = $MaxPaSame}
+$config.SpawnerConfig | % {$_.MaxParallelJobsOnSameDisk = $MaxPaSame}
 
 $MaxP1 = Read-Host -Prompt "ConfigurePloto: How many Jobs do you want to be run max in parallel in phase 1? (eg: 9)"
-$config.JobConfig | % {$_.MaxParallelJobsInPhase1OnAllDisks = $MaxP1}
+$config.SpawnerConfig | % {$_.MaxParallelJobsInPhase1OnAllDisks = $MaxP1}
 
 $StartE = Read-Host -Prompt "ConfigurePloto: Do you want to start a new Job early? (eg: Yes or No)"
 If ($StartE -eq "Yes" -or $StartE -eq "yes" -or $StartE -eq "y")
     {
-        $config.JobConfig | % {$_.StartEarly = "true"}
-        $config.JobConfig | % {$_.StartEarlyPhase = "4"}
+        $config.SpawnerConfig | % {$_.StartEarly = "true"}
+        $config.SpawnerConfig | % {$_.StartEarlyPhase = "4"}
     }
 else
     {
-        $config.JobConfig | % {$_.StartEarly = "false"} 
+        $config.SpawnerConfig | % {$_.StartEarly = "false"} 
     }
 
 if ($PlotterToUse -ne "Stotik" -or $PlotterToUse -ne "stotik")

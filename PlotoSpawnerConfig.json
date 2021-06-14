@@ -18,9 +18,8 @@
     }
   ],
 
-  "JobConfig": [
+  "SpawnerConfig": [
       {
-        "KSizeToPlot": "32",
         "ReplotForPool": "true",
         "IntervallToCheckInMinutes": "5",
         "InputAmountToSpawn": "100", 
@@ -30,7 +29,13 @@
         "MaxParallelJobsOnSameDisk": "2",
         "MaxParallelJobsInPhase1OnAllDisks" : "4",
         "StartEarly": "true",
-        "StartEarlyPhase": "4",
+        "StartEarlyPhase": "4"
+          }
+    ],
+
+  "JobConfig": [
+      {
+        "KSizeToPlot": "32",
         "BufferSize": "3390",
         "Thread": "4",
         "Buckets": "128",
@@ -46,13 +51,7 @@
       "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxxxx",
       "WhenJobSpawned": "true",
       "WhenNoOutDrivesAvailable": "true",
-      "WhenJobCouldNotBeSpawned": "true"
-    }
-  ],
-
-  "PlotoFyAlerts": [
-    {
-      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxx",
+      "WhenJobCouldNotBeSpawned": "true",
       "PeriodOfReportInHours": "1"
     }
   ]
