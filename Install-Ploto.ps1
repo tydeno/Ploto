@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 0.61
+Version: 0.621
 Author: Tydeno
 
 
@@ -277,9 +277,20 @@ Write-Host "ConfigurePloto: Lets go over to the disk config..."
 
 $TempDriveDenom = Read-Host -Prompt "ConfigurePloto: Define your TempDrive Denom (eg: plot)"
 $config.DiskConfig | % {$_.TempDriveDenom = $TempDriveDenom}
+$tempdrives = Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom
+Write-Host "Will be using the following Drives as TempDrives:"
+foreach ($drive in $tempdrives)
+    {$drive}
+
 
 $OutDriveDenom = Read-Host -Prompt "ConfigurePloto: Define your OutDrive Denom (eg: out)"
 $config.DiskConfig | % {$_.OutDriveDenom = $OutDriveDenom}
+$outdrives = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom
+
+Write-Host "Will be using the following Drives as OutDrives:"
+foreach ($drive in $outdrives)
+    {$drive}
+
 
 
 $EnableT2 = Read-Host -Prompt "ConfigurePloto: Do you want to enable T2 drives? (eg: Yes or No)"
@@ -289,6 +300,11 @@ if ($EnableT2 -eq "Yes" -or $EnableT2 -eq "yes" -or $EnableT2 -eq "y")
     {
         $config.DiskConfig | % {$_.EnableT2 = "true"}
         $t2denom = Read-Host -Prompt "ConfigurePloto: Define your t2 drivedenom (eg: t2)"
+        $t2drives = Get-PlotoT2Drives -T2Denom $t2denom
+        Write-Host "Will be using the following Drives as T2Drives:"
+        foreach ($drive in $t2drives)
+            {$drive}
+
     }
 else
     {
@@ -297,6 +313,8 @@ else
     }
 
 $config.DiskConfig | % {$_.Temp2Denom = $t2denom}
+
+
 
 
 $replot = Read-Host -Prompt "ConfigurePloto: Do you want to replot existing plots? (eg: Yes or No)"
@@ -480,4 +498,5 @@ else
 
 
 Write-Host "InstallPloto @"(Get-Date)": Ploto was installed correctly on this System." -ForegroundColor Green
+
 Write-Host "InstallPloto @"(Get-Date)": To launch it, start a PowerShell Session and run 'Start-PlotoSpawns'" 
