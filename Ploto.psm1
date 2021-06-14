@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.5.6.9.3.6
+Version: 1.0.9.5.6.9.3.7
 Author: Tydeno
 
 
@@ -1891,26 +1891,28 @@ function Stop-PlotoJob
                     }               
             }     
 
-        
-        $T2FileArrayToDel = Get-ChildItem $job.T2Drive | Where-Object {$_.Name -like "*$PlotoIdToScramble*" -and $_.Extension -eq ".tmp"} 
-
-        If ($T2FileArrayToDel)
+        if ($job.T2Drive -ne $null -or $job.T2Drive -ne "None")
             {
-                Write-Host "PlotoStopJob @"(Get-Date)": Found .tmp files for this job to be deleted on T2 drive."
+                $T2FileArrayToDel = Get-ChildItem $job.T2Drive | Where-Object {$_.Name -like "*$PlotoIdToScramble*" -and $_.Extension -eq ".tmp"} 
 
-                try 
+                If ($T2FileArrayToDel)
                     {
-                        $T2FileArrayToDel | Remove-Item -Force
-                        Write-Host "PlotoStopJob @"(Get-Date)": Removed temp files on t2drive: "$Job.T2Drive -ForegroundColor Green   
-                    }
+                        Write-Host "PlotoStopJob @"(Get-Date)": Found .tmp files for this job to be deleted on T2 drive."
 
-                catch
-                    {
-                        Write-Host "PlotoStopJob @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red   
-                    }    
+                        try 
+                            {
+                                $T2FileArrayToDel | Remove-Item -Force
+                                Write-Host "PlotoStopJob @"(Get-Date)": Removed temp files on t2drive: "$Job.T2Drive -ForegroundColor Green   
+                            }
+
+                        catch
+                            {
+                                Write-Host "PlotoStopJob @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red   
+                            }    
             
+                    }
             }
-
+        
         #Remove logs
 
         if (Test-Path $Job.LogPath)
