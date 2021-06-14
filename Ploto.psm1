@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.5.6.9.5.3.2
+Version: 1.0.9.5.6.9.5.3.5
 Author: Tydeno
 
 
@@ -796,7 +796,6 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                 Add-Content -Path $LogPath1 -Value "ArgumentList: $ArgumentList"
                                                 Add-Content -Path $LogPath1 -Value "PlotterUsed: Chia Official"
 
-
                                                 $chiaexe = Start-Process $PathToChia -ArgumentList $ArgumentList -RedirectStandardOutput $LogPath -PassThru -WindowStyle $WindowStyle
                                                 $procid = $chiaexe.Id
                                                 Add-Content -Path $LogPath1 -Value "PID: $procid" -Force
@@ -1581,7 +1580,6 @@ foreach ($log in $logs)
                 $PlotterUsed = "Chia"
                 Write-Host "Get-PlotoJobs @"(Get-Date)": This Job has 'PlotterUsed' not set in LogStat. Was created using an old version." -ForegroundColor Yellow
                 Write-Host "Get-PlotoJobs @"(Get-Date)": Setting PlotterUsed in logstat to 'Chia'" -ForegroundColor Yellow
-                Add-Content -Path $StatLogToCheck -Value "PlotterUsed: Chia"
                 
 
             }
@@ -2076,6 +2074,7 @@ function Remove-AbortedPlotoJobs
                 {
                     $completiontime = $job.CompletionTime
                 }
+            $StartTime = Get-Date ($job.starttime)
 
             $JobToReport = [PSCustomObject]@{
             JobId     =  $job.jobid
@@ -2089,7 +2088,7 @@ function Remove-AbortedPlotoJobs
             CompletionTimeP2 = $job.CompletionTimeP2
             CompletionTimeP3 = $job.CompletionTimeP3
             CompletionTimeP4 = $job.CompletionTimeP4
-            EndDate = (Get-Date $job.StartTime).AddHours($completiontime)
+            EndDate = (Get-Date $StartTime).AddHours($completiontime)
             }
 
             #Send notification about spotted Job that is aborted
