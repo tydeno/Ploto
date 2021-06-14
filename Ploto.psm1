@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.5.6.9.5.3.8
+Version: 1.0.9.5.6.9.5.3.9
 Author: Tydeno
 
 
@@ -2411,7 +2411,7 @@ function Invoke-PlotoFyStatusReport
             Throw $_.Exception.Message
         } 
 
-    $ReportPeriod = $config.PlotoFyAlerts.PeriodOfReportInHours
+    $ReportPeriod = $config.SpawnerAlerts.PeriodOfReportInHours
 
     #get completed jobs in last X minutes
     $PeriodToCheck = (Get-Date).AddHours(-$ReportPeriod)
