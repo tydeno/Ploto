@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.5.6.9.5.3.5
+Version: 1.0.9.5.6.9.5.3.6
 Author: Tydeno
 
 
@@ -1641,7 +1641,7 @@ foreach ($log in $logs)
         If ($PlotterUsed -eq "Stotik" -or $PlotterUsed -eq "stotik")
             {
 
-            $patternStotik = @("P1] Table 1", "P1] Table 2", "P1] Table 3", "P1] Table 4", "P1] Table 5", "P1] Table 6", "P1] Table 7", "Phase 1 took", "P2] Table 7 rewrite", "P2] Table 6 rewrite", "P2] Table 5 rewrite", "P2] Table 4 rewrite", "P2] Table 3 rewrite", "P2] Table 2 rewrite", "P2] Phase 2 took", 'P3-2] Table 2 rewrite took', 'P3-2] Table 3 rewrite took', 'P3-2] Table 4 rewrite took', 'P3-2] Table 5 rewrite took', 'P3-2] Table 6 rewrite took', 'P3-2] Table 7 rewrite took', 'Phase 3 took', 'P4] Finished writing C2 table', "Phase 4 took", "Plot Name", "Process ID", "Total plot creation", "Started copy")
+            $patternStotik = @("P1] Table 1", "P1] Table 2", "P1] Table 3", "P1] Table 4", "P1] Table 5", "P1] Table 6", "P1] Table 7", "Phase 1 took", "P2] Table 7 rewrite", "P2] Table 6 rewrite", "P2] Table 5 rewrite", "P2] Table 4 rewrite", "P2] Table 3 rewrite", "P2] Table 2 rewrite", "P2] Phase 2 took", 'P3-2] Table 2 rewrite took', 'P3-2] Table 3 rewrite took', 'P3-2] Table 4 rewrite took', 'P3-2] Table 5 rewrite took', 'P3-2] Table 6 rewrite took', 'P3-2] Table 7 rewrite took', 'Phase 3 took', 'P4] Finished writing C2 table', "Phase 4 took", "Plot Name", "Process ID", "Total plot creation", "Started copy", "Copy to")
 
             $status = get-content ($PlotterBaseLogPath+"\"+$log.name) | Select-String -Pattern $patternStotik
             $ErrorActionPreference = "SilentlyContinue"
@@ -1685,6 +1685,7 @@ foreach ($log in $logs)
                     "Phase 4 took*" {$StatusReturn = "4.2"}
                     "Total plot creation*" {$StatusReturn = "4.2"}
                     "Started copy*" {$StatusReturn = "4.3"}
+                    "Copy to*" {$StatusReturn = "4.3"}
                     "Could not copy*" {$StatusReturn = "Error"}
 
                     default {$StatusReturn = "Could not fetch Status"}
