@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.5.6.9.5.3.6
+Version: 1.0.9.5.6.9.5.3.7
 Author: Tydeno
 
 
@@ -2530,7 +2530,7 @@ function Invoke-PlotoFyStatusReport
                     )
                 )
 
-                $WebHookURL = $config.PlotoFyAlerts.DiscordWebHookURL
+                $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
 
                 Invoke-PsDsHook -CreateConfig $WebHookURL 
                 Invoke-PSDsHook $embedBuilder     
