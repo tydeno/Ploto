@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.5.6.9.5.3.7
+Version: 1.0.9.5.6.9.5.3.8
 Author: Tydeno
 
 
@@ -1800,13 +1800,6 @@ foreach ($log in $logs)
 
                 }
   
-            if ($StatusReturn -eq "Could not fetch Status")
-                {
-
-                    $StatusReturn = "Aborted"
-                    $TimeToCompleteCalcInh = "None"
-                    $chiaPid = "None"   
-                }
             else
                 {
                     $ChiaProc = Get-Process -Id $chiaPid
