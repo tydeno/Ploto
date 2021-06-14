@@ -211,9 +211,10 @@ All ReplotJobs launchd, will use the the drives as OutDrive, that match the Repl
 ## About running custom plotters
 Ploto now supports custom plotters. This functionality was implemented to support madMAx43v3r's chia-plotter. It also allows to use sever other forks, like Stotiks and catchmeifyoucans release.
 
-To run a custom plotter, make sure you define "PlotterUsed: Stotik" in your config. Use the value "Stotitk" for all custome plotters.
+To run a custom plotter, make sure you define "PlotterUsed: Stotik" in your config. Use the value "Stotitk" for all custom plotters.
 Also make sure that you add the fullpath of the customplotter to the config. Then simply run Ploto as usually.
 
+When setting up your conifg; Take into consideration how your custom Plotter works!
 
 ## Prereqs
 The following prereqs need to be met in order for Ploto to function properly:
