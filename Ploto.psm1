@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.5.6.9.5.3.9
+Version: 1.0.9.5.6.9.5.4.6
 Author: Tydeno
 
 
@@ -1641,17 +1641,17 @@ foreach ($log in $logs)
         If ($PlotterUsed -eq "Stotik" -or $PlotterUsed -eq "stotik")
             {
 
-            $patternStotik = @("P1] Table 1", "P1] Table 2", "P1] Table 3", "P1] Table 4", "P1] Table 5", "P1] Table 6", "P1] Table 7", "Phase 1 took", "P2] Table 7 rewrite", "P2] Table 6 rewrite", "P2] Table 5 rewrite", "P2] Table 4 rewrite", "P2] Table 3 rewrite", "P2] Table 2 rewrite", "P2] Phase 2 took", 'P3-2] Table 2 rewrite took', 'P3-2] Table 3 rewrite took', 'P3-2] Table 4 rewrite took', 'P3-2] Table 5 rewrite took', 'P3-2] Table 6 rewrite took', 'P3-2] Table 7 rewrite took', 'Phase 3 took', 'P4] Finished writing C2 table', "Phase 4 took", "Plot Name", "Process ID", "Total plot creation", "Started copy", "Copy to")
+            $patternStotik = @("P1] Table 1", "P1] Table 2", "P1] Table 3", "P1] Table 4", "P1] Table 5", "P1] Table 6", "P1] Table 7", "Phase 1 took", "Phase 2 took", "P2] Table 7 rewrite", "P2] Table 6 rewrite", "P2] Table 5 rewrite", "P2] Table 4 rewrite", "P2] Table 3 rewrite", "P2] Table 2 rewrite", "P2] Phase 2 took", 'P3-2] Table 2 rewrite took', 'P3-2] Table 3 rewrite took', 'P3-2] Table 4 rewrite took', 'P3-2] Table 5 rewrite took', 'P3-2] Table 6 rewrite took', 'P3-2] Table 7 rewrite took', 'Phase 3 took', 'P4] Finished writing C2 table', "Phase 4 took", "Plot Name", "Process ID", "Total plot creation", "Started copy", "Copy to")
 
             $status = get-content ($PlotterBaseLogPath+"\"+$log.name) | Select-String -Pattern $patternStotik
             $ErrorActionPreference = "SilentlyContinue"
             $CurrentStatus = $status[($status.count-1)]
 
   
-            $CompletionTimeP1 = ($status -match "Phase 1 took").TrimStart("Phase 1 took  ")
-            $CompletionTimeP2 = ($status -match "Phase 2 took").TrimStart("Phase 2 took  ")
-            $CompletionTimeP3 = ($status -match "Phase 3 took").TrimStart("Phase 3 took  ")
-            $CompletionTimeP4 = ($status -match "Phase 4 took").TrimStart("Phase 4 took  ")
+            $CompletionTimeP1 = ($status -match "Phase 1 took").line.Split(" ")[3]
+            $CompletionTimeP2 = ($status -match "Phase 2 took").line.Split(" ")[3]
+            $CompletionTimeP3 = ($status -match "Phase 3 took").line.Split(" ")[3]
+            $CompletionTimeP4 = ($status -match "Phase 4 took").line.Split(" ")[3]
 
             $plotId = (($status -match "Plot Name:").line.Split("-"))[7]
 
@@ -1767,6 +1767,13 @@ foreach ($log in $logs)
                            $FileArrToCountSize = Get-ChildItem $OutDrive | Where-Object {$_.Name -like "*$PlotoIdToScramble*" -and $_.Extension -eq ".plot"} 
                            $SizeOnOutDisk = "{0:N2} GB" -f (($FileArrToCountSize | Measure-Object length -s).Sum /1GB)
 
+
+                           if ($t2drive -ne $null)
+                            {
+                               $FileArrToCountSize = Get-ChildItem $t2drive | Where-Object {$_.Name -like "*$PlotoIdToScramble*" -and $_.Extension -eq ".tmp"} 
+                               $SizeOnT2Disk = "{0:N2} GB" -f (($FileArrToCountSize | Measure-Object length -s).Sum /1GB)
+                            }
+
                            if ($PerfCounter)
                             {
                                if ($StatusReturn -ne "4.3" -or $StatusReturn -ne "Completed")
@@ -1791,13 +1798,21 @@ foreach ($log in $logs)
             #Set certian properties when is Complete
             if ($StatusReturn -eq "4.3")
                 {
-                    $TimeToComplete = ($status -match "Total time").line.Split("=").Split(" ")[4]
-                    $TimeToCompleteCalcInh = ($TimeToComplete / 60) / 60
+                if ($PlotterUsed -eq "Chia" -or $PlotterUsed -eq "chia")
+                    {
+                        $TimeToComplete = ($status -match "Total time").line.Split("=").Split(" ")[4]
+                    }
+                if ($PlotterUsed -eq "Stotik" -or $PlotterUsed -eq "stotik")
+                    {
+                        $TimeToComplete = ($status -match "Total plot").line.Split(" ")[5]
+                    }
+
+                    #$TimeToCompleteCalcInh = ($TimeToComplete / 60) / 60
+                    $TimeToCompleteCalcInh =  [Math]::round((($TimeToComplete / 60) / 60),3)
                     $EndDate = (Get-Date $StartTime).AddHours($TimeToCompleteCalcInh)
 
                     $StatusReturn =  "Completed"
                     $chiaPid = "None"
-
                 }
   
             else
@@ -1814,7 +1829,6 @@ foreach ($log in $logs)
                         {
                             $TimeToCompleteCalcInh = "Still in progress"
                         }                        
-
                 }
 
 
@@ -1837,6 +1851,7 @@ foreach ($log in $logs)
                 }
 
 
+
             if ($PerfCounter)
                 {
                     #Getting Plot Object Ready
@@ -1849,6 +1864,7 @@ foreach ($log in $logs)
                     OutDrive = $OutDrive
                     PID = $chiaPid
                     PlotSizeOnTempDisk = $SizeOnDisk
+                    PlotSizeOnT2Disk = $SizeOnT2Disk
                     PlotSizeOnOutDisk = $SizeOnOutDisk
                     cpuUsage = $cpuUsage
                     memUsage = $MemUsage
@@ -1867,7 +1883,6 @@ foreach ($log in $logs)
                     IsReplot = $IsReplot
                     PlotterUsed = $PlotterUsed
                     }
-                
                 }
 
             else
@@ -1882,6 +1897,7 @@ foreach ($log in $logs)
                     OutDrive = $OutDrive
                     PID = $chiaPid
                     PlotSizeOnTempDisk = $SizeOnDisk
+                    PlotSizeOnT2Disk = $SizeOnT2Disk
                     PlotSizeOnOutDisk = $SizeOnOutDisk
                     ArgumentList = $ArgumentList
                     PlotId = $plotId
@@ -1898,7 +1914,6 @@ foreach ($log in $logs)
                     IsReplot = $IsReplot
                     PlotterUsed = $PlotterUsed
                     }
-
                 }
       
         if ($PerfCounter -and $StatusReturn -eq "Completed")
@@ -1926,11 +1941,8 @@ foreach ($log in $logs)
         $CompletionTimeP4 = $null
     }
 
-
 $ErrorActionPreference = "Continue"
-
 $output = $collectionWithPlotJobsOut | Sort-Object Status
-
 return $output
 
 }
@@ -2496,7 +2508,8 @@ function Invoke-PlotoFyStatusReport
                     }
 
                 $AvgDur = ($collectionWithJobsToReport | Measure-Object -Property CompletionTime -Average).Average
-                $AvgDur = [math]::Floor($AvgDur)
+                $AvgDur = [math]::Round($AvgDur,3)
+
                 $JobsAvgDurMsg = "It took "+$AvgDur+" (floored value) hours to complete a plot on average in that period."
                 $embedBuilder.AddField(
                     [DiscordField]::New(
@@ -2604,7 +2617,7 @@ function Invoke-PlotoFyStatusReport
                     )
                 )
 
-                $WebHookURL = $config.PlotoFyAlerts.DiscordWebHookURL
+                $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
 
                 Invoke-PsDsHook -CreateConfig $WebHookURL 
                 Invoke-PSDsHook $embedBuilder     
@@ -2646,7 +2659,7 @@ function Invoke-PlotoFyStatusReport
                     )
                 )
 
-                $WebHookURL = $config.PlotoFyAlerts.DiscordWebHookURL
+                $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
 
                 Invoke-PsDsHook -CreateConfig $WebHookURL 
                 Invoke-PSDsHook $embedBuilder     
@@ -2657,102 +2670,7 @@ function Invoke-PlotoFyStatusReport
                 Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
             }
         }
-    
-    else
-        {
-            if ($jip -ne 0)
-                {
-                    $SummaryHeader = "Plotting Summary for Jobs in Progress for "+$ReportPeriod+" hours" 
-                    $SummaryVal = "PlotoFy calling in, as you wished. Unfortunately, we did not complete any jobs in the last "+$config.PlotoFyAlerts.PeriodOfReportInHours+"hour. However, we do have Jobs in progress."
-                    $color = "green"
-                }
-            else 
-                {
-                    $SummaryHeader = "Summary Report for "+$ReportPeriod+" hours. Nothing going on"
-                    $SummaryVal = "PlotoFy calling in, as you wished. Unfortunately, we did not complete any jobs in the last "+$config.PlotoFyAlerts.PeriodOfReportInHours+"hour. And there are no jobs in Progress. Is Ploto running at all?"
-                    $color = "red"
-                }
-            
-            try 
-            {                
-                #Create embed builder object via the [DiscordEmbed] class
-                $embedBuilder = [DiscordEmbed]::New(
-                                    $SummaryHeader,
-                                    $SummaryVal
-                                )
-                $countjie = 0
-                foreach ($ji in $jops)
-                {
-                    $countjie++
-                    $ArgId = "ArgumentList Job "+$countjie
-                    $JobDetailsArgListMsg = $ji.ArgumentList.TrimStart("plots create ")
-                    $embedBuilder.AddField(
-                        [DiscordField]::New(
-                            $ArgId,
-                            $JobDetailsArgListMsg, 
-                            $true
-                        )
-                    )
-                    $StaId = "StartTime Job "+$countjie
-                    $JobDetailsStartTimeMsg = $ji.StartTime
-                    $embedBuilder.AddField(
-                        [DiscordField]::New(
-                            $StaId,
-                            $JobDetailsStartTimeMsg, 
-                            $true
-                        )
-                    )
-
-                    $EndId = "Phase"+$countjie
-                    $JobDetailsStatMsg = $ji.Status
-                    $embedBuilder.AddField(
-                        [DiscordField]::New(
-                            $EndId,
-                            $JobDetailsStatMsg, 
-                            $true
-                        )
-                    )                
-                }
-
-                $embedBuilder.AddField(
-                    [DiscordField]::New(
-                        'Total Jobs in progress',
-                        $jip, 
-                        $true
-                    )
-                )
-
-                #Add purple color
-                $embedBuilder.WithColor(
-                    [DiscordColor]::New(
-                        $color
-                    )
-                )
-
-                $plotname = $config.PlotterName
-                $footie = "Ploto: "+$plotname
-
-                #Add a footer
-                $embedBuilder.AddFooter(
-                    [DiscordFooter]::New(
-                        $footie
-                    )
-                )
-
-                $WebHookURL = $config.PlotoFyAlerts.DiscordWebHookURL
-
-                Invoke-PsDsHook -CreateConfig $WebHookURL 
-                Invoke-PSDsHook $embedBuilder     
-            }
-            catch
-            {
-                Write-Host "PlotoSpawner @"(Get-Date)": ERROR! Could not send Discord API Call or received Bad request" -ForegroundColor Red
-                Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
-            }
-
-
-        }
-
+   
     
     return $collectionWithJobsToReport
 }
