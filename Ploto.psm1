@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.5.6.9.5.4.6
+Version: 1.0.9.5.6.9.5.4.7
 Author: Tydeno
 
 
@@ -2692,7 +2692,7 @@ function Request-PlotoFyStatusReport
                 } 
         Invoke-PlotoFyStatusReport
         
-        $sleep = $config.PlotoFyAlerts.PeriodOfReportInHours
+        $sleep = $config.SpawnerAlerts.PeriodOfReportInHours
         Write-Host "Sleep defined in config in h:"$sleep
         $Sleep2 = ($sleep -as [decimal])*(60*60)
         Write-Host "Sleeping for:"$Sleep2 "seconds..."
