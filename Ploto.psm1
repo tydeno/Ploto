@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.5.6.9.5.5
+Version: 1.0.9.5.6.9.5.8
 Author: Tydeno
 
 
@@ -788,13 +788,13 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                         Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Calculated path to chia.exe: "+$PathToChia)
              
                                         $baseArgs = "plots create -k 32 -b "+$BufferSize
-                                        $ArgumentList = $baseArgs+$ArgumentList
+                                        $ArgumentList = $baseArgs+" "+$ArgumentList
                                         try 
                                             {
                                                 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Launching chia.exe with params.")
                                                 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Using ArgumentList:"+$ArgumentList)
                                                 Add-Content -Path $LogPath1 -Value "ArgumentList: $ArgumentList"
-                                                Add-Content -Path $LogPath1 -Value "PlotterUsed: Chia Official"
+                                                Add-Content -Path $LogPath1 -Value "PlotterUsed: Chia"
 
                                                 $chiaexe = Start-Process $PathToChia -ArgumentList $ArgumentList -RedirectStandardOutput $LogPath -PassThru -WindowStyle $WindowStyle
                                                 $procid = $chiaexe.Id
@@ -2485,7 +2485,22 @@ function Invoke-PlotoFyStatusReport
                     {
                         $counter++
                         $ArgId = "ArgumentList Job "+$counter
-                        $JobDetailsArgListMsg = $j.ArgumentList.TrimStart("plots create ")
+                        
+                        $countchars = ($j.ArgumentList.ToCharArray()).Count
+                        if ($countchars -gt 199)
+                            {
+                                $arglistun = $j.ArgumentList
+                                $ArgumentList = $arglistun -replace ".{199}$"
+                                $exArgs = "-f YourKeys -p YourKeys"
+                                $JobDetailsArgListMsg = $ArgumentList+$exArgs
+                            }
+                        else
+                            {
+                                 $JobDetailsArgListMsg = $j.ArgumentList.TrimStart("plots create ")
+                            }
+
+
+                       
                         $embedBuilder.AddField(
                             [DiscordField]::New(
                                 $ArgId,
