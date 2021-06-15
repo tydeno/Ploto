@@ -1,9 +1,8 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.5.6.9.5.8
+Version: 1.1
 Author: Tydeno
-
 
 .DESCRIPTION
 A basic Windows PowerShell based Chia Plotting Manager. Cause I was tired of spawning them myself. Basically spawns and moves Plots around.
