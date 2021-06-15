@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.0.9.5.6.9.5.4.7
+Version: 1.0.9.5.6.9.5.5
 Author: Tydeno
 
 
@@ -1848,6 +1848,13 @@ foreach ($log in $logs)
             else
                 {
                     $IsReplot = "false"
+                }
+            $countchars = ($ArgumentList.ToCharArray()).Count
+            if ($countchars -gt 199)
+                {
+                    $ArgumentList = $ArgumentList -replace ".{199}$"
+                    $exArgs = "-f YourKeys -p YourKeys"
+                    $ArgumentList = $ArgumentList+$exArgs
                 }
 
 
