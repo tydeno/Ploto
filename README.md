@@ -134,13 +134,9 @@ When there is one available, Ploto determines the best OutDrive (most free space
 Ploto iterates once through all available TempDrives and spawns a plot per each TempDrive (as long as enough OutDrive space is given).
 After that, Ploto checks if amount Spawned is equal as defined as input. If not, Ploto keeps going until it is.
 
-### Understanding Plot and OutDrives
+### Understanding Plot and OutDrive denominators
 PlotoSpawner identifies your drives for temping and storing plots by a common denominator you specify. 
 This means that all drives that match that denominator, will be used as either Temp or OutDrive.
-
-IMPORTANT: Ploto Assumes you Plot in the root of your Drives and that the Drives are dedicated to plotting. So make sure you do that aswell.
-It may work when the drives contains other data but, but Ploto was designed for empty, plot-only drives.
-EDIT: I noticed I have a folder in my Q:\ drive with some data. So it seems to work. 
 
 For reference heres my setup:
 * CPU: i9-9900k
@@ -163,6 +159,11 @@ For reference heres my setup:
 |ChiaOut 2 | D:\ | SATA HDD | 465 GB
 
 So my denominators for my TempDrives its "plot" and for my destination drives its "out".
+This means that all my drives, that have "out" in their name (name of volume of logical disk) will be used as "OutDrives" (-d). And all drives that have "plot" in their name will be used as tempdrives (-t).
+
+IMPORTANT: Ploto Assumes you Plot in the root of your Drives and that the Drives are dedicated to plotting. So make sure you do that aswell.
+It may work when the drives contains other data but, but Ploto was designed for empty, plot-only drives.
+EDIT: I noticed I have a folder in my Q:\ drive with some data. So it seems to work. 
 
 ### About -2 drives
 Ploto now supports -2 drives. You define them just like plot and tempdrives. On each Job Ploto checks if a -2 drive is plottable. If yes, it spawns the job using that -2 drive. If not, it spawns the job without the drive. 
