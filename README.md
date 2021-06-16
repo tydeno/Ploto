@@ -21,7 +21,7 @@ And if you like, you may define an Intervall upon which Plotofy sends you notifi
 * [How you can support this project](https://github.com/tydeno/Ploto/tree/main#how-you-can-support-this-project)
 * [Is it safe to use?](https://github.com/tydeno/Ploto/tree/main#is-it-safe-to-use)
 * [How it works](https://github.com/tydeno/Ploto/tree/main#plotospawn)
-   * [Understanding Plot and OutDrives](https://github.com/tydeno/Ploto/tree/main#understanding-plot-and-outdrives)
+   * [Understanding Plot and OutDrives](https://github.com/tydeno/Ploto/tree/main#understanding-plot-and-outdrive-denominators)
    * [About -2 drives](https://github.com/tydeno/Ploto/tree/main#about--2-drives)
    * [About parallelization on separate disks](https://github.com/tydeno/Ploto/tree/main#about-parallelization-on-separate-disks)
    * [About parallelization on the same disk](https://github.com/tydeno/Ploto/tree/main#about-parallelization-on-the-same-disk)
