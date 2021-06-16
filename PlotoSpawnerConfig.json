@@ -1,10 +1,11 @@
 {
-  "PlotterName": "",
-  "EnableAlerts": "",
-  "EnablePlotoFyOnStart": "",
-  "ChiaWindowStyle": "",
-  "PathToPloto": "",
- 
+  "PlotterName": "SirNotPlotAlot",
+  "PlotterUsed": "Stotik",
+  "PathToUnofficialPlotter": "...\\chia_plot.exe",
+  "EnableAlerts": "false",
+  "EnablePlotoFyOnStart": "true",
+  "ChiaWindowStyle": "normal",
+  "PathToPloto": "C:/Users/Tydeno/Desktop/Ploto/Ploto.psm1",
 
   "DiskConfig": [
     {
@@ -16,10 +17,9 @@
     }
   ],
 
-  "JobConfig": [
+  "SpawnerConfig": [
       {
-        "KSizeToPlot": "32",
-        "ReplotForPool": "true",
+        "ReplotForPool": "false",
         "IntervallToCheckInMinutes": "5",
         "InputAmountToSpawn": "100", 
         "WaitTimeBetweenPlotOnSeparateDisks": "15",
@@ -28,9 +28,16 @@
         "MaxParallelJobsOnSameDisk": "2",
         "MaxParallelJobsInPhase1OnAllDisks" : "4",
         "StartEarly": "true",
-        "StartEarlyPhase": "4",
-        "BufferSize": "3390",
+        "StartEarlyPhase": "4"
+      }
+    ],
+
+  "JobConfig": [
+      {
+        "KSizeToPlot": "32",
+        "BufferSize": "",
         "Thread": "4",
+        "Buckets": "128",
         "Bitfield": "true",
         "FarmerKey": "",
         "PoolKey": "",
@@ -43,13 +50,7 @@
       "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxxxx",
       "WhenJobSpawned": "true",
       "WhenNoOutDrivesAvailable": "true",
-      "WhenJobCouldNotBeSpawned": "true"
-    }
-  ],
-
-  "PlotoFyAlerts": [
-    {
-      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxx",
+      "WhenJobCouldNotBeSpawned": "true",
       "PeriodOfReportInHours": "1"
     }
   ]

@@ -14,6 +14,31 @@ And if you like, you may define an Intervall upon which Plotofy sends you notifi
 
 ![image](https://user-images.githubusercontent.com/83050419/118398002-f479d580-b656-11eb-82f7-a92a4a0af4a9.png)
 
+
+
+# Table of content
+* [Contact](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#contact)
+* [How you can support this project](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#how-you-can-support-this-project)
+* [Is it safe to use?](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#is-it-safe-to-use)
+* [How it works](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#plotospawn)
+   * [Understanding Plot and OutDrives](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#understanding-plot-and-outdrives)
+   * [About -2 drives](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#about--2-drives)
+   * [About parallelization on separate disks](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#about-parallelization-on-separate-disks)
+   * [About parallelization on the same disk](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#about-parallelization-on-the-same-disk)
+   * [About DIscord webhooks](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#alright-i-saw-that-discord-bot-picture-how-do-i-use-that)
+   * [Plotting with your Pool & Farmer Key](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#plotting-with-your-pool--farmer-key)
+   * [Plotting for pools](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#plotting-for-pools)
+   * [About replotting](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#about-replotting)
+   * [About running custom plotters](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#about-running-custom-plotters)
+   * [Status Codes and their meaning (Chia official plotter)]()
+   * [Status Codes and their meaning (madmax/stotik custom plotter)]()
+* [How to](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#prereqs)
+ 	* [Install Ploto](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#how-to-install-ploto)
+ 	* [Spawn Plots](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#how-to-spawn-plots)
+ 	* [Get Jobs](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#how-to-get-jobs)
+ 	* [Move Plots](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#how-to-move-plots)
+* [FAQ](https://github.com/tydeno/Ploto/tree/testing-stotikmadmax#faq)
+
 ## Contact
 For general chatting, issues and support of how to use Ploto, you may join the Discord below.
 If you find any bugs, do not hesitate to create or update an issue directly here in GitHub.
@@ -24,6 +49,8 @@ If you find any bugs, do not hesitate to create or update an issue directly here
 In case you'd like to to support the development of Ploto in a monetary way, you may donate in the currencies below with the according wallet adresses:
 * XCH Adress: xch19ddu8lxgq2g6ssnk7kmexmwxazapvdt7fp8cekeun0cdm9jt6vxsqg30yt
 
+Or trough my [GitHub Sponsoring page](https://github.com/sponsors/tydeno)
+
 ## Is it safe to use? 
 We've seen some horrific stuff happening with 3rd Party Tools around a Chia. For instance
 there was/is a PowerShell Script that should add some Introducers to your farm. It does that yes. But it also empties your wallet and sends your private keys home.
@@ -33,6 +60,8 @@ Never trust, always verify is the leading principle.
 
 So I encourage you to go trough the code in this repo, line by line to verify if it does something bad.
 If theres a line you don't understand do not hesitate to raise an issue and ask straight away.
+
+However, bear in mind that my identity is verified by Github trough the sponsoring program. They have my adress, tax and ID number and thus know exactly who I am. Doing bad things with my repo would be a very bad idea in that sense for myself.
 
 From a technical perspective, if you are cooncerned that your private keys and or wallet might be exposed to Ploto, you can mitigate that.
 Ploto only needs chia.exe to start PlotJobs. No private keys, no access to farmers/harvesters nor a wallet.
@@ -200,7 +229,6 @@ To create portable pool plots, we need to use the param "P2Singleton" in the con
 Therefore we need to create a singleton that points to a pool first, and then we can start plotting. 
 If you want to plot portable pools, make sure FarmerKey and PoolKey are NOT specified in the config, as this will mess thing up
 
-
 ### About replotting
 Ploto now supports the ability to replot existing drives. This assumes you have one or more drives with final plots that are actively being farmed.
 If you now launch Ploto with 'Replot: "true"' and your denom for your ReplotDrives (drives you want to replot), the following will happen:
@@ -208,6 +236,14 @@ If you now launch Ploto with 'Replot: "true"' and your denom for your ReplotDriv
 2.) If there is a job entering phase 4 with "IsReplot=True", it deletes the oldest plot on the drive, the replotJob uses as OutDrive.
 
 All ReplotJobs launchd, will use the the drives as OutDrive, that match the ReplotDriveDenom. So if you replot, make sure you set the InputAmountToSpawn to exactly the number of Plots you want to Replot. Currently Ploto does not know with which keys/singletons a Plot was plotted. So it keeps going and potentially deletes already replotted jobs, if InputAmountToSpawn is too high. This can lead to unneccesary wear & tear.
+
+## About running custom plotters
+Ploto now supports custom plotters. This functionality was implemented to support madMAx43v3r's chia-plotter. It also allows to use sever other forks, like Stotiks and catchmeifyoucans release.
+
+To run a custom plotter, make sure you define "PlotterUsed: Stotik" in your config. Use the value "Stotitk" for all custom plotters.
+Also make sure that you add the fullpath of the customplotter to the config. Then simply run Ploto as usually.
+
+When setting up your conifg; Take into consideration how your custom Plotter works!
 
 ## Prereqs
 The following prereqs need to be met in order for Ploto to function properly:
@@ -311,7 +347,7 @@ PID  Status       TempDrive OutDrive cpuUsagePercent memUsageMB PlotSizeOnDisk
 5444 3.6          Q:        D:                  3.29       2676 48.03 GB
 ```
 
-### Status Codes and their meaning
+### Status Codes and their meaning (Chia official plotter)
 See below for a definition of what phase coe is associated with which chia.exe log output.
 ```powershell
 "Starting plotting progress into temporary dirs:*" {$StatusReturn = "Initializing"}
@@ -342,6 +378,39 @@ See below for a definition of what phase coe is associated with which chia.exe l
 "Writing C2 table*" {$StatusReturn = "4.1"}
 "Time for phase 4*" {$StatusReturn = "4.2"}
 "Renamed final file*" {$StatusReturn = "Completed"}
+```
+
+### Status Codes and their meaning (madmax/stotik custom plotter)
+See below for a definition of what phase coe is associated with which chia.exe log output.
+```powershell
+"Process ID*" {$StatusReturn = "Initializing"}
+"Plot Name*" {$StatusReturn = "1.1"}
+"*P1] Table 1*" {$StatusReturn = "1.2"}
+"*P1] Table 2*" {$StatusReturn = "1.3"}
+"*P1] Table 3*" {$StatusReturn = "1.4"}
+"*P1] Table 4*" {$StatusReturn = "1.5"}
+"*P1] Table 5*" {$StatusReturn = "1.6"}
+"*P1] Table 6*" {$StatusReturn = "1.7"}
+"*P1] Table 7*" {$StatusReturn = "1.8"}
+"Phase 1 took*" {$StatusReturn = "2.0"}
+"*P2] Table 7 rewrite*" {$StatusReturn = "2.1"}
+"*P2] Table 6 rewrite*" {$StatusReturn = "2.2"}
+"*P2] Table 5 rewrite*" {$StatusReturn = "2.3"}
+"*P2] Table 4 rewrite*" {$StatusReturn = "2.4"}
+"*P2] Table 3 rewrite*" {$StatusReturn = "2.5"}
+"*P2] Table 2 rewrite*" {$StatusReturn = "2.6"}
+"Phase 2 took*" {$StatusReturn = "3.0"}
+"*P3-2] Table 2 rewrite took*" {$StatusReturn = "3.1"}
+"*P3-2] Table 3 rewrite took*" {$StatusReturn = "3.2"}
+"*P3-2] Table 4 rewrite took*" {$StatusReturn = "3.3"}
+"*P3-2] Table 5 rewrite took*" {$StatusReturn = "3.4"}
+"*P3-2] Table 6 rewrite took*" {$StatusReturn = "3.5"}
+"*P3-2] Table 7 rewrite took*" {$StatusReturn = "3.6"}
+"Phase 3 took*" {$StatusReturn = "4.0"}
+"*P4] Finished writing C2 table*" {$StatusReturn = "4.1"}
+"Phase 4 took*" {$StatusReturn = "4.2"}
+"Total plot creation*" {$StatusReturn = "4.2"}
+"Started copy*" {$StatusReturn = "4.3"}
 ```
 
 ## How to Stop Jobs

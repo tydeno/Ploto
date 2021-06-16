@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 0.4
+Version: 0.625
 Author: Tydeno
 
 
@@ -105,7 +105,7 @@ else
     }
 
 
-Write-Host "InstallPloto @"(Get-Date)": Lets check the current set Execution Policy..."
+Write-Host "InstallPloto @"(Get-Date)": Lets check the current set Execution Policy..." -ForegroundColor Cyan
 $ExecPolicy = Get-ExecutionPolicy
 Write-Host "InstallPloto @"(Get-Date)": Execution Policy is set to: "$ExecPolicy
 
@@ -152,7 +152,51 @@ catch
      
     }
 
+
+
 Write-Host "InstallPloto @"(Get-Date)": Okay, next step is getting the config and setting it together with you..."
+
+Write-Host "InstallPloto @"(Get-Date)": Checking if we have new properties in config from new version..." -ForegroundColor Cyan
+
+$pathtolchech = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
+ $sourcecfg = Get-Content -raw -Path $scriptPath"\PlotoSpawnerConfig.json" | ConvertFrom-Json
+if (Test-Path $pathtolchech)
+    {
+        $installedcfg = Get-Content -raw -Path $env:HOMEDRIVE$env:HOMEPath"\.chia\mainnet\config\PlotoSpawnerConfig.json" | ConvertFrom-Json
+        $contentEqual = ($sourcecfg | ConvertTo-Json -Depth 32 -Compress) -eq 
+                        ($installedcfg | ConvertTo-Json -Depth 32 -Compress)
+
+        if ($contentEqual -eq $false)
+            {
+                $compare = Compare-Object (($sourcecfg | ConvertTo-Json -Depth 32) -split '\r?\n') `
+                        (($installedcfg | ConvertTo-Json -Depth 32) -split '\r?\n')
+
+                if ($compare -ne $null)
+                    {
+                        Write-Host "InstallPloto @"(Get-Date)": We are missing some properties in installed config. Need to update." -ForegroundColor Yellow
+                        Write-Host "InstallPloto @"(Get-Date)": The following properties are missing in productive config:" -ForegroundColor Yellow         
+                    
+                        foreach ($missingprop in $compare.inputobject)
+                            {
+                                Write-Host "InstallPloto @"(Get-Date)":"$missingprop -ForegroundColor Yellow
+                            }
+
+
+                    }
+                else
+                    {
+                        Write-Host "InstallPloto @"(Get-Date)": We are NOT missing any properties in installed, productive config. NO need to update." -ForegroundColor Green 
+                    }
+            }  
+    }
+else
+    {
+         Write-Host "InstallPloto @"(Get-Date)": No productive config found among this usercontext."
+    }
+   
+
+
+
 $SkipCFG = Read-Host "InstallPloto: Do you want to set the config? If not, we skip that, because you alreay have one in place (eg. Yes or y)"
 
 If ($SkipCFG -eq "Yes" -or $SkipCFG -eq "y")
@@ -209,7 +253,7 @@ if ($config.PathToPloto -eq "C:/Users/Tydeno/Desktop/Ploto/Ploto.psm1" -or $conf
 
 
 Write-Host "-------------------------------------"
-Write-Host "ConfigurePloto: Lets go over to the basic config..."
+Write-Host "ConfigurePloto: Lets go over to the basic config..." -ForegroundColor Cyan
 
 $PlotterName = Read-Host -Prompt "ConfigurePloto: Enter the name of your plotter (eg: SirNotPlotAlot)"
 $config.PlotterName = $PlotterName
@@ -222,12 +266,12 @@ If ($EnableAlerts -eq "Yes" -or $EnableAlerts -eq "yes" -or $EnableAlerts -eq "y
 
         $WebhookURL = Read-Host -Prompt "Enter the WebhookURL of Discord where you want to receive alerts:"
         $config.SpawnerAlerts | % {$_.DiscordWebhookUrl = $WebhookURL}
-        $config.PlotoFyAlerts | % {$_.DiscordWebhookUrl = $WebhookURL}
 
         $PeriodToReport = Read-Host -Prompt "In what intervall in hours would you like to receive a summary? (eg: 0.5)"
         $config.SpawnerAlerts | % {$_.WhenJobSpawned = "true"}
         $config.SpawnerAlerts | % {$_.WhenNoOutDrivesAvailable = "true"}
         $config.SpawnerAlerts | % {$_.WhenJobCouldNotBeSpawned  = "true"}
+        $config.SpawnerAlerts | % {$_.PeriodOfReportInHours  = $PeriodToReport}
     }
 else
     {
@@ -243,9 +287,18 @@ Write-Host "ConfigurePloto: Lets go over to the disk config..."
 
 $TempDriveDenom = Read-Host -Prompt "ConfigurePloto: Define your TempDrive Denom (eg: plot)"
 $config.DiskConfig | % {$_.TempDriveDenom = $TempDriveDenom}
+$tempdrives = Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom
+Write-Host "Will be using the following Drives as TempDrives:"
+$tempdrives | ft
+
 
 $OutDriveDenom = Read-Host -Prompt "ConfigurePloto: Define your OutDrive Denom (eg: out)"
 $config.DiskConfig | % {$_.OutDriveDenom = $OutDriveDenom}
+$outdrives = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom
+
+Write-Host "Will be using the following Drives as OutDrives:"
+$outdrives | ft
+
 
 
 $EnableT2 = Read-Host -Prompt "ConfigurePloto: Do you want to enable T2 drives? (eg: Yes or No)"
@@ -255,6 +308,10 @@ if ($EnableT2 -eq "Yes" -or $EnableT2 -eq "yes" -or $EnableT2 -eq "y")
     {
         $config.DiskConfig | % {$_.EnableT2 = "true"}
         $t2denom = Read-Host -Prompt "ConfigurePloto: Define your t2 drivedenom (eg: t2)"
+        $t2drives = Get-PlotoT2Drives -T2Denom $t2denom
+        Write-Host "Will be using the following Drives as T2Drives:"
+        $t2drives  | ft
+
     }
 else
     {
@@ -265,24 +322,47 @@ else
 $config.DiskConfig | % {$_.Temp2Denom = $t2denom}
 
 
+
+
 $replot = Read-Host -Prompt "ConfigurePloto: Do you want to replot existing plots? (eg: Yes or No)"
 if ($replot -eq "Yes" -or $replot -eq "yes" -or $replot -eq "y")
      {
-        $config.JobConfig | % {$_.ReplotForPool = "true"}
+        Write-Host "ConfigurePloto: Will be replotting." -ForegroundColor Magenta
+        $config.SpawnerConfig | % {$_.ReplotForPool = "true"}
         $replotDenom = Read-Host "Define your replot Denom (eg: redeploy)"
-        $P2 = Read-Host "ConfigurePloto: Enter your P2SingletonAdress to be used by the plots (eg: 76x8s9s89sjhsdsshdsi)"
-
         $config.DiskConfig | % {$_.DenomForOutDrivesToReplotForPools = $replotDenom}
-        $config.JobConfig | % {$_.P2SingletonAdress = $P2}
+
         
     }
 else
     {
-        $config.DiskConfig | % {$_.DenomForOutDrivesToReplotForPools = ""}
-        $config.JobConfig | % {$_.P2SingletonAdress = ""}       
-        $config.JobConfig | % {$_.ReplotForPool = "false"}
+        Write-Host "ConfigurePloto: Will not be replotting." -ForegroundColor Magenta
+        $config.DiskConfig | % {$_.DenomForOutDrivesToReplotForPools = ""}   
+        $config.SpawnerConfig | % {$_.ReplotForPool = "false"}
     }
+    
+$PlotForPools = Read-Host "ConfigurePloto: Do you want to create poolable, portable plots? (eg: Yes or No)"
 
+
+if ($PlotForPools -eq "Yes" -or $PlotForPools -eq "y")
+    {
+        $P2 = Read-Host "ConfigurePloto: Enter your P2SingletonAdress to be used by the plots (eg: 76x8s9s89sjhsdsshdsi)"
+        $fk = Read-host -Prompt "ConfigurePloto: Define your farmer key (eg: dskofsjfias09eidaoufoj...)"
+        $config.JobConfig | % {$_.P2SingletonAdress = $P2} 
+        $config.JobConfig | % {$_.FarmerKey = $fk}
+    }
+else
+    {
+    $pfkeys = Read-Host -Prompt "ConfigurePloto: Do you want to specify -p and -f keys for plotting? DO NOT DO THIS IF YOU WANT PORTABLE POOL PLOTS! (eg: Yes or No)"
+
+    if ($pfkeys -eq "Yes" -or $pfkeys -eq "y")
+        {
+            $pk = Read-host -Prompt "ConfigurePloto: Define your pool key (eg: 982192183012830173jdi832...)"
+            $fk = Read-host -Prompt "ConfigurePloto: Define your farmer key (eg: dskofsjfias09eidaoufoj...)"
+            $config.JobConfig | % {$_.PoolKey = $pk}
+            $config.JobConfig | % {$_.FarmerKey = $fk}
+        }    
+    }
 
 if ($WindowStyle -eq "Yes" -or $WindowStyle -eq "yes" -or $WindowStyle -eq "y")
     {
@@ -295,48 +375,71 @@ else
 
 
 Write-Host "-------------------------------------"
-Write-Host "ConfigurePloto: Lets go over to the job config..."
+Write-Host "ConfigurePloto: Lets go over to the job config..." -ForegroundColor Cyan
+
+$PlotterToUse = Read-Host -Prompt "ConfigurePloto: Which Plotter do you want to use? Enter 'Stotik' for Madmax Stotik or enter 'Chia' for official Chia plotter"
+
+if ($PlotterToUse -eq "Stotik" -or $PlotterToUse -eq "stotik")
+    {
+        
+        Write-Host "ConfigurePloto: We will be using MadMax plotter. Pay attention when configuring the JobConfig that you take into consideration how madmax/stotik work" -ForegroundColor Magenta
+        $config | % {$_.PlotterUsed  = $PlotterToUse}
+        $PathtoStotik = Read-Host -Prompt "ConfigurePloto: Enter fullpath to chia_plots.exe"
+        $config | % {$_.PathToUnofficialPlotter  = $PathtoStotik}
+    }
+else
+    {
+         Write-Host "ConfigurePloto: We will be using official Chia Plotter." -ForegroundColor Magenta
+         $PlotterToUse = "Chia"
+         $config | % {$_.PlotterUsed  = $PlotterToUse}
+    }
+
 
 $InputAmountToSpawn = Read-Host -Prompt "ConfigurePloto: How many plots do you want to be spawned overall? (eg: 1000)"
-$config.JobConfig | % {$_.InputAmounttoSpawn  = $InputAmountToSpawn}
+$config.SpawnerConfig | % {$_.InputAmounttoSpawn  = $InputAmountToSpawn}
 
 $IntervallToCheckIn = Read-Host -Prompt "ConfigurePloto: In what intervall do you want to check for new jobs in minutes? (eg: 5)"
-$config.JobConfig | % {$_.IntervallToCheckInMinutes = $IntervallToCheckIn}
+$config.SpawnerConfig | % {$_.IntervallToCheckInMinutes = $IntervallToCheckIn}
 
 $WaitSep = Read-Host -Prompt "ConfigurePloto: What stagger time do you want between jobs on separate disks in minutes? (eg. 15)"
-$config.JobConfig | % {$_.WaitTimeBetweenPlotOnSeparateDisks = $WaitSep}
+$config.SpawnerConfig | % {$_.WaitTimeBetweenPlotOnSeparateDisks = $WaitSep}
 
 $WaitSame = Read-Host -Prompt "ConfigurePloto: What stagger time do you want between jobs on same disks in minutes? (eg. 45)"
-$config.JobConfig | % {$_.WaitTimeBetweenPlotOnSameDisk = $WaitSame}
+$config.SpawnerConfig | % {$_.WaitTimeBetweenPlotOnSameDisk = $WaitSame}
 
 $MaxPa = Read-Host -Prompt "ConfigurePloto: How many Jobs do you want to be run max in parallel? (eg: 15)"
-$config.JobConfig | % {$_.MaxParallelJobsOnAllDisks = $MaxPa}
+$config.SpawnerConfig | % {$_.MaxParallelJobsOnAllDisks = $MaxPa}
 
 $MaxPaSame = Read-Host -Prompt "ConfigurePloto: How many Jobs do you want to be run max in parallel on the same disk? (eg: 3)"
-$config.JobConfig | % {$_.MaxParallelJobsOnSameDisk = $MaxPaSame}
+$config.SpawnerConfig | % {$_.MaxParallelJobsOnSameDisk = $MaxPaSame}
 
 $MaxP1 = Read-Host -Prompt "ConfigurePloto: How many Jobs do you want to be run max in parallel in phase 1? (eg: 9)"
-$config.JobConfig | % {$_.MaxParallelJobsInPhase1OnAllDisks = $MaxP1}
+$config.SpawnerConfig | % {$_.MaxParallelJobsInPhase1OnAllDisks = $MaxP1}
 
 $StartE = Read-Host -Prompt "ConfigurePloto: Do you want to start a new Job early? (eg: Yes or No)"
 If ($StartE -eq "Yes" -or $StartE -eq "yes" -or $StartE -eq "y")
     {
-        $config.JobConfig | % {$_.StartEarly = "true"}
-        $config.JobConfig | % {$_.StartEarlyPhase = "4"}
+        $config.SpawnerConfig | % {$_.StartEarly = "true"}
+        $config.SpawnerConfig | % {$_.StartEarlyPhase = "4"}
     }
 else
     {
-        $config.JobConfig | % {$_.StartEarly = "false"} 
+        $config.SpawnerConfig | % {$_.StartEarly = "false"} 
     }
 
-$bSize = Read-Host -Prompt "ConfigurePloto: Define BufferSize for jobs (eg: 3390)"
-$config.JobConfig | % {$_.BufferSize = $bSize} 
+if ($PlotterToUse -ne "Stotik" -or $PlotterToUse -ne "stotik")
+    {
+        $bSize = Read-Host -Prompt "ConfigurePloto: Define BufferSize for jobs (eg: 3390)"
+        $config.JobConfig | % {$_.BufferSize = $bSize} 
+    }
 
+$buckets = Read-Host -Prompt "ConfigurePloto: Define amount of buckets (eg: 128)"
+$config.JobConfig | % {$_.Buckets = $buckets} 
 
 $ts = Read-Host -Prompt "ConfigurePloto: Define amount of Threads for jobs (eg: 4)"
-$config.JobConfig | % {$_.Thread= $ts} 
+$config.JobConfig | % {$_.Thread = $ts} 
 
-$bf = Read-Host -Prompt "ConfigurePloto: Do you want to disable Bitfield? (eg. Yes or No)"
+$bf = Read-Host -Prompt "ConfigurePloto: Do you want to disable Bitfield? NOT RECOMMENDED TO DISABLE! (eg. Yes or No)"
 
 if ($bf = "Yes" -or $bf -eq "yes" -or $bf -eq "y")
     {
@@ -347,24 +450,6 @@ else
         $config.JobConfig | % {$_.Bitfield = "true"}
     }
 
-
-if ($P2 -eq "" -or $P2 -eq " ")
-{
-    $pfkeys = Read-Host -Prompt "ConfigurePloto: Do you want to specify -p and -f keys for plotting? DO NOT DO THIS IF YOU WANT PORTABLE POOL PLOTS! (eg: Yes or No)"
-    if ($pfkeys -eq "true")
-        {
-            $pk = Read-host -Prompt "ConfigurePloto: Define your pool key (eg: 982192183012830173jdi832...)"
-            $fk = Read-host -Prompt "ConfigurePloto: Define your farmer key (eg: dskofsjfias09eidaoufoj...)"
-        }
-    else
-        {
-            $pk = ""
-            $fk = ""
-        }
-
-    $config.JobConfig | % {$_.PoolKey = $pk}
-    $config.JobConfig | % {$_.FarmerKey = $fk}
-}
 Write-Host "--------------------------"
 
 
@@ -410,8 +495,11 @@ else
     }
 else
     {
-      Write-Host "InstallPloto @"(Get-Date)": We skipped setting the config. Only updated Ploto Module." -ForegroundColor Yellow  
+        Write-Host "InstallPloto @"(Get-Date)": We skipped setting the config. Only updated Ploto Module." -ForegroundColor Yellow
     }
 
+
+
 Write-Host "InstallPloto @"(Get-Date)": Ploto was installed correctly on this System." -ForegroundColor Green
+
 Write-Host "InstallPloto @"(Get-Date)": To launch it, start a PowerShell Session and run 'Start-PlotoSpawns'" 
