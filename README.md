@@ -227,7 +227,7 @@ Be advises that this in BETA mode right now.
 
 To create portable pool plots, we need to use the param "P2Singleton" in the config. 
 Therefore we need to create a singleton that points to a pool first, and then we can start plotting. 
-If you want to plot portable pools, make sure FarmerKey and PoolKey are NOT specified in the config, as this will mess thing up
+If you want to plot portable pools, make sure your PoolKey is NOT specified in the config, as this will mess thing up
 
 ### About replotting
 Ploto now supports the ability to replot existing drives. This assumes you have one or more drives with final plots that are actively being farmed.
