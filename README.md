@@ -232,8 +232,9 @@ If you want to plot portable pools, make sure FarmerKey and PoolKey are NOT spec
 ### About replotting
 Ploto now supports the ability to replot existing drives. This assumes you have one or more drives with final plots that are actively being farmed.
 If you now launch Ploto with 'Replot: "true"' and your denom for your ReplotDrives (drives you want to replot), the following will happen:
-1.) Ploto launches a Watchdog that looks for jobs that are about to enter phase 4 and have property "IsReplot=True"
-2.) If there is a job entering phase 4 with "IsReplot=True", it deletes the oldest plot on the drive, the replotJob uses as OutDrive.
+
+1. Ploto launches a Watchdog that looks for jobs that are about to enter phase 4 and have property "IsReplot=True"
+2. If there is a job entering phase 4 with "IsReplot=True", it deletes the oldest plot on the drive, the replotJob uses as OutDrive.
 
 All ReplotJobs launchd, will use the the drives as OutDrive, that match the ReplotDriveDenom. So if you replot, make sure you set the InputAmountToSpawn to exactly the number of Plots you want to Replot. Currently Ploto does not know with which keys/singletons a Plot was plotted. So it keeps going and potentially deletes already replotted jobs, if InputAmountToSpawn is too high. This can lead to unneccesary wear & tear.
 
