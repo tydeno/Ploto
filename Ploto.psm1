@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.1
+Version: 1.1.1.6cd
 Author: Tydeno
 
 .DESCRIPTION
@@ -110,8 +110,16 @@ function Get-PlotoTempDrives
 {
 	Param(
         [parameter(Mandatory=$true)]
-		$TempDriveDenom
+		$TempDriveDenom,
+        $Plotter = "Chia"
 		)
+
+$GbUsed = 290
+if ($Plotter -eq "Stotik" -or $Plotter -eq "stotik")
+    {
+        $GbUsed = 240
+    }
+
 
 $tmpDrives = Get-CimInstance win32_logicaldisk -Verbose:$false | Where-Object {$_.VolumeName -like "*$TempDriveDenom*"}
 
@@ -134,14 +142,7 @@ foreach ($tmpDrive in $tmpDrives)
         $FreeSpace = [math]::Round($tmpDrive.FreeSpace  / 1073741824, 2)
 
         $Partition = Get-Partition | Where-Object {$_.DriveLetter -eq ($tmpDrive.DeviceId.TrimEnd(":"))}
-
-        If ($Partition.DiskNumber -eq $null)
-            {
-                Write-Host "PlotoSpawner @ "(Get-Date)": Cannot get disks for the logical volume" $tmpDrive.DeviceID "by PowerShell using Get-Partition/Get-Disk cmdlet. Cannot get the disk and temperature for reporting. Can keep going." -ForegroundColor Yellow
-            }
-
-        #$approxDiskModel = $Partition.DiskPathsplit("&")[2].trimstart("prod_").Replace("_", " ").Split("#")[0]
-
+        
         $oldea = $ErrorActionPreference
         $ErrorActionPreference = "SilentlyContinue"
 
@@ -150,6 +151,24 @@ foreach ($tmpDrive in $tmpDrives)
         $PhysicalDisk = Get-PhysicalDisk | Where-Object {$_.FriendlyName -eq $Disk.Model}
 
         $ErrorActionPreference = $oldea
+
+        If ($Partition.DiskNumber -eq $null)
+            {
+                Write-Host "GetPlotoTempDrives @ "(Get-Date)": Cannot get disks for the logical volume" $tmpDrive.DeviceID "by PowerShell using Get-Partition/Get-Disk cmdlet. Cannot get the disk and temperature for reporting. Can keep going." -ForegroundColor Yellow
+                Write-Host "GetPlotoTempDrives @ "(Get-Date)": Seems this disk is a RamDisk. Will be using this disk as a RamDisk" -ForegroundColor Yellow
+                $Disk = "RAM"
+                $DiskType = "RAM"
+                $DiskBus = "RAM"
+            }
+        else
+            {
+                $Disk = $Disk.Model
+                $DiskType = $PhysicalDisk.MediaType
+                $DiskBus = $PhysicalDisk.BusType
+            }
+
+        #$approxDiskModel = $Partition.DiskPathsplit("&")[2].trimstart("prod_").Replace("_", " ").Split("#")[0]
+
 
         #Get-CurrenJobs
         $activeJobs = Get-PlotoJobs | Where-Object {$_.TempDrive -eq $tmpDrive.DeviceId} | Where-Object {$_.Status -ne "Completed"}
@@ -165,17 +184,17 @@ foreach ($tmpDrive in $tmpDrives)
                         $PlotInProgressCount = 1
                     }
                 
-                $RedundencyCheck = $DiskSize - ($FreeSpace + $PlotInProgressCount * 290)
+                $RedundencyCheck = $DiskSize - ($FreeSpace + $PlotInProgressCount * $GbUsed)
                 #has addiontal data in the disk
                 if($RedundencyCheck -gt 0)
                     {
-                        $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / 290))
+                        $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / $GbUsed))
                         $AvailableAmounToPlot = $AmountOfPlotsToTempMax - $PlotInProgressCount
                     }
                 else
                     {
-                        $AmountOfPlotsinProgressOccupied = [math]::Floor(($PlotInProgressCount * 290))
-                        $AvailableAmounToPlot = [math]::Floor(($DiskSize - $AmountOfPlotsinProgressOccupied) / 290)
+                        $AmountOfPlotsinProgressOccupied = [math]::Floor(($PlotInProgressCount * $GbUsed))
+                        $AvailableAmounToPlot = [math]::Floor(($DiskSize - $AmountOfPlotsinProgressOccupied) / $GbUsed)
                         $AmountOfPlotsToTempMax = $AvailableAmounToPlot + $PlotInProgressCount
                     }
 
@@ -186,7 +205,7 @@ foreach ($tmpDrive in $tmpDrives)
                 $HasPlotInProgress = $false
                 $PlotInProgressName = " "
                 $PlotInProgressCount = 0
-                $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / 290))
+                $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / $GbUsed))
                 $AvailableAmounToPlot = $AmountOfPlotsToTempMax
             }
 
@@ -204,9 +223,9 @@ foreach ($tmpDrive in $tmpDrives)
         $driveToPass = [PSCustomObject]@{
         DriveLetter     =  $tmpDrive.DeviceID
         ChiaDriveType = "Temp"
-        Disk = $Disk.Model
-        DiskType = $PhysicalDisk.MediaType
-        DiskBus = $PhysicalDisk.BusType
+        Disk = $Disk
+        DiskType = $DiskType
+        DiskBus = $DiskBus
         VolumeName = $tmpDrive.VolumeName
         FreeSpace = $FreeSpace
         TotalSpace = $DiskSize
@@ -259,9 +278,19 @@ foreach ($tmp2Drive in $tmp2Drives)
 
         If ($Partition.DiskNumber -eq $null)
             {
-                Write-Host "PlotoSpawner @ "(Get-Date)": Cannot get disks for the logical volume" $tmp2Drive.DeviceId "by PowerShell using Get-Partition/Get-Disk cmdlet. Cannot get the disk and temperature for reporting. Can keep going." -ForegroundColor Yellow
+                Write-Host "GetPlotoT2Drives @ "(Get-Date)": Cannot get disks for the logical volume" $tmp2Drive.DeviceId "by PowerShell using Get-Partition/Get-Disk cmdlet. Cannot get the disk and temperature for reporting. Can keep going." -ForegroundColor Yellow
+                Write-Host "GetPlotoT2Drives @ "(Get-Date)": Seems this disk is a RamDisk. Will be using this disk as a RamDisk" -ForegroundColor Yellow
+                $Disk = "RAM"
+                $DiskType = "RAM"
+                $DiskBus = "RAM"
             }
 
+        else
+            {
+                $Disk = $Disk.Model
+                $DiskType = $PhysicalDisk.MediaType
+                $DiskBus = $PhysicalDisk.BusType
+            }
         #$approxDiskModel = $Partition.DiskPathsplit("&")[2].trimstart("prod_").Replace("_", " ").Split("#")[0]
 
         $oldea = $ErrorActionPreference
@@ -327,9 +356,9 @@ foreach ($tmp2Drive in $tmp2Drives)
         $driveToPass = [PSCustomObject]@{
         DriveLetter     =  $tmp2Drive.DeviceId
         ChiaDriveType = "T2"
-        Disk = $Disk.Model
-        DiskType = $PhysicalDisk.MediaType
-        DiskBus = $PhysicalDisk.BusType
+        Disk = $Disk
+        DiskType = $DiskType
+        DiskBus = $DiskBus
         VolumeName = $tmp2Drive.VolumeName
         FreeSpace = $FreeSpace
         TotalSpace = $DiskSize
@@ -420,9 +449,8 @@ catch
 
 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Invoking PlotoJobs started.")
 
-$PlottableTempDrives = Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom | Where-Object {$_.IsPlottable -eq $true}   
+$PlottableTempDrives = Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom | Where-Object {$_.IsPlottable -eq $true}
 $PlottableOutDrives = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom | Where-Object {$_.IsPlottable -eq $true}
-
 
 
 if ($PlottableOutDrives -eq $null)
@@ -2086,7 +2114,7 @@ function Remove-AbortedPlotoJobs
                 {
                     $completiontime = $job.CompletionTime
                 }
-            $StartTime = Get-Date ($job.starttime)
+            [datetime]$StartTime = Get-Date ($job.starttime)
 
             $JobToReport = [PSCustomObject]@{
             JobId     =  $job.jobid
