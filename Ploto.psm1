@@ -2561,7 +2561,7 @@ function Invoke-PlotoDeleteForReplot
 
 	Param(
 		[parameter(Mandatory=$true)]
-		$ReplotDriveDenom
+		$ReplotDrives
 		)
 
     #Get active jobs entering phase 4.
@@ -2574,7 +2574,7 @@ function Invoke-PlotoDeleteForReplot
                 {
                         Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Checking if selected ReplotDrive has enough space or oldest plot needs to be deleted..")
                         #Check if we need to delete a plot on that OutDrive spacewise, with active jobs to it in mind.
-                        $OutDriveToCheck = Get-PlotoOutDrives | Where-Object {$_.DriveLetter -eq $job.OutDrive}
+                        $OutDriveToCheck = Get-PlotoOutDrives -Replot $true | Where-Object {$_.DriveLetter -eq $job.OutDrive}
 
                         if ($OutDriveToCheck.FreeSpace -lt 107 -and $OutDriveToCheck.AvailableAmountToPlot -le 1)
                             {
