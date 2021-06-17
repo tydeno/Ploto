@@ -9,7 +9,7 @@
 
   "DiskConfig": [
     {
-      "TempDrives": "E:\\,P:\",
+      "TempDrives": "E:\\,P:\\",
       "Temp2Drives": "K:\\Plotter",
       "OutDrives": "",
       "EnableT2": "false",
