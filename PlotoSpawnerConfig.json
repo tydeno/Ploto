@@ -10,10 +10,10 @@
   "DiskConfig": [
     {
       "TempDrives": "E:\, P:\",
-      "Temp2Drives": "K:\",
+      "Temp2Drives": "K:\Potter",
       "OutDrives": "",
       "EnableT2": "false",
-      "DenomForOutDrivesToReplotForPools": ""
+      "ReplotDrives": ""
     }
   ],
 
