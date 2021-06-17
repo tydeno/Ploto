@@ -9,8 +9,8 @@
 
   "DiskConfig": [
     {
-      "TempDrives": "E:\, P:\",
-      "Temp2Drives": "K:\Potter",
+      "TempDrives": "E:\\,P:\",
+      "Temp2Drives": "K:\\Plotter",
       "OutDrives": "",
       "EnableT2": "false",
       "ReplotDrives": ""
