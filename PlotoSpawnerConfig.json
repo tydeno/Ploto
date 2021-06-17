@@ -9,9 +9,9 @@
 
   "DiskConfig": [
     {
-      "TempDriveDenom": "",
-      "Temp2Denom": "",
-      "OutDriveDenom": "",
+      "TempDrive": "E:\, P:\",
+      "Temp2Drive": "K:\",
+      "OutDrive": "",
       "EnableT2": "false",
       "DenomForOutDrivesToReplotForPools": ""
     }
