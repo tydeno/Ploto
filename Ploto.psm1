@@ -1650,7 +1650,7 @@ function Start-PlotoSpawns
     Write-Host "--------------------------------------------------------------------------------------------------"
 
     Write-Host "PlotoManager @"(Get-Date)": DiskConfig" -ForegroundColor Gray
-    Write-Host "PlotoManager @"(Get-Date)": Using temp drives: "$TempDrives-ForegroundColor Gray
+    Write-Host "PlotoManager @"(Get-Date)": Using temp drives: "$TempDrives -ForegroundColor Gray
     Write-Host "PlotoManager @"(Get-Date)": Using -2 drives: "$t2drives -ForegroundColor Gray
     Write-Host "PlotoManager @"(Get-Date)": Using destination drives: "$OutDrives -ForegroundColor Gray
     Write-Host "PlotoManager @"(Get-Date)": Common denominator for destination drives to replot (name of logical volume): "$ReplotDrives -ForegroundColor Gray
