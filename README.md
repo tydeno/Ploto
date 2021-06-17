@@ -21,7 +21,7 @@ And if you like, you may define an Intervall upon which Plotofy sends you notifi
 * [How you can support this project](https://github.com/tydeno/Ploto/tree/main#how-you-can-support-this-project)
 * [Is it safe to use?](https://github.com/tydeno/Ploto/tree/main#is-it-safe-to-use)
 * [How it works](https://github.com/tydeno/Ploto/tree/main#plotospawn)
-   * [Understanding Plot and OutDrives](https://github.com/tydeno/Ploto/tree/main#understanding-plot-and-outdrives)
+   * [Understanding Plot and OutDrives](https://github.com/tydeno/Ploto/tree/main#understanding-plot-and-outdrive-denominators)
    * [About -2 drives](https://github.com/tydeno/Ploto/tree/main#about--2-drives)
    * [About parallelization on separate disks](https://github.com/tydeno/Ploto/tree/main#about-parallelization-on-separate-disks)
    * [About parallelization on the same disk](https://github.com/tydeno/Ploto/tree/main#about-parallelization-on-the-same-disk)
@@ -89,11 +89,11 @@ to define several drivesuse :`F:,E:,K:`
 
 Important: There are no spaces allowed betwen the ","!
 
+
 ### About -2 drives
 Ploto now supports -2 drives. You define them just like plot and tempdrives. On each Job Ploto checks if a -2 drive is plottable. If yes, it spawns the job using that -2 drive. If not, it spawns the job without the drive. 
 
 > -2 [tmp dir 2]: Define a secondary temporary directory for plot creation. This is where Plotting Phase 3 (Compression) and Phase 4 (Checkpoints) occur. Depending on your OS, > -2 might default to either -t or -d. Therefore, if either -t or -d are running low on space, it's recommended to set -2 manually. The -2 dir requires an equal amount of > > working space as the final size of the plot.
-
 
 ### About parallelization on separate disks
 Using the Parameter "-MaxParallelJobsOnAllDisks", you can define how many Plots Jobs overall there should be in parallel. So this will be your hard cap. If there are as many jobs as you defined as max, PlotoSpawner wont spawn further Jobs. This keeps your system from overcommiting.
