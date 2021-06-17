@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.1.1.6
+Version: 1.1.3.0
 Author: Tydeno
 
 .DESCRIPTION
@@ -11,96 +11,136 @@ https://github.com/tydeno/Ploto
 
 function Get-PlotoOutDrives
 {
-	Param(
-		[parameter(Mandatory=$true)]
-		$OutDriveDenom
-		)
+$PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
 
-$outDrives = Get-CimInstance win32_logicaldisk -Verbose:$false | Where-Object {$_.VolumeName -like "*$OutDriveDenom*"} 
+try 
+    {
+        $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
+        $outdrivescfg = $config.DiskConfig.OutDrives
+
+        if ($outdrivescfg.contains(","))
+            {
+                $outdrivescfg = $outdrivescfg.split(",")    
+            }
+    }
+catch
+    {
+         Throw $_.Exception.Message
+         exit
+    } 
 
 #Check Space for outDrives
 $collectionWithDisks= New-Object System.Collections.ArrayList
-foreach ($drive in $outDrives)
+foreach ($drive in $outdrivescfg)
     {
 
-        $DiskSize = [math]::Round($drive.Size  / 1073741824, 2)
-        $FreeSpace = [math]::Round($drive.FreeSpace  / 1073741824, 2)
-
-                #Get-CurrenJobs
-        $activeJobs = Get-PlotoJobs | Where-Object {$_.OutDrive -eq $drive.DeviceId} | Where-Object {$_.Status -ne "Completed"}
-        if ($activeJobs)
+            if ($drive.contains("\"))
             {
-                $HasPlotInProgress = $true
-                $PlotInProgressName = $activeJobs.PlotId
-                $PlotInProgressCount = $activeJobs.count
-                $PlotInProgressPhase = $activeJobs.Status
+                $drletter = $drive.Split("\")[0]
+                $FullPathToUse = $drive
+            }
+        else
+            {
+                $drletter = $drive
+                $FullPathToUse = ""
+            }
 
-                if ($PlotInProgressCount -eq $null)
+        try {
+                $drive = Get-CimInstance win32_logicaldisk -Verbose:$false | Where-Object {$_.DeviceID -eq $drletter}
+            }
+        catch
+            {
+                Write-Host "GetPlotoTempDrives @ "(Get-Date)": Could not fetch defined drive: "$drletter -ForegroundColor Red
+            }
+
+        if ($drive -ne $null)
+            {
+                $DiskSize = [math]::Round($drive.Size  / 1073741824, 2)
+                $FreeSpace = [math]::Round($drive.FreeSpace  / 1073741824, 2)
+
+                        #Get-CurrenJobs
+                $activeJobs = Get-PlotoJobs | Where-Object {$_.OutDrive -eq $drive.DeviceId} | Where-Object {$_.Status -ne "Completed"}
+                if ($activeJobs)
                     {
-                        $PlotInProgressCount = 1
-                    }
+                        $HasPlotInProgress = $true
+                        $PlotInProgressName = $activeJobs.PlotId
+                        $PlotInProgressCount = $activeJobs.count
+                        $PlotInProgressPhase = $activeJobs.Status
+
+                        if ($PlotInProgressCount -eq $null)
+                            {
+                                $PlotInProgressCount = 1
+                            }
                 
-                $RedundencyCheck = $DiskSize - ($FreeSpace + $PlotInProgressCount * 107)
-                #has addiontal data in the disk
-                if($RedundencyCheck -gt 0)
+                        $RedundencyCheck = $DiskSize - ($FreeSpace + $PlotInProgressCount * 107)
+                        #has addiontal data in the disk
+                        if($RedundencyCheck -gt 0)
+                            {
+                                $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / 107))
+                                $AvailableAmounToPlot = $AmountOfPlotsToTempMax - $PlotInProgressCount
+                            }
+                        else
+                            {
+                                $AmountOfPlotsinProgressOccupied = [math]::Floor(($PlotInProgressCount * 107))
+                                $AvailableAmounToPlot = [math]::Floor(($DiskSize - $AmountOfPlotsinProgressOccupied) / 107)
+                                $AmountOfPlotsToTempMax = $AvailableAmounToPlot + $PlotInProgressCount
+                            }
+
+                    }
+
+                else
                     {
+                        $HasPlotInProgress = $false
+                        $PlotInProgressName = " "
+                        $PlotInProgressCount = 0
                         $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / 107))
-                        $AvailableAmounToPlot = $AmountOfPlotsToTempMax - $PlotInProgressCount
+                        $AvailableAmounToPlot = $AmountOfPlotsToTempMax
+                    }
+
+
+                if ($AvailableAmounToPlot -ge 1)
+                    {
+                        $IsPlottable = $true
                     }
                 else
                     {
-                        $AmountOfPlotsinProgressOccupied = [math]::Floor(($PlotInProgressCount * 107))
-                        $AvailableAmounToPlot = [math]::Floor(($DiskSize - $AmountOfPlotsinProgressOccupied) / 107)
-                        $AmountOfPlotsToTempMax = $AvailableAmounToPlot + $PlotInProgressCount
+                        $IsPlottable = $false
                     }
 
-            }
 
+                If ($FreeSpace -gt 107 -and $AvailableAmounToPlot -ge 1)
+                    {
+                        $PlotToDest = $true
+                    }
+                else
+                    {
+                        $PlotToDest = $false
+                    }
+
+                $outdriveToPass = [PSCustomObject]@{
+                DriveLetter     =  $drive.DeviceID
+                FullPathToUse = $FullPathToUse
+                ChiaDriveType = "Out"
+                VolumeName = $drive.VolumeName
+                FreeSpace = $FreeSpace
+                TotalSpace = $DiskSize
+                IsPlottable    = $PlotToDest
+                HasPlotInProgress = $HasPlotInProgress
+                AmountOfPlotsInProgress =  $PlotInProgressCount
+                AmountOfPlotsToTempMax = $AmountOfPlotsToTempMax
+                AvailableAmountToPlot = $AvailableAmounToPlot
+                PlotInProgressID = $PlotInProgressName
+                PlotInProgressPhase = $PlotInProgressPhase
+                }
+
+                $collectionWithDisks.Add($outdriveToPass) | Out-Null   
+            }
         else
             {
-                $HasPlotInProgress = $false
-                $PlotInProgressName = " "
-                $PlotInProgressCount = 0
-                $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / 107))
-                $AvailableAmounToPlot = $AmountOfPlotsToTempMax
+                Write-Host "GetPlotoTempDrives @ "(Get-Date)": Could not fetch defined drive: "$drletter -ForegroundColor Red
             }
 
-
-        if ($AvailableAmounToPlot -ge 1)
-            {
-                $IsPlottable = $true
-            }
-        else
-            {
-                $IsPlottable = $false
-            }
-
-
-        If ($FreeSpace -gt 107 -and $AvailableAmounToPlot -ge 1)
-            {
-                $PlotToDest = $true
-            }
-        else
-            {
-                $PlotToDest = $false
-            }
-
-        $outdriveToPass = [PSCustomObject]@{
-        DriveLetter     =  $drive.DeviceID
-        ChiaDriveType = "Out"
-        VolumeName = $drive.VolumeName
-        FreeSpace = $FreeSpace
-        TotalSpace = $DiskSize
-        IsPlottable    = $PlotToDest
-        HasPlotInProgress = $HasPlotInProgress
-        AmountOfPlotsInProgress =  $PlotInProgressCount
-        AmountOfPlotsToTempMax = $AmountOfPlotsToTempMax
-        AvailableAmountToPlot = $AvailableAmounToPlot
-        PlotInProgressID = $PlotInProgressName
-        PlotInProgressPhase = $PlotInProgressPhase
-        }
-
-        $collectionWithDisks.Add($outdriveToPass) | Out-Null
+      
 
     }
     return $collectionWithDisks 
@@ -108,11 +148,26 @@ foreach ($drive in $outDrives)
 
 function Get-PlotoTempDrives
 {
-	Param(
-        [parameter(Mandatory=$true)]
-		$TempDriveDenom,
-        $Plotter = "Chia"
-		)
+
+$PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
+
+try 
+    {
+        $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
+        $tempdrivescfg = $config.DiskConfig.TempDrives
+
+        if ($tempdrivescfg.contains(","))
+            {
+                $tempdrivescfg = $tempdrivescfg.split(",")    
+            }
+    }
+catch
+    {
+         Throw $_.Exception.Message
+         exit
+    } 
+
+
 
 $GbUsed = 290
 if ($Plotter -eq "Stotik" -or $Plotter -eq "stotik")
@@ -121,127 +176,149 @@ if ($Plotter -eq "Stotik" -or $Plotter -eq "stotik")
     }
 
 
-$tmpDrives = Get-CimInstance win32_logicaldisk -Verbose:$false | Where-Object {$_.VolumeName -like "*$TempDriveDenom*"}
-
-
 #Check Space for outDrives
 $collectionWithDisks= New-Object System.Collections.ArrayList
-foreach ($tmpDrive in $tmpDrives)
+foreach ($tmpDrive in $tempdrivescfg)
     {
-        $FolderCheck = Get-ChildItem $tmpDrive.DeviceId | Where-Object {$_.Attributes -eq "Directory"}
-        if ($FolderCheck)
+        if ($tmpdrive.contains("\"))
             {
-                $HasFolder = $true
+                $drletter = $tmpdrive.Split("\")[0]
+                $FullPathToUse = $tmpDrive
             }
         else
             {
-                $HasFolder = $false
-            }
-        
-        $DiskSize = ([math]::Round($tmpDrive.Size  / 1073741824, 2))
-        $FreeSpace = [math]::Round($tmpDrive.FreeSpace  / 1073741824, 2)
-
-        $Partition = Get-Partition | Where-Object {$_.DriveLetter -eq ($tmpDrive.DeviceId.TrimEnd(":"))}
-        
-        $oldea = $ErrorActionPreference
-        $ErrorActionPreference = "SilentlyContinue"
-
-        #Get Disk from partition
-        $Disk = Get-Disk -Number $Partition.DiskNumber
-        $PhysicalDisk = Get-PhysicalDisk | Where-Object {$_.FriendlyName -eq $Disk.Model}
-
-        $ErrorActionPreference = $oldea
-
-        If ($Partition.DiskNumber -eq $null)
-            {
-                Write-Host "GetPlotoTempDrives @ "(Get-Date)": Cannot get disks for the logical volume" $tmpDrive.DeviceID "by PowerShell using Get-Partition/Get-Disk cmdlet. Cannot get the disk and temperature for reporting. Can keep going." -ForegroundColor Yellow
-                Write-Host "GetPlotoTempDrives @ "(Get-Date)": Seems this disk is a RamDisk. Will be using this disk as a RamDisk" -ForegroundColor Yellow
-                $Disk = "RAM"
-                $DiskType = "RAM"
-                $DiskBus = "RAM"
-            }
-        else
-            {
-                $Disk = $Disk.Model
-                $DiskType = $PhysicalDisk.MediaType
-                $DiskBus = $PhysicalDisk.BusType
+                $drletter = $tmpdrive
+                $FullPathToUse = ""
             }
 
-        #$approxDiskModel = $Partition.DiskPathsplit("&")[2].trimstart("prod_").Replace("_", " ").Split("#")[0]
-
-
-        #Get-CurrenJobs
-        $activeJobs = Get-PlotoJobs | Where-Object {$_.TempDrive -eq $tmpDrive.DeviceId} | Where-Object {$_.Status -ne "Completed"}
-        if ($activeJobs)
+        try {
+                $tmpdrive = Get-CimInstance win32_logicaldisk -Verbose:$false | Where-Object {$_.DeviceID -eq $drletter}
+            }
+        catch
             {
-                $HasPlotInProgress = $true
-                $PlotInProgressName = $activeJobs.PlotId
-                $PlotInProgressCount = $activeJobs.count
-                $PlotInProgressPhase = $activeJobs.Status
+                Write-Host "GetPlotoTempDrives @ "(Get-Date)": Could not fetch defined drive: "$drletter -ForegroundColor Red
+            }
+        if ($tmpDrive -ne $null)
+            {
+                $FolderCheck = Get-ChildItem $tmpDrive.DeviceId | Where-Object {$_.Attributes -eq "Directory"}
 
-                if ($PlotInProgressCount -eq $null)
+                if ($FolderCheck)
                     {
-                        $PlotInProgressCount = 1
-                    }
-                
-                $RedundencyCheck = $DiskSize - ($FreeSpace + $PlotInProgressCount * $GbUsed)
-                #has addiontal data in the disk
-                if($RedundencyCheck -gt 0)
-                    {
-                        $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / $GbUsed))
-                        $AvailableAmounToPlot = $AmountOfPlotsToTempMax - $PlotInProgressCount
+                        $HasFolder = $true
                     }
                 else
                     {
-                        $AmountOfPlotsinProgressOccupied = [math]::Floor(($PlotInProgressCount * $GbUsed))
-                        $AvailableAmounToPlot = [math]::Floor(($DiskSize - $AmountOfPlotsinProgressOccupied) / $GbUsed)
-                        $AmountOfPlotsToTempMax = $AvailableAmounToPlot + $PlotInProgressCount
+                        $HasFolder = $false
+                    }
+        
+                $DiskSize = ([math]::Round($tmpDrive.Size  / 1073741824, 2))
+                $FreeSpace = [math]::Round($tmpDrive.FreeSpace  / 1073741824, 2)
+
+                $Partition = Get-Partition | Where-Object {$_.DriveLetter -eq ($tmpDrive.DeviceId.TrimEnd(":"))}
+        
+                $oldea = $ErrorActionPreference
+                $ErrorActionPreference = "SilentlyContinue"
+
+                #Get Disk from partition
+                $Disk = Get-Disk -Number $Partition.DiskNumber
+                $PhysicalDisk = Get-PhysicalDisk | Where-Object {$_.FriendlyName -eq $Disk.Model}
+
+                $ErrorActionPreference = $oldea
+
+                If ($Partition.DiskNumber -eq $null)
+                    {
+                        Write-Host "GetPlotoTempDrives @ "(Get-Date)": Cannot get disks for the logical volume" $tmpDrive.DeviceID "by PowerShell using Get-Partition/Get-Disk cmdlet. Cannot get the disk and temperature for reporting. Can keep going." -ForegroundColor Yellow
+                        Write-Host "GetPlotoTempDrives @ "(Get-Date)": Seems this disk is a RamDisk or a shared drive from another host. Will be using this disk as a RamDisk" -ForegroundColor Yellow
+                        $Disk = "RAM"
+                        $DiskType = "RAM"
+                        $DiskBus = "RAM"
+                    }
+                else
+                    {
+                        $Disk = $Disk.Model
+                        $DiskType = $PhysicalDisk.MediaType
+                        $DiskBus = $PhysicalDisk.BusType
                     }
 
-            }
+                #Get-CurrenJobs
+                $activeJobs = Get-PlotoJobs | Where-Object {$_.TempDrive -eq $tmpDrive.DeviceId} | Where-Object {$_.Status -ne "Completed"}
+                if ($activeJobs)
+                    {
+                        $HasPlotInProgress = $true
+                        $PlotInProgressName = $activeJobs.PlotId
+                        $PlotInProgressCount = $activeJobs.count
+                        $PlotInProgressPhase = $activeJobs.Status
 
-        else
-            {
-                $HasPlotInProgress = $false
-                $PlotInProgressName = " "
-                $PlotInProgressCount = 0
-                $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / $GbUsed))
-                $AvailableAmounToPlot = $AmountOfPlotsToTempMax
-            }
+                        if ($PlotInProgressCount -eq $null)
+                            {
+                                $PlotInProgressCount = 1
+                            }
+                
+                        $RedundencyCheck = $DiskSize - ($FreeSpace + $PlotInProgressCount * $GbUsed)
+                        #has addiontal data in the disk
+                        if($RedundencyCheck -gt 0)
+                            {
+                                $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / $GbUsed))
+                                $AvailableAmounToPlot = $AmountOfPlotsToTempMax - $PlotInProgressCount
+                            }
+                        else
+                            {
+                                $AmountOfPlotsinProgressOccupied = [math]::Floor(($PlotInProgressCount * $GbUsed))
+                                $AvailableAmounToPlot = [math]::Floor(($DiskSize - $AmountOfPlotsinProgressOccupied) / $GbUsed)
+                                $AmountOfPlotsToTempMax = $AvailableAmounToPlot + $PlotInProgressCount
+                            }
+
+                    }
+
+                else
+                    {
+                        $HasPlotInProgress = $false
+                        $PlotInProgressName = " "
+                        $PlotInProgressCount = 0
+                        $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / $GbUsed))
+                        $AvailableAmounToPlot = $AmountOfPlotsToTempMax
+                    }
 
 
-        if ($AvailableAmounToPlot -ge 1)
-            {
-                $IsPlottable = $true
-            }
-        else
-            {
-                $IsPlottable = $false
-            }
+                if ($AvailableAmounToPlot -ge 1)
+                    {
+                        $IsPlottable = $true
+                    }
+                else
+                    {
+                        $IsPlottable = $false
+                    }
 
         
-        $driveToPass = [PSCustomObject]@{
-        DriveLetter     =  $tmpDrive.DeviceID
-        ChiaDriveType = "Temp"
-        Disk = $Disk
-        DiskType = $DiskType
-        DiskBus = $DiskBus
-        VolumeName = $tmpDrive.VolumeName
-        FreeSpace = $FreeSpace
-        TotalSpace = $DiskSize
-        hasFolder = $HasFolder
-        IsPlottable    = $IsPlottable
-        HasPlotInProgress = $HasPlotInProgress
-        AmountOfPlotsInProgress =  $PlotInProgressCount
-        AmountOfPlotsToTempMax = $AmountOfPlotsToTempMax
-        AvailableAmountToPlot = $AvailableAmounToPlot
-        PlotInProgressID = $PlotInProgressName
-        PlotInProgressPhase = $PlotInProgressPhase
+                $driveToPass = [PSCustomObject]@{
+                DriveLetter     =  $tmpDrive.DeviceID
+                FullPathToUse = $FullPathToUse
+                ChiaDriveType = "Temp"
+                Disk = $Disk
+                DiskType = $DiskType
+                DiskBus = $DiskBus
+                VolumeName = $tmpDrive.VolumeName
+                FreeSpace = $FreeSpace
+                TotalSpace = $DiskSize
+                hasFolder = $HasFolder
+                IsPlottable    = $IsPlottable
+                HasPlotInProgress = $HasPlotInProgress
+                AmountOfPlotsInProgress =  $PlotInProgressCount
+                AmountOfPlotsToTempMax = $AmountOfPlotsToTempMax
+                AvailableAmountToPlot = $AvailableAmounToPlot
+                PlotInProgressID = $PlotInProgressName
+                PlotInProgressPhase = $PlotInProgressPhase
 
-        }
 
-        $collectionWithDisks.Add($driveToPass) | Out-Null
-
+                $tmpDrive = $null
+                
+            }
+                $collectionWithDisks.Add($driveToPass) | Out-Null
+            }
+        else
+            {
+                Write-Host "GetPlotoTempDrives @ "(Get-Date)": Could not fetch defined drive: "$drletter -ForegroundColor Red
+            }
     }
     return $collectionWithDisks 
 }
@@ -249,135 +326,170 @@ foreach ($tmpDrive in $tmpDrives)
 function Get-PlotoT2Drives
 {
 
-	Param(
-        [parameter(Mandatory=$true)]
-		$T2Denom
-		)
+$PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
 
-$tmp2drives = Get-CimInstance win32_logicaldisk -Verbose:$false | Where-Object {$_.VolumeName -like "*$T2Denom*"}
+try 
+    {
+        $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
+        $t2drivescfg = $config.DiskConfig.Temp2Drives
+
+        if ($t2drivescfg.contains(","))
+            {
+                $t2drivescfg = $t2drivescfg.split(",")    
+            }
+    }
+catch
+    {
+         Throw $_.Exception.Message
+         exit
+    } 
 
 
 #Check Space for outDrives
-$collectionWithDisks= New-Object System.Collections.ArrayList
-foreach ($tmp2Drive in $tmp2Drives)
+$collectionWithDisks = New-Object System.Collections.ArrayList
+foreach ($tmp2Drive in $t2drivescfg)
     {
-        $FolderCheck = Get-ChildItem $tmp2Drive.DeviceId | Where-Object {$_.Attributes -eq "Directory"}
-        if ($FolderCheck)
+        if ($tmp2drive.contains("\"))
             {
-                $HasFolder = $true
+                $drletter = $tmp2drive.Split("\")[0]
+                $FullPathToUse = $tmp2Drive
             }
         else
             {
-                $HasFolder = $false
-            }
-        
-        $DiskSize = ([math]::Round($tmp2Drive.Size  / 1073741824, 2))
-        $FreeSpace = [math]::Round($tmp2Drive.FreeSpace  / 1073741824, 2)
-
-        $Partition = Get-Partition | Where-Object {$_.DriveLetter -eq ($tmp2Drive.DeviceId.TrimEnd(":"))}
-
-        If ($Partition.DiskNumber -eq $null)
-            {
-                Write-Host "GetPlotoT2Drives @ "(Get-Date)": Cannot get disks for the logical volume" $tmp2Drive.DeviceId "by PowerShell using Get-Partition/Get-Disk cmdlet. Cannot get the disk and temperature for reporting. Can keep going." -ForegroundColor Yellow
-                Write-Host "GetPlotoT2Drives @ "(Get-Date)": Seems this disk is a RamDisk. Will be using this disk as a RamDisk" -ForegroundColor Yellow
-                $Disk = "RAM"
-                $DiskType = "RAM"
-                $DiskBus = "RAM"
+                $drletter = $tmp2drive
+                $FullPathToUse = ""
             }
 
-        else
-            {
-                $Disk = $Disk.Model
-                $DiskType = $PhysicalDisk.MediaType
-                $DiskBus = $PhysicalDisk.BusType
+        try {
+                $tmp2drive = Get-CimInstance win32_logicaldisk -Verbose:$false | Where-Object {$_.DeviceID -eq $drletter}
             }
-        #$approxDiskModel = $Partition.DiskPathsplit("&")[2].trimstart("prod_").Replace("_", " ").Split("#")[0]
-
-        $oldea = $ErrorActionPreference
-        $ErrorActionPreference = "SilentlyContinue"
-
-        #Get Disk from partition
-        $Disk = Get-Disk -Number $Partition.DiskNumber
-        $PhysicalDisk = Get-PhysicalDisk | Where-Object {$_.FriendlyName -eq $Disk.Model}
-
-        $ErrorActionPreference = $oldea
-
-        #Get-CurrenJobs
-        $activeJobs = Get-PlotoJobs | Where-Object {$_.T2Drive -eq $tmp2Drive.DeviceId} | Where-Object {$_.Status -ne "Completed"}
-        if ($activeJobs)
+        catch
             {
-                $HasPlotInProgress = $true
-                $PlotInProgressName = $activeJobs.PlotId
-                $PlotInProgressCount = $activeJobs.count
-                $PlotInProgressPhase = $activeJobs.Status
+                Write-Host "GetPlotoTempDrives @ "(Get-Date)": Could not fetch defined drive: "$drletter -ForegroundColor Red
+            }
 
-                
-
-                if ($PlotInProgressCount -eq $null)
+        if ($tmp2Drive -ne $null)
+            {
+                $FolderCheck = Get-ChildItem $tmp2Drive.DeviceId | Where-Object {$_.Attributes -eq "Directory"}
+                if ($FolderCheck)
                     {
-                        $PlotInProgressCount = 1
-                    }
-                
-                $RedundencyCheck = $DiskSize - ($FreeSpace + $PlotInProgressCount * 107)
-                #has addiontal data in the disk
-                if($RedundencyCheck -gt 0)
-                    {
-                        $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / 107))
-                        $AvailableAmounToPlot = $AmountOfPlotsToTempMax - $PlotInProgressCount
+                        $HasFolder = $true
                     }
                 else
                     {
-                        $AmountOfPlotsinProgressOccupied = [math]::Floor(($PlotInProgressCount * 107))
-                        $AvailableAmounToPlot = [math]::Floor(($DiskSize - $AmountOfPlotsinProgressOccupied) / 107)
-                        $AmountOfPlotsToTempMax = $AvailableAmounToPlot + $PlotInProgressCount
+                        $HasFolder = $false
                     }
-            }
+        
+                $DiskSize = ([math]::Round($tmp2Drive.Size  / 1073741824, 2))
+                $FreeSpace = [math]::Round($tmp2Drive.FreeSpace  / 1073741824, 2)
 
-        else
-            {
-                $HasPlotInProgress = $false
-                $PlotInProgressName = " "
-                $PlotInProgressCount = 0
-                $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / 107))
-                $AvailableAmounToPlot = $AmountOfPlotsToTempMax
-            }
+                $Partition = Get-Partition | Where-Object {$_.DriveLetter -eq ($tmp2Drive.DeviceId.TrimEnd(":"))}
+
+                If ($Partition.DiskNumber -eq $null)
+                    {
+                        Write-Host "GetPlotoT2Drives @ "(Get-Date)": Cannot get disks for the logical volume" $tmp2Drive.DeviceId "by PowerShell using Get-Partition/Get-Disk cmdlet. Cannot get the disk and temperature for reporting. Can keep going." -ForegroundColor Yellow
+                        Write-Host "GetPlotoT2Drives @ "(Get-Date)": Seems this disk is a RamDisk. Will be using this disk as a RamDisk" -ForegroundColor Yellow
+                        $Disk = "RAM"
+                        $DiskType = "RAM"
+                        $DiskBus = "RAM"
+                    }
+
+                else
+                    {
+                        $Disk = $Disk.Model
+                        $DiskType = $PhysicalDisk.MediaType
+                        $DiskBus = $PhysicalDisk.BusType
+                    }
+                #$approxDiskModel = $Partition.DiskPathsplit("&")[2].trimstart("prod_").Replace("_", " ").Split("#")[0]
+
+                $oldea = $ErrorActionPreference
+                $ErrorActionPreference = "SilentlyContinue"
+
+                #Get Disk from partition
+                $Disk = Get-Disk -Number $Partition.DiskNumber
+                $PhysicalDisk = Get-PhysicalDisk | Where-Object {$_.FriendlyName -eq $Disk.Model}
+
+                $ErrorActionPreference = $oldea
+
+                #Get-CurrenJobs
+                $activeJobs = Get-PlotoJobs | Where-Object {$_.T2Drive -eq $tmp2Drive.DeviceId} | Where-Object {$_.Status -ne "Completed"}
+                if ($activeJobs)
+                    {
+                        $HasPlotInProgress = $true
+                        $PlotInProgressName = $activeJobs.PlotId
+                        $PlotInProgressCount = $activeJobs.count
+                        $PlotInProgressPhase = $activeJobs.Status
+
+                
+
+                        if ($PlotInProgressCount -eq $null)
+                            {
+                                $PlotInProgressCount = 1
+                            }
+                
+                        $RedundencyCheck = $DiskSize - ($FreeSpace + $PlotInProgressCount * 107)
+                        #has addiontal data in the disk
+                        if($RedundencyCheck -gt 0)
+                            {
+                                $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / 107))
+                                $AvailableAmounToPlot = $AmountOfPlotsToTempMax - $PlotInProgressCount
+                            }
+                        else
+                            {
+                                $AmountOfPlotsinProgressOccupied = [math]::Floor(($PlotInProgressCount * 107))
+                                $AvailableAmounToPlot = [math]::Floor(($DiskSize - $AmountOfPlotsinProgressOccupied) / 107)
+                                $AmountOfPlotsToTempMax = $AvailableAmounToPlot + $PlotInProgressCount
+                            }
+                    }
+
+                else
+                    {
+                        $HasPlotInProgress = $false
+                        $PlotInProgressName = " "
+                        $PlotInProgressCount = 0
+                        $AmountOfPlotsToTempMax = [math]::Floor(($FreeSpace / 107))
+                        $AvailableAmounToPlot = $AmountOfPlotsToTempMax
+                    }
 
 
-        if ($AvailableAmounToPlot -ge 1)
-            {
-                $IsPlottable = $true
-            }
-        else
-            {
-                $IsPlottable = $false
-            }
+                if ($AvailableAmounToPlot -ge 1)
+                    {
+                        $IsPlottable = $true
+                    }
+                else
+                    {
+                        $IsPlottable = $false
+                    }
 
         
-        $driveToPass = [PSCustomObject]@{
-        DriveLetter     =  $tmp2Drive.DeviceId
-        ChiaDriveType = "T2"
-        Disk = $Disk
-        DiskType = $DiskType
-        DiskBus = $DiskBus
-        VolumeName = $tmp2Drive.VolumeName
-        FreeSpace = $FreeSpace
-        TotalSpace = $DiskSize
-        hasFolder = $HasFolder
-        IsPlottable    = $IsPlottable
-        HasPlotInProgress = $HasPlotInProgress
-        AmountOfPlotsInProgress =  $PlotInProgressCount
-        AmountOfPlotsToTempMax = $AmountOfPlotsToTempMax
-        AvailableAmountToPlot = $AvailableAmounToPlot
-        PlotInProgressID = $PlotInProgressName
-        PlotInProgressPhase = $PlotInProgressPhase
-        }
+                $driveToPass = [PSCustomObject]@{
+                DriveLetter     =  $tmp2Drive.DeviceId
+                ChiaDriveType = "T2"
+                Disk = $Disk
+                DiskType = $DiskType
+                DiskBus = $DiskBus
+                VolumeName = $tmp2Drive.VolumeName
+                FreeSpace = $FreeSpace
+                TotalSpace = $DiskSize
+                hasFolder = $HasFolder
+                IsPlottable    = $IsPlottable
+                HasPlotInProgress = $HasPlotInProgress
+                AmountOfPlotsInProgress =  $PlotInProgressCount
+                AmountOfPlotsToTempMax = $AmountOfPlotsToTempMax
+                AvailableAmountToPlot = $AvailableAmounToPlot
+                PlotInProgressID = $PlotInProgressName
+                PlotInProgressPhase = $PlotInProgressPhase
+                }
 
-        $collectionWithDisks.Add($driveToPass) | Out-Null
-
+                $collectionWithDisks.Add($driveToPass) | Out-Null          
+            
+            }
+        else
+            {
+                Write-Host "GetPlotoTempDrives @ "(Get-Date)": Could not fetch defined drive: "$drletter -ForegroundColor Red
+            }
     }
     return $collectionWithDisks
-
-
 }
 
 function Invoke-PlotoJob
