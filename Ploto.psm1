@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.1.3.0
+Version: 1.1.4
 Author: Tydeno
 
 .DESCRIPTION
@@ -11,12 +11,25 @@ https://github.com/tydeno/Ploto
 
 function Get-PlotoOutDrives
 {
+	Param(
+		$Replot
+		)
+
+
 $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
 
 try 
     {
         $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
-        $outdrivescfg = $config.DiskConfig.OutDrives
+        
+        if ($replot)
+            {
+                $outdrivescfg = $config.DiskConfig.ReplotDrives
+            }
+        else
+            {
+                $outdrivescfg = $config.DiskConfig.OutDrives
+            }
 
         if ($outdrivescfg.contains(","))
             {
@@ -28,6 +41,8 @@ catch
          Throw $_.Exception.Message
          exit
     } 
+
+
 
 #Check Space for outDrives
 $collectionWithDisks= New-Object System.Collections.ArrayList
@@ -58,6 +73,33 @@ foreach ($drive in $outdrivescfg)
                 $DiskSize = [math]::Round($drive.Size  / 1073741824, 2)
                 $FreeSpace = [math]::Round($drive.FreeSpace  / 1073741824, 2)
 
+
+                $Partition = Get-Partition | Where-Object {$_.DriveLetter -eq ($drive.DeviceId.TrimEnd(":"))}
+        
+                $oldea = $ErrorActionPreference
+                $ErrorActionPreference = "SilentlyContinue"
+
+                #Get Disk from partition
+                $Disk = Get-Disk -Number $Partition.DiskNumber
+                $PhysicalDisk = Get-PhysicalDisk | Where-Object {$_.FriendlyName -eq $Disk.Model}
+
+                $ErrorActionPreference = $oldea
+
+                If ($Partition.DiskNumber -eq $null)
+                    {
+                        Write-Host "GetPlotoTempDrives @ "(Get-Date)": Cannot get disks for the logical volume" $tmpDrive.DeviceID "by PowerShell using Get-Partition/Get-Disk cmdlet. Cannot get the disk and temperature for reporting. Can keep going." -ForegroundColor Yellow
+                        $Disk = "Not available"
+                        $DiskType = "Not available"
+                        $DiskBus = "Not available"
+                    }
+                else
+                    {
+                        $Disk = $Disk.Model
+                        $DiskType = $PhysicalDisk.MediaType
+                        $DiskBus = $PhysicalDisk.BusType
+                    }
+
+
                         #Get-CurrenJobs
                 $activeJobs = Get-PlotoJobs | Where-Object {$_.OutDrive -eq $drive.DeviceId} | Where-Object {$_.Status -ne "Completed"}
                 if ($activeJobs)
@@ -85,7 +127,6 @@ foreach ($drive in $outdrivescfg)
                                 $AvailableAmounToPlot = [math]::Floor(($DiskSize - $AmountOfPlotsinProgressOccupied) / 107)
                                 $AmountOfPlotsToTempMax = $AvailableAmounToPlot + $PlotInProgressCount
                             }
-
                     }
 
                 else
@@ -120,6 +161,7 @@ foreach ($drive in $outdrivescfg)
                 $outdriveToPass = [PSCustomObject]@{
                 DriveLetter     =  $drive.DeviceID
                 FullPathToUse = $FullPathToUse
+                Disk = $Disk
                 ChiaDriveType = "Out"
                 VolumeName = $drive.VolumeName
                 FreeSpace = $FreeSpace
@@ -382,8 +424,17 @@ foreach ($tmp2Drive in $t2drivescfg)
         
                 $DiskSize = ([math]::Round($tmp2Drive.Size  / 1073741824, 2))
                 $FreeSpace = [math]::Round($tmp2Drive.FreeSpace  / 1073741824, 2)
-
+                
                 $Partition = Get-Partition | Where-Object {$_.DriveLetter -eq ($tmp2Drive.DeviceId.TrimEnd(":"))}
+
+                $oldea = $ErrorActionPreference
+                $ErrorActionPreference = "SilentlyContinue"
+
+                #Get Disk from partition
+                $Disk = Get-Disk -Number $Partition.DiskNumber
+                $PhysicalDisk = Get-PhysicalDisk | Where-Object {$_.FriendlyName -eq $Disk.Model}
+
+                $ErrorActionPreference = $oldea
 
                 If ($Partition.DiskNumber -eq $null)
                     {
@@ -400,16 +451,6 @@ foreach ($tmp2Drive in $t2drivescfg)
                         $DiskType = $PhysicalDisk.MediaType
                         $DiskBus = $PhysicalDisk.BusType
                     }
-                #$approxDiskModel = $Partition.DiskPathsplit("&")[2].trimstart("prod_").Replace("_", " ").Split("#")[0]
-
-                $oldea = $ErrorActionPreference
-                $ErrorActionPreference = "SilentlyContinue"
-
-                #Get Disk from partition
-                $Disk = Get-Disk -Number $Partition.DiskNumber
-                $PhysicalDisk = Get-PhysicalDisk | Where-Object {$_.FriendlyName -eq $Disk.Model}
-
-                $ErrorActionPreference = $oldea
 
                 #Get-CurrenJobs
                 $activeJobs = Get-PlotoJobs | Where-Object {$_.T2Drive -eq $tmp2Drive.DeviceId} | Where-Object {$_.Status -ne "Completed"}
@@ -464,6 +505,7 @@ foreach ($tmp2Drive in $t2drivescfg)
         
                 $driveToPass = [PSCustomObject]@{
                 DriveLetter     =  $tmp2Drive.DeviceId
+                FullPathToUse = $FullPathToUse
                 ChiaDriveType = "T2"
                 Disk = $Disk
                 DiskType = $DiskType
@@ -496,11 +538,11 @@ function Invoke-PlotoJob
 {
 	Param(
 		[parameter(Mandatory=$true)]
-		$OutDriveDenom,
+		$OutDrives,
 	    [parameter(Mandatory=$true)]
 	    $InputAmountToSpawn,
 		[parameter(Mandatory=$true)]
-		$TempDriveDenom,
+		$TempDrives,
 	    [parameter(Mandatory=$true)]
 	    $WaitTimeBetweenPlotOnSeparateDisks,
 	    [parameter(Mandatory=$false)]
@@ -515,7 +557,7 @@ function Invoke-PlotoJob
         $EnableBitfield=$true,
         $EnableAlerts,
         $CountSpawnedJobs,
-        $T2Denom,
+        $T2Drives,
         $WindowStyle,
         $FarmerKey,
         $PoolKey,
@@ -524,7 +566,7 @@ function Invoke-PlotoJob
         $StartEarly,
         $StartEarlyPhase,
         $P2Singleton,
-        $ReplotDriveDenom, 
+        $ReplotDrives, 
         $Replot,
         $ksize,
         $Plotter,
@@ -561,8 +603,8 @@ catch
 
 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Invoking PlotoJobs started.")
 
-$PlottableTempDrives = Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom | Where-Object {$_.IsPlottable -eq $true}
-$PlottableOutDrives = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom | Where-Object {$_.IsPlottable -eq $true}
+$PlottableTempDrives = Get-PlotoTempDrives | Where-Object {$_.IsPlottable -eq $true}
+$PlottableOutDrives = Get-PlotoOutDrives | Where-Object {$_.IsPlottable -eq $true}
 
 
 if ($PlottableOutDrives -eq $null)
@@ -585,7 +627,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                 #Lets get the best suited TempDrive (The one with least amount of jobs ongoing)
                 Write-Verbose ("PlotoSpawner @ "+(Get-Date)+":  Scanning for the drive with least amount of jobs...")
 
-                $PlottableTempDrives = Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom | Where-Object {$_.IsPlottable -eq $true}   
+                $PlottableTempDrives = Get-PlotoTempDrives | Where-Object {$_.IsPlottable -eq $true}   
 
                 #Is there an nvme?
                 If ($PlottableTempDrives | Where-Object {$_.DiskBus -like "*NVME*"})
@@ -602,6 +644,15 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                     #We have several OutDisks in our Array that could be the best OutDrive. Need to pick one!
                     $PlottableTempDrive = $PlottableTempDrive[0]
                 }
+
+                if ($PlottableTempDrive.FullPathToUse -ne "" -or $FullPathToUse -ne $null)
+                    {
+                        $PlottableTempDriveDriveLetter = $PlottableTempDrive.FullPathToUse
+                    }     
+                    else
+                    {
+                        $PlottableTempDriveDriveLetter = $PlottableTempDrive.DriveLetter
+                    } 
 
                Write-Verbose ("PlotoSpawner @ "+(Get-Date)+":  Will be using TempDrive: "+$PlottableTempDrive.DriveLetter+" to check for jobs on it...")
 
@@ -646,7 +697,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                 if (!$JobsOnThisDiskIPWithinCheckPeriod)
                                     {
  
-                                    $PlottableOutDrives = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom | Where-Object {$_.IsPlottable -eq $true}
+                                    $PlottableOutDrives = Get-PlotoOutDrives | Where-Object {$_.IsPlottable -eq $true}
                                     if ($PlottableOutDrives -eq $null)
                                     {
                                         Throw "Error: No outdrives found"
@@ -656,11 +707,11 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
 
 
                                     #Building ArgumentList for chia.exe
-                                    if ($Replot -eq "true" -and $ReplotDriveDenom -ne "")
+                                    if ($Replot -eq "true" -and $ReplotDrives -ne "")
                                         {
                                             Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Replotting enabled. Will delete existing plots shortly upon before a job enters phase 4. Also ignoring the fact that an OutDrive has no space, as a plot will be deleted to make space for new one.")
                                             #Pick an Outdrive from ReplotDenom
-                                            $replotDrives = Get-PlotoOutDrives -OutDriveDenom $ReplotDriveDenom
+                                            $replotDrives = Get-PlotoOutDrives -Replot $true
 
                                             $min = ($replotDrives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
                                             $OutDrive = $replotDrives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
@@ -670,7 +721,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                         {
                                             
                                             #normal flow as we do not replot
-                                            $PlottableOutDrives = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom | Where-Object {$_.IsPlottable -eq $true}
+                                            $PlottableOutDrives = Get-PlotoOutDrives | Where-Object {$_.IsPlottable -eq $true}
 
                                             $min = ($PlottableOutDrives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
                                             $OutDrive = $PlottableOutDrives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
@@ -720,9 +771,18 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                             Throw "Error: No outdrives found"
                                             exit
                                         }
-
-
-                                    $OutDriveLetter = $OutDrive.DriveLetter
+                                    else
+                                        {
+                                            if ($OutDrive.FullPathToUse -ne "" -or $FullPathToUse -ne $null)
+                                                {
+                                                    $OutDriveLetter = $outdrive.FullPathToUse
+                                                }     
+                                               else
+                                                {
+                                                    $OutDriveLetter = $OutDrive.DriveLetter
+                                                }                                   
+                                        }
+                                    
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Best Outdrive most least jobs: "+$OutDriveLetter)
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Using FarmerKey: "+$FarmerKey)
                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": using PoolKey: "+$PoolKey)
@@ -747,7 +807,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                     Add-Content -Path $LogPath1 -Value "TempDrive: $PlottableTempDrive"
                                     Add-Content -Path $LogPath1 -Value "StartTime: $StartTime"
 
-                                    if ($Replot -eq "true" -and $ReplotDriveDenom -ne "")
+                                    if ($Replot -eq "true" -and $ReplotDrives -ne "")
                                         {
                                             Add-Content -Path $LogPath1 -Value "IsReplot: true"
                                         }
@@ -762,11 +822,11 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                         {
                                             Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Bitfield is set to be used.")
 
-                                            if ($T2Denom -and $config.DiskConfig.EnableT2 -eq "true")
+                                            if ($config.DiskConfig.EnableT2 -eq "true")
                                                 {
                                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": using T2. Scanning for most suitable...")
                                                     #Get best fitted t2 Drive 
-                                                    $PlottableT2Drives = Get-PlotoT2Drives -T2denom $T2Denom | Where-Object {$_.IsPlottable -eq $true}   
+                                                    $PlottableT2Drives = Get-PlotoT2Drives | Where-Object {$_.IsPlottable -eq $true}   
                                                     $min = ($PlottableT2Drives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
                                                     $t2drive = $PlottableT2Drives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
                                             
@@ -793,6 +853,10 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                         }
                                                     else
                                                         {
+                                                            if ($t2drive.FullPathToUse -ne "" -or $FullPathToUse -ne $null)
+                                                            {
+                                                                $t2driveletter = $t2drive.FullPathToUse
+                                                            }
                                                             $ArgumentList = "-r "+$Thread+" -u "+$Buckets+" -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\ -2 "+$t2driveletter+"\"
                                                         }
                                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Using T2 Drive: "+$t2driveletter)
@@ -805,7 +869,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Not using T2 drive.")
                                                     Add-Content -Path $LogPath1 -Value "T2Drive: None"
                                                     $t2driveletter = "None"
-                                                    $ArgumentList = "-r "+$Thread+" -u "+$Buckets+" -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\"
+                                                    $ArgumentList = "-r "+$Thread+" -u "+$Buckets+" -t "+$PlottableTempDriveDriveLetter+"\ -d "+$OutDriveLetter+"\"
                                                 } 
                                         }
 
@@ -813,11 +877,11 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                         {
                                             Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Bitfield is not used.")
                                             
-                                            if ($T2Denom -and $config.DiskConfig.EnableT2 -eq "true")
+                                            if ($config.DiskConfig.EnableT2 -eq "true")
                                                 {
                                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": using T2. Scanning for most suitable...")
                                                     #Get best fitted t2 Drive 
-                                                    $PlottableT2Drives = Get-PlotoT2Drives -T2denom $T2Denom | Where-Object {$_.IsPlottable -eq $true}   
+                                                    $PlottableT2Drives = Get-PlotoT2Drives | Where-Object {$_.IsPlottable -eq $true}   
                                                     $min = ($PlottableT2Drives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
                                                     $t2drive = $PlottableT2Drives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
                                             
@@ -833,18 +897,23 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                             $t2driveletter = $t2drive.DriveLetter
                                                         }
 
-                                                    
+
+      
 
                                                     if ($t2drive -eq $null)
                                                         {
                                                             $t2drive = "None"
                                                             $t2driveletter = "None"
                                                             Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": T2 is set to be used, but currently no T2 available. Will be using no T2 for this job.")
-                                                            $ArgumentList = "-r "+$Thread+" -u "+$Buckets+" -t  "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\"
+                                                            $ArgumentList = "-r "+$Thread+" -u "+$Buckets+" -t  "+$PlottableTempDriveDriveLetter+"\ -d "+$OutDriveLetter+"\"
                                                         }
                                                     else
                                                         {
-                                                            $ArgumentList = "-r "+$Thread+" -u "+$Buckets+" -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\ -2 "+$t2driveletter+"\"
+                                                        if ($t2drive.FullPathToUse -ne "" -or $FullPathToUse -ne $null)
+                                                            {
+                                                                $t2driveletter = $t2drive.FullPathToUse
+                                                            }
+                                                            $ArgumentList = "-r "+$Thread+" -u "+$Buckets+" -t "+$PlottableTempDriveDriveLetter+"\ -d "+$OutDriveLetter+"\ -2 "+$t2driveletter+"\"
                                                         }
                                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Using T2 Drive: "+$t2driveletter)
 
@@ -856,7 +925,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                     Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Not using T2 drive.")
                                                     Add-Content -Path $LogPath1 -Value "T2Drive: None"
                                                     $t2driveletter = "None"
-                                                    $ArgumentList = "-r "+$Thread+" -u "+$Buckets+" -t "+$PlottableTempDrive.DriveLetter+"\ -d "+$OutDriveLetter+"\ -e"
+                                                    $ArgumentList = "-r "+$Thread+" -u "+$Buckets+" -t "+$PlottableTempDriveDriveLetter+"\ -d "+$OutDriveLetter+"\ -e"
                                                 }
                                            }
 
@@ -1542,10 +1611,10 @@ function Start-PlotoSpawns
     $StartEarlyPhase = $config.SpawnerConfig.StartEarlyPhase
     $Replot = $config.SpawnerConfig.ReplotForPool
 
-    $OutDriveDenom = $config.DiskConfig.OutDriveDenom
-    $TempDriveDenom = $config.DiskConfig.TempDriveDenom
-    $t2denom = $config.DiskConfig.Temp2Denom
-    $ReplotDriveDenom = $config.DiskConfig.DenomForOutDrivesToReplotForPools
+    $OutDrives = $config.DiskConfig.OutDrives
+    $TempDrives = $config.DiskConfig.TempDrives
+    $t2drives = $config.DiskConfig.Temp2Drives
+    $ReplotDrives = $config.DiskConfig.ReplotDrives
 
     [int]$BufferSize = $config.JobConfig.BufferSize
     [int]$Thread = $config.JobConfig.Thread
@@ -1581,10 +1650,10 @@ function Start-PlotoSpawns
     Write-Host "--------------------------------------------------------------------------------------------------"
 
     Write-Host "PlotoManager @"(Get-Date)": DiskConfig" -ForegroundColor Gray
-    Write-Host "PlotoManager @"(Get-Date)": Common denominator for temp drives (name of logical volume): "$TempDriveDenom -ForegroundColor Gray
-    Write-Host "PlotoManager @"(Get-Date)": Common denominator for -2 drives (name of logical volume): "$t2denom -ForegroundColor Gray
-    Write-Host "PlotoManager @"(Get-Date)": Common denominator for destination drives (name of logical volume): "$OutDriveDenom -ForegroundColor Gray
-    Write-Host "PlotoManager @"(Get-Date)": Common denominator for destination drives to replot (name of logical volume): "$ReplotDriveDenom -ForegroundColor Gray
+    Write-Host "PlotoManager @"(Get-Date)": Using temp drives: "$TempDrives-ForegroundColor Gray
+    Write-Host "PlotoManager @"(Get-Date)": Using -2 drives: "$t2drives -ForegroundColor Gray
+    Write-Host "PlotoManager @"(Get-Date)": Using destination drives: "$OutDrives -ForegroundColor Gray
+    Write-Host "PlotoManager @"(Get-Date)": Common denominator for destination drives to replot (name of logical volume): "$ReplotDrives -ForegroundColor Gray
 
     Write-Host "--------------------------------------------------------------------------------------------------"
 
@@ -1660,11 +1729,11 @@ function Start-PlotoSpawns
 
         if ($verbose)
             {
-                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -Buckets $Buckets -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -P2Singleton $P2Singleton -ReplotDriveDenom $ReplotDriveDenom -Replot $Replot -ksize $ksize -Plotter $Plotter -PathToUnofficialPlotter $PathToUnofficialPlotter -Verbose
+                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -Buckets $Buckets -OutDrives $OutDrives -TempDrives $TempDrives -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Drives $t2drives -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -P2Singleton $P2Singleton -ReplotDrives $ReplotDrives -Replot $Replot -ksize $ksize -Plotter $Plotter -PathToUnofficialPlotter $PathToUnofficialPlotter -Verbose
             }
         else
             {
-                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -Buckets $Buckets -OutDriveDenom $OutDriveDenom -TempDriveDenom $TempDriveDenom -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Denom $t2denom -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -P2Singleton $P2Singleton -ReplotDriveDenom $ReplotDriveDenom -Replot $Replot -ksize $ksize -Plotter $Plotter -PathToUnofficialPlotter $PathToUnofficialPlotter
+                $SpawnedPlots = Invoke-PlotoJob -BufferSize $BufferSize -Thread $Thread -Buckets $Buckets -OutDrives $OutDrives -TempDrives $TempDrives -EnableBitfield $EnableBitfield -WaitTimeBetweenPlotOnSeparateDisks $WaitTimeBetweenPlotOnSeparateDisks -WaitTimeBetweenPlotOnSameDisk $WaitTimeBetweenPlotOnSameDisk -MaxParallelJobsOnAllDisks $MaxParallelJobsOnAllDisks -MaxParallelJobsOnSameDisk $MaxParallelJobsOnSameDisk -EnableAlerts $EnableAlerts -InputAmountToSpawn $InputAmountToSpawn -CountSpawnedJobs $SpawnedCountOverall -T2Drives $t2drives -WindowStyle $WindowStyle -FarmerKey $FarmerKey -PoolKey $PoolKey -MaxParallelJobsInPhase1OnSameDisk $MaxParallelJobsInPhase1OnSameDisk -MaxParallelJobsInPhase1OnAllDisks $MaxParallelJobsInPhase1OnAllDisks -StartEarly $StartEarly -StartEarlyPhase $StartEarlyPhase -P2Singleton $P2Singleton -ReplotDrives $ReplotDrives -Replot $Replot -ksize $ksize -Plotter $Plotter -PathToUnofficialPlotter $PathToUnofficialPlotter
             }
         
         
@@ -2134,7 +2203,7 @@ function Stop-PlotoJob
         $PlotoIdToScramble = $job.PlotId
         #Scramble temp dir for .tmp files
 
-        $FileArrToDel = Get-ChildItem $job.TempDrive | Where-Object {$_.Name -like "*$PlotoIdToScramble*" -and $_.Extension -eq ".tmp"} 
+        $FileArrToDel = Get-ChildItem $job.TempDrive -Recurse | Where-Object {$_.Name -like "*$PlotoIdToScramble*" -and $_.Extension -eq ".tmp"} 
 
         if ($FileArrToDel)
             {
@@ -2155,7 +2224,7 @@ function Stop-PlotoJob
 
         if ($job.T2Drive -ne $null -or $job.T2Drive -ne "None")
             {
-                $T2FileArrayToDel = Get-ChildItem $job.T2Drive | Where-Object {$_.Name -like "*$PlotoIdToScramble*" -and $_.Extension -eq ".tmp"} 
+                $T2FileArrayToDel = Get-ChildItem $job.T2Drive -Recurse | Where-Object {$_.Name -like "*$PlotoIdToScramble*" -and $_.Extension -eq ".tmp"} 
 
                 If ($T2FileArrayToDel)
                     {
@@ -2305,12 +2374,20 @@ function Remove-AbortedPlotoJobs
 function Get-PlotoPlots
 {
 	Param(
-		[parameter(Mandatory=$true)]
-		$OutDriveDenom
+    $replot
 		)
 
 #Scan for final Plot Files to Move
-$OutDrivesToScan = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom
+
+if ($replot)
+    {
+        $OutDrivesToScan = Get-PlotoOutDrives -Replot $true
+    }
+else
+    {
+        $OutDrivesToScan = Get-PlotoOutDrives
+    }
+
 
 if ($OutDrivesToScan)
     {
@@ -2381,7 +2458,7 @@ function Move-PlotoPlots
 		$TransferMethod
 		)
 
-$PlotsToMove = Get-PlotoPlots -OutDriveDenom $OutDriveDenom
+$PlotsToMove = Get-PlotoPlots
 
 if ($PlotsToMove)
     {
@@ -2497,13 +2574,13 @@ function Invoke-PlotoDeleteForReplot
                 {
                         Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Checking if selected ReplotDrive has enough space or oldest plot needs to be deleted..")
                         #Check if we need to delete a plot on that OutDrive spacewise, with active jobs to it in mind.
-                        $OutDriveToCheck = Get-PlotoOutDrives -OutDriveDenom $ReplotDriveDenom | Where-Object {$_.DriveLetter -eq $job.OutDrive}
+                        $OutDriveToCheck = Get-PlotoOutDrives | Where-Object {$_.DriveLetter -eq $job.OutDrive}
 
                         if ($OutDriveToCheck.FreeSpace -lt 107 -and $OutDriveToCheck.AvailableAmountToPlot -le 1)
                             {
                                 Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Not enough space available for new plot, need to delete oldest one for replotting... ")
                                 #pick oldest plottodel
-                                $plottoDel = (Get-PlotoPlots -OutDriveDenom $ReplotDriveDenom | sort creationtime)[0]
+                                $plottoDel = (Get-PlotoPlots -replot $true | sort creationtime)[0]
                                 Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Oldest Plot in ReplotDrive "+$OutDriveToCheck.DriveLetter+ " of job with id "+$job.JobId+" that is about to finish: "+$plottoDel.FilePath)
 
                                 $plotitemtodel = Get-ChildItem $plottoDel.FilePath
