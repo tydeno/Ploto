@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 0.625
+Version: 0.7
 Author: Tydeno
 
 
@@ -284,33 +284,22 @@ $WindowStyle = Read-Host -Prompt "ConfigurePloto: Do you want to the plot jobs i
 Write-Host "-------------------------------------"
 
 Write-Host "ConfigurePloto: Lets go over to the disk config..."
+Write-Host "ConfigurePloto: To define your drives, use the following notation:"  
+Write-Host "ConfigurePloto: To define one drive, use the following notation: F:"
+Write-Host "ConfigurePloto: To define several drives, use the following notation: F:,E:,K:"
+Write-Host "ConfigurePloto: To define a folder within a  drive, use following notation: F:\afolder,E:\anotherone,K:\somefolder"
+$TempDrives = Read-Host -Prompt "ConfigurePloto: Define your TempDrives."
+$config.DiskConfig | % {$_.TempDrives = $TempDrives}
 
-$TempDriveDenom = Read-Host -Prompt "ConfigurePloto: Define your TempDrive Denom (eg: plot)"
-$config.DiskConfig | % {$_.TempDriveDenom = $TempDriveDenom}
-$tempdrives = Get-PlotoTempDrives -TempDriveDenom $TempDriveDenom
-Write-Host "Will be using the following Drives as TempDrives:"
-$tempdrives | ft
-
-
-$OutDriveDenom = Read-Host -Prompt "ConfigurePloto: Define your OutDrive Denom (eg: out)"
-$config.DiskConfig | % {$_.OutDriveDenom = $OutDriveDenom}
-$outdrives = Get-PlotoOutDrives -OutDriveDenom $OutDriveDenom
-
-Write-Host "Will be using the following Drives as OutDrives:"
-$outdrives | ft
-
-
+$OutDrives = Read-Host -Prompt "ConfigurePloto: Define your OutDrives"
+$config.DiskConfig | % {$_.OutDrives = $OutDrives}
 
 $EnableT2 = Read-Host -Prompt "ConfigurePloto: Do you want to enable T2 drives? (eg: Yes or No)"
-
 
 if ($EnableT2 -eq "Yes" -or $EnableT2 -eq "yes" -or $EnableT2 -eq "y")
     {
         $config.DiskConfig | % {$_.EnableT2 = "true"}
-        $t2denom = Read-Host -Prompt "ConfigurePloto: Define your t2 drivedenom (eg: t2)"
-        $t2drives = Get-PlotoT2Drives -T2Denom $t2denom
-        Write-Host "Will be using the following Drives as T2Drives:"
-        $t2drives  | ft
+        $t2denom = Read-Host -Prompt "ConfigurePloto: Define your t2drives"
 
     }
 else
@@ -319,9 +308,7 @@ else
         $t2denom = ""        
     }
 
-$config.DiskConfig | % {$_.Temp2Denom = $t2denom}
-
-
+$config.DiskConfig | % {$_.Temp2drives = $t2denom}
 
 
 $replot = Read-Host -Prompt "ConfigurePloto: Do you want to replot existing plots? (eg: Yes or No)"
@@ -329,15 +316,13 @@ if ($replot -eq "Yes" -or $replot -eq "yes" -or $replot -eq "y")
      {
         Write-Host "ConfigurePloto: Will be replotting." -ForegroundColor Magenta
         $config.SpawnerConfig | % {$_.ReplotForPool = "true"}
-        $replotDenom = Read-Host "Define your replot Denom (eg: redeploy)"
-        $config.DiskConfig | % {$_.DenomForOutDrivesToReplotForPools = $replotDenom}
-
-        
+        $replotDenom = Read-Host "Define your ReplotDrives"
+        $config.DiskConfig | % {$_.ReplotDrives = $replotDenom}
     }
 else
     {
         Write-Host "ConfigurePloto: Will not be replotting." -ForegroundColor Magenta
-        $config.DiskConfig | % {$_.DenomForOutDrivesToReplotForPools = ""}   
+        $config.DiskConfig | % {$_.ReplotDrives = ""}   
         $config.SpawnerConfig | % {$_.ReplotForPool = "false"}
     }
     
@@ -475,6 +460,20 @@ if ($consent -eq "Yes" -or $consent -eq "y")
     {
         try 
             {
+
+                $tempdrives = Get-PlotoTempDrives 
+                Write-Host "Will be using the following Drives as TempDrives:"
+                $tempdrives | ft
+
+                $outdrives = Get-PlotoOutDrives
+
+                Write-Host "Will be using the following Drives as OutDrives:"
+                $outdrives | ft
+
+                $t2drives = Get-PlotoT2Drives 
+                Write-Host "Will be using the following Drives as T2Drives:"
+                $t2drives  | ft
+
                 $destination = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\"
                 Copy-Item -Path $PathToConfig -Destination $destination -Force
                 Write-Host "InstallPloto @"(Get-Date)": Copied config successfully to: " $destination -ForegroundColor Green
