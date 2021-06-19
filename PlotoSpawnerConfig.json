@@ -9,11 +9,11 @@
 
   "DiskConfig": [
     {
-      "TempDriveDenom": "",
-      "Temp2Denom": "",
-      "OutDriveDenom": "",
+      "TempDrives": "E:\\,P:\\",
+      "Temp2Drives": "K:\\Plotter",
+      "OutDrives": "",
       "EnableT2": "false",
-      "DenomForOutDrivesToReplotForPools": ""
+      "ReplotDrives": ""
     }
   ],
 

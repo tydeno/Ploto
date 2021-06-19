@@ -71,62 +71,8 @@ On top of that; it always makes sense to set your reward address to a cold walle
 
 # PlotoSpawn
 TLDR: It plots 1x plot on each TempDrive (if you have 6x TempDrives = 6x parallel Plot Jobs) as long as you want it to and as long as you have OutDrive space.
-When and where Plots are spawned is defined by PlotoSpawnerConfig.json which looks like this:
+When and where Plots are spawned is defined by PlotoSpawnerConfig.json.
 
-```
-{
-    "PlotterName": "SirNotPlotAlot",    | The Name of your plotter
-    "EnableAlerts": "false",            | Enable JobSpawned Alerts (Webhook config in PlotoAlertsConfig.json)
-    "ChiaWindowStyle": "hidden",        | Determines Window Style of chia.exe (Allowed Values: normal, hidden, maximized, minimized)
-    "PathToPloto": "C:/Users/Tydeno/Desktop/Ploto/Ploto.psm1", | Absolute path to the module as the background jobs needs to load it again
-
-    "DiskConfig": [
-      {
-        "TempDriveDenom": "plot",      | The common denominator for all your TempDrives
-	"Temp2Denom": "t2",	       | The common denominator for all your Temp2Drives
-        "OutDriveDenom": "out",        | The common denominator for all your OutDrives
-	"EnableT2": "true",            | Determines if Ploto uses Temp2 drives. Must be set to true along with temp2denom defined
-	"DenomForOutDrivesToReplotForPools": "replot" | The common denominator for all your Drives with final plots you want to replot
-      }
-    ],
-
-    "JobConfig": [
-        {
-	  "KSizeToPlot": "32",
-          "ReplotForPool": "true",                    | If enabled, ReplotWatchDog will be started and all Jobs will use the drives defined by replotdrivedenom as OutDrives
-	  "IntervallToCheckInMinutes": "5",   	      | Defines the time Ploto waits between each iteration to check for available tempd drives again 
-    	  "InputAmountToSpawn": "100",                | Amount of jobs maximal to be spawned in this launch of ploto
-          "WaitTimeBetweenPlotOnSeparateDisks": "15", | Wait time in minutes Ploto waits until a new job on another disk is spawned
-          "WaitTimeBetweenPlotOnSameDisk": "30",      | Wait time in minutes Ploto waits until a new job on the same disk is spawned
-          "MaxParallelJobsOnAllDisks": "6", 	      | Maximum amount of parallel jobs allowed on all disks combined
-          "MaxParallelJobsOnSameDisk": "2", 	      | Maximum amount of parallel jobs allowed on a single disk. Affects all disks of all sizes. Set to you're highest disk.
-	  "MaxParallelJobsInPhase1OnSameDisk": "2",   | Maximum amoumt of parallel jobs allowed on the same in  phase 1
-          "MaxParallelJobsInPhase1OnAllDisks" : "10", | Maximum amoumt of parallel jobs allowed on all disks in  phase 1
-          "StartEarly": "true",		              | Enable EarlyStart (when jobs completed StatusEarlyPhase)
-          "StartEarlyPhase": "3",                     | Defines when a job should be early started. If a job completes phase 3 in this example, it is not considered an active                                                           job anymore and makes room for another to spawn early.
-          "BufferSize": "1000",
-          "Thread": "1",
-          "Bitfield": "true",
-	  "P2SingletonAdress": "sisda78sd78sdauzida789hjsa7sa78saiou" | Your P2Singletonadress used to create portable plot. Do not specify together with -p and -f!
-        }
-      ]
-    "SpawnerAlerts": [
-	    {
-	      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxxxx",    | EndpointURL of your discord Webhook 
-	      "WhenJobSpawned": "true",                                                
-	      "WhenNoOutDrivesAvailable": "true",
-	      "WhenJobCouldNotBeSpawned": "true"
-	    }
-	  ],
-
-	  "PlotoFyAlerts": [
-	    {
-	      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxx",    | EndpointURL of your discord Webhook 
-	      "PeriodOfReportInHours": "1",                                              | Period the report is send out and covering    
-	    }
-	  ]
-}
-```
 Ploto checks periodically, if a TempDrive and OutDrive is available for plotting. 
 If there is no TempDrive available, or no OutDrive, Ploto checks again in amount of minutes defines in $config.IntervallToCheckInMinutes
 
@@ -134,42 +80,20 @@ When there is one available, Ploto determines the best OutDrive (most free space
 Ploto iterates once through all available TempDrives and spawns a plot per each TempDrive (as long as enough OutDrive space is given).
 After that, Ploto checks if amount Spawned is equal as defined as input. If not, Ploto keeps going until it is.
 
-### Understanding Plot and OutDrive denominators
-Ploto is quite different than what you probably would expect when it comes to how you define your drives to be used. Instead of specifying driveletters, PlotoSpawner identifies your drives for temping and storing plots by a common denominator you specify. 
-This means that all drives that match that denominator, will be used as either Temp or OutDrive.
+### Understanding Plot and OutDrives
+To define your temp and outdrives you use the config.
+To define a folder within a drive, use following notation: 
+`F:\\afolder,E:\\anotherone,K:\\somefolder`
 
-For reference heres my setup:
-* CPU: i9-9900k
-* RAM: 32 GB DDR4
-* TempDrives:
+to define several drivesuse :`F:,E:,K:`
 
-| Name          | DriveLetter | Type   | Size      |
-|---------------|----------|--------|--------------|
-|ChiaPlot 1 | I:\ | SATA SSD | 465 GB
-|ChiaPlot 2 | H:\ | SATA SSD | 465 GB
-|ChiaPlot 3 | E:\ | SATA SSD | 465 GB
-|ChiaPlot 4 | Q:\ | SATA SSD | 1810 GB
-|ChiaPlot 5 | J:\ | NVME SSD PCI 16x | 465 GB
+Important: There are no spaces allowed betwen the ","!
 
-* OutDrives:
-
-| Name          | DriveLetter | Type   | Size      |
-|---------------|----------|--------|--------------|
-|ChiaOut 1 | K:\ | SATA HDD | 465 GB
-|ChiaOut 2 | D:\ | SATA HDD | 465 GB
-
-So my denominators for my TempDrives its "plot" and for my destination drives its "out".
-This means that all my drives, that have "out" in their name (name of volume of logical disk) will be used as "OutDrives" (-d). And all drives that have "plot" in their name will be used as tempdrives (-t).
-
-IMPORTANT: Ploto Assumes you Plot in the root of your Drives and that the Drives are dedicated to plotting. So make sure you do that aswell.
-It may work when the drives contains other data but, but Ploto was designed for empty, plot-only drives.
-EDIT: I noticed I have a folder in my Q:\ drive with some data. So it seems to work. 
 
 ### About -2 drives
 Ploto now supports -2 drives. You define them just like plot and tempdrives. On each Job Ploto checks if a -2 drive is plottable. If yes, it spawns the job using that -2 drive. If not, it spawns the job without the drive. 
 
 > -2 [tmp dir 2]: Define a secondary temporary directory for plot creation. This is where Plotting Phase 3 (Compression) and Phase 4 (Checkpoints) occur. Depending on your OS, > -2 might default to either -t or -d. Therefore, if either -t or -d are running low on space, it's recommended to set -2 manually. The -2 dir requires an equal amount of > > working space as the final size of the plot.
-
 
 ### About parallelization on separate disks
 Using the Parameter "-MaxParallelJobsOnAllDisks", you can define how many Plots Jobs overall there should be in parallel. So this will be your hard cap. If there are as many jobs as you defined as max, PlotoSpawner wont spawn further Jobs. This keeps your system from overcommiting.
