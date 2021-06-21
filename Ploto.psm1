@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.1.27
+Version: 1.1.28911
 Author: Tydeno
 
 .DESCRIPTION
@@ -16,7 +16,7 @@ function Get-PlotoOutDrives
         $Mover
 		)
 
-
+Write-Host "GetPlotoOutDrives @"(Get-Date)": I've been called" -ForegroundColor Magenta  
 $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
 
 try 
@@ -49,20 +49,23 @@ catch
          exit
     } 
 
-
+Write-Host "GetPlotoOutDrives @"(Get-Date)": cfg is there" -ForegroundColor Magenta  
 
 #Check Space for outDrives
 $collectionWithDisks= New-Object System.Collections.ArrayList
 foreach ($drive in $outdrivescfg)
     {
+        Write-Host "GetPlotoOutDrives @"(Get-Date)": looping loui" -ForegroundColor Magenta  
 
             if ($drive.contains("\"))
             {
+                Write-Host "GetPlotoOutDrives @"(Get-Date)": drive contains some '\' splitting hard. Means there is FolderDefined" -ForegroundColor Magenta  
                 $drletter = $drive.Split("\")[0]
                 $FullPathToUse = $drive
             }
         else
             {
+                Write-Host "GetPlotoOutDrives @"(Get-Date)": No folder defined" -ForegroundColor Magenta  
                 $drletter = $drive
                 $FullPathToUse = ""
             }
@@ -106,16 +109,20 @@ foreach ($drive in $outdrivescfg)
                         $DiskBus = $PhysicalDisk.BusType
                     }
 
-
+                    Write-Host "GetPlotoOutDrives @"(Get-Date)": We go here 112ish?" -ForegroundColor Magenta  
                         #Get-CurrenJobs
                 $activeJobs = Get-PlotoJobs | Where-Object {$_.OutDrive -eq $drive.DeviceId} | Where-Object {$_.Status -ne "Completed"}
+                                    Write-Host "GetPlotoOutDrives @"(Get-Date)": We go here 115?" -ForegroundColor Magenta  
                 if ($activeJobs)
                     {
                         $HasPlotInProgress = $true
+                                               Write-Host "GetPlotoOutDrives @"(Get-Date)": We go here 118?" -ForegroundColor Magenta  
                         $PlotInProgressName = $activeJobs.PlotId
+                                            Write-Host "GetPlotoOutDrives @"(Get-Date)": We go here 120?" -ForegroundColor Magenta  
                         $PlotInProgressCount = $activeJobs.count
                         $PlotInProgressPhase = $activeJobs.Status
 
+                        Write-Host "GetPlotoOutDrives @"(Get-Date)": We go here 124?" -ForegroundColor Magenta  
                         if ($PlotInProgressCount -eq $null)
                             {
                                 $PlotInProgressCount = 1
@@ -135,7 +142,7 @@ foreach ($drive in $outdrivescfg)
                                 $AmountOfPlotsToTempMax = $AvailableAmounToPlot + $PlotInProgressCount
                             }
                     }
-
+                    Write-Host "GetPlotoOutDrives @"(Get-Date)": We go here 142?" -ForegroundColor Magenta  
                 else
                     {
                         $HasPlotInProgress = $false
@@ -154,7 +161,7 @@ foreach ($drive in $outdrivescfg)
                     {
                         $IsPlottable = $false
                     }
-
+                                        Write-Host "GetPlotoOutDrives @"(Get-Date)": We go here 160?" -ForegroundColor Magenta  
 
                 If ($FreeSpace -gt 107 -and $AvailableAmounToPlot -ge 1)
                     {
@@ -165,6 +172,7 @@ foreach ($drive in $outdrivescfg)
                         $PlotToDest = $false
                     }
 
+                                    Write-Host "GetPlotoOutDrives @"(Get-Date)": We go here 170?" -ForegroundColor Magenta  
                 $outdriveToPass = [PSCustomObject]@{
                 DriveLetter     =  $drive.DeviceID
                 FullPathToUse = $FullPathToUse
@@ -181,7 +189,7 @@ foreach ($drive in $outdrivescfg)
                 PlotInProgressID = $PlotInProgressName
                 PlotInProgressPhase = $PlotInProgressPhase
                 }
-
+                Write-Host "GetPlotoOutDrives @"(Get-Date)": We go here 188?" -ForegroundColor Magenta  
                 $collectionWithDisks.Add($outdriveToPass) | Out-Null   
             }
         else
@@ -1519,11 +1527,8 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                             Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Amount of Plots in Progress overall: "+$JobCountAll)                    
                             Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Amount of Plots in Progress on this Drive: "+$JobCountOnSameDisk) 
                             Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Skipping Drive: "+$PlottableTempDrive)
-                    }                             
-
-                
-                         
-    }
+                    }                                           
+            }
     }    
 else
     {
@@ -1700,6 +1705,7 @@ function Start-PlotoSpawns
             catch
                 {
                     Write-Host "PlotoManager @"(Get-Date)": Could not launch PlotoFy!" -ForegroundColor Red
+                    Write-Host $_.Exception.Message -ForegroundColor red
                 }
 
            Write-Host "---------------------------------------------------------------------------------"
@@ -1724,6 +1730,7 @@ function Start-PlotoSpawns
             catch
                 {
                     Write-Host "PlotoManager @"(Get-Date)": Could not launch ReplotWatchDog!" -ForegroundColor Red
+                    Write-Host $_.Exception.Message -ForegroundColor red
                 }
 
            Write-Host "---------------------------------------------------------------------------------"
@@ -1748,6 +1755,7 @@ function Start-PlotoSpawns
             catch
                 {
                     Write-Host "PlotoManager @"(Get-Date)": Could not launch MoveWatchDog!" -ForegroundColor Red
+                    Write-Host $_.Exception.Message -ForegroundColor red
                 }
 
            Write-Host "---------------------------------------------------------------------------------"
@@ -2324,29 +2332,13 @@ function Remove-AbortedPlotoJobs
     $collectionWithJobsToReport= New-Object System.Collections.ArrayList
     foreach ($job in $JobsToAbort)
         {
-            if ($job.CompletionTime -eq "None")
-                {
-                    $completiontime = 0
-                }
-            else
-                {
-                    $completiontime = $job.CompletionTime
-                }
-            [datetime]$StartTime = Get-Date ($job.starttime)
-
             $JobToReport = [PSCustomObject]@{
             JobId     =  $job.jobid
-            StartTime = $job.Starttime
+            StartTime = $job.StartTime
             PlotId = $job.PlotId
             ArgumentList = $job.ArgumentList
             TempDrive = $job.TempDrive
             OutDrive = $job.OutDrive
-            CompletionTime = $job.CompletionTime
-            CompletionTimeP1 = $job.CompletionTimeP1
-            CompletionTimeP2 = $job.CompletionTimeP2
-            CompletionTimeP3 = $job.CompletionTimeP3
-            CompletionTimeP4 = $job.CompletionTimeP4
-            EndDate = (Get-Date $StartTime).AddHours($completiontime)
             }
 
             #Send notification about spotted Job that is aborted
@@ -2529,13 +2521,16 @@ function Move-PlotoPlots
             throw "Exiting cause there is no readable config."
         } 
 
-$TransferMethod = "BITS"
+Write-Host "PlotoMover @"(Get-Date)": Getting OutDrives and Plots to move..." -ForegroundColor Magenta  
 $DestinationDrives = Get-PlotoOutDrives -Mover $true
+Write-Host "PlotoMover @"(Get-Date)": Destination Drives:"$DestinationDrives 
 $PlotsToMove = Get-PlotoPlots
+
+Write-Host "PlotoMover @"(Get-Date)": Checking if we have any plots to move..." 
 
 if ($PlotsToMove)
     {
-        Write-Host "PlotoMover @"(Get-Date)": There are Plots found to be moved: "
+        Write-Host "PlotoMover @"(Get-Date)": There were Plots found to be moved: "
         foreach ($plot in $PlotsToMove)
             {
                 Write-Host $plot.filepath -ForegroundColor Green
@@ -2634,7 +2629,7 @@ function Start-PlotoMove
             Throw $_.Exception.Message
         } 
  
-    } -Name 
+    } -Name "PlotoMove" 
 }
 
 function Request-PlotoMove
@@ -2642,6 +2637,7 @@ function Request-PlotoMove
 $count = 0
     for ($count -lt 100000000000)
         {
+           Write-Host "RequestPlotoMove @"(Get-Date)": Calling Move-PlotoPlots..."
            Move-PlotoPlots
            $count++
            Start-Sleep 300 
