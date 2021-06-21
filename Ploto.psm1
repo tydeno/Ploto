@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.1.2
+Version: 1.1.22
 Author: Tydeno
 
 .DESCRIPTION
@@ -1606,6 +1606,8 @@ function Start-PlotoSpawns
     $EnableFy = $config.EnablePlotoFyOnStart
     $Plotter = $config.PlotterUsed
     $PathToUnofficialPlotter = $config.PathToUnofficialPlotter
+    $EnableMover = $config.EnableMover
+    $PathsToMovePlotsTo = $config.PathsToMovePlotsTo
 
     [int]$IntervallToWait = $config.SpawnerConfig.IntervallToCheckInMinutes
     [int]$InputAmountToSpawn = $config.SpawnerConfig.InputAmountToSpawn 
@@ -1631,15 +1633,20 @@ function Start-PlotoSpawns
     $P2Singleton = $config.JobConfig.P2SingletonAdress
     $ksize = $config.JobConfig.KSizeToPlot
     $Buckets = $config.JobConfig.Buckets
+    $DiscoUrl = $config.SpawnerAlerts.DiscordWebhookURL
+
     Write-Host "--------------------------------------------------------------------------------------------------"
 
     Write-Host "PlotoManager @"(Get-Date)": BaseConfig:" -ForegroundColor Cyan
 
-    Write-Host "PlotoManager @"(Get-Date)": AlertsEnabled:"$EnableAlerts -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": Alerts Enabled:"$EnableAlerts -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": DiscordWebhookURL:"$DiscoUrl -ForegroundColor Cyan
     Write-Host "PlotoManager @"(Get-Date)": WindowStyle:"$WindowStyle -ForegroundColor Cyan
-    Write-Host "PlotoManager @"(Get-Date)": EnableAlertWatchdogOnStartUp:"$EnableFy -ForegroundColor Cyan
-    Write-Host "PlotoManager @"(Get-Date)": UsingPlotter:"$Plotter -ForegroundColor Cyan
-    Write-Host "PlotoManager @"(Get-Date)": CustomPlotterPath"$PathToUnofficialPlotter -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": Enable AlertWatchdog OnStartUp:"$EnableFy -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": Using Plotter:"$Plotter -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": Custom plotter path"$PathToUnofficialPlotter -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": PlotoMover is enabled:"$EnableMover -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": Paths to move final Plots to"$PathsToMovePlotsTo-ForegroundColor Cyan
 
     Write-Host "--------------------------------------------------------------------------------------------------"
 
@@ -1683,11 +1690,11 @@ function Start-PlotoSpawns
             if ($bgjobs)
                 {
                     Write-Host "PlotoManager @"(Get-Date)": We have found active PlotoFy jobs. Stopping it and starting fresh..."
-                    $bgjobs | Stop-Job | Remove-Job
+                    $bgjobs | Stop-Job | Remove-Job | Out-Null
                 }
             try 
                 {
-                    Start-PlotoFy
+                    Start-PlotoFy | Out-Null
                     Write-Host "PlotoManager @"(Get-Date)": Started PlotoFy successfully. Check your Discord" -ForegroundColor Green
                 }
             catch
@@ -1707,11 +1714,11 @@ function Start-PlotoSpawns
             if ($bgjobs)
                 {
                     Write-Host "PlotoManager @"(Get-Date)": We have found active ReplotWatchdog jobs. Stopping it and starting fresh..."
-                    $bgjobs | Stop-Job | Remove-Job
+                    $bgjobs | Stop-Job | Remove-Job | Out-Null
                 }
             try 
                 {
-                    Start-ReplotWatchDog
+                    Start-ReplotWatchDog | Out-Null
                     Write-Host "PlotoManager @"(Get-Date)": Started ReplotWatchDog successfully." -ForegroundColor Green
                 }
             catch
@@ -1723,16 +1730,39 @@ function Start-PlotoSpawns
             
         }
 
+    if ($EnableMover -eq "true")
+        {
+            Write-Host "PlotoManager @"(Get-Date)": Mover is enabled. Checking for active Watchdog jobs..."
+
+            $bgjobs = Get-Job | Where-Object {$_.Name -like "*PlotoMover*"}
+            if ($bgjobs)
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": We have found active MoverWatchdog jobs. Stopping it and starting fresh..."
+                    $bgjobs | Stop-Job | Remove-Job | Out-Null
+                }
+            try 
+                {
+                    Start-PlotoMove | Out-Null
+                    Write-Host "PlotoManager @"(Get-Date)": Started MoveWatchdog successfully." -ForegroundColor Green
+                }
+            catch
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Could not launch MoveWatchDog!" -ForegroundColor Red
+                }
+
+           Write-Host "---------------------------------------------------------------------------------"
+        
+        }
+
     $SpawnedCountOverall = 0 
 
     Do
     {
-            if  (Get-PlotoJobs | Where-Object {$_.Status -eq "Aborted"})
-
-                {
-                    Write-Host "PlotoManager @"(Get-Date)": Detected aborted jobs. Removing them..."
-                    Remove-AbortedPlotoJobs
-                }
+        if  (Get-PlotoJobs | Where-Object {$_.Status -eq "Aborted"})
+            {
+                Write-Host "PlotoManager @"(Get-Date)": Detected aborted jobs. Removing them..."
+                Remove-AbortedPlotoJobs
+            }
 
         if ($verbose)
             {
@@ -2560,8 +2590,7 @@ if ($PlotsToMove)
                             Write-Host "PlotoMover @"(Get-Date)": ERROR: Could not move Plot!" -ForegroundColor Red
                             Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
                         }        
-                }
-                    
+                }   
         }
     }
 
@@ -2585,6 +2614,31 @@ function Start-PlotoMove
         }
 
     Until ($count -eq $endlessCount)
+
+
+    Start-Job -ScriptBlock {
+    try 
+        {
+            Request-PlotoMove
+        }
+     catch
+        {
+            Throw $_.Exception.Message
+        } 
+ 
+    } -Name 
+
+}
+
+function Request-PlotoMove
+{
+$count = 0
+    for ($count -lt 100000000000)
+        {
+           Move-PlotoPlots
+           $count++
+           Start-Sleep 300 
+        }
 }
 
 function Invoke-PlotoDeleteForReplot
@@ -3901,7 +3955,6 @@ function Invoke-PayloadBuilder {
 
     }
 }
-
 
 function Measure-Latest {
     BEGIN { $latest = $null }
