@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.1.1
+Version: 1.1.2
 Author: Tydeno
 
 .DESCRIPTION
@@ -12,7 +12,8 @@ https://github.com/tydeno/Ploto
 function Get-PlotoOutDrives
 {
 	Param(
-		$Replot
+		$Replot,
+        $Mover
 		)
 
 
@@ -22,11 +23,17 @@ try
     {
         $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
         
-        if ($replot)
+        if ($replot -eq $true)
             {
                 $outdrivescfg = $config.DiskConfig.ReplotDrives
             }
-        else
+
+        if ($Mover -eq $true)
+            {
+                $outdrivescfg = $config.PathsToMovePlotsTo
+            }
+
+        if ($mover -ne $true -and $Replot -ne $true)
             {
                 $outdrivescfg = $config.DiskConfig.OutDrives
             }
@@ -2374,7 +2381,8 @@ function Remove-AbortedPlotoJobs
 function Get-PlotoPlots
 {
 	Param(
-    $replot
+    $replot,
+    $mover
 		)
 
 #Scan for final Plot Files to Move
@@ -2386,6 +2394,11 @@ if ($replot)
 else
     {
         $OutDrivesToScan = Get-PlotoOutDrives
+    }
+
+if ($mover)
+    {
+        $OutDrivesToScan = Get-PlotoOutDrives -Mover $true
     }
 
 
@@ -2448,17 +2461,47 @@ else
 
 function Move-PlotoPlots
 {
-	Param(
-		[parameter(Mandatory=$true)]
-		$DestinationDrive,
-		[parameter(Mandatory=$true)]
-		$OutDriveDenom,
-		[parameter(Mandatory=$true)]
-        [ValidateSet("BITS", "Move-Item", IgnoreCase = $true)]
-		$TransferMethod
-		)
 
-$PlotsToMove = Get-PlotoPlots
+    Write-Host "PlotoManager @"(Get-Date)": Loading config from "$env:HOMEDRIVE$env:HOMEPath"\.chia\mainnet\config\PlotoSpawnerConfig.json..."
+    $PathToConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
+
+    try 
+        {
+            $config = Get-Content -raw -Path $PathToConfig | ConvertFrom-Json
+            Write-Host "PlotoManager @"(Get-Date)": Loaded config successfully." -ForegroundColor Green
+        }
+    catch
+        {
+            Write-Host "PlotoManager @"(Get-Date)": Could not read Config. Check your config with the hints below and on https://jsonformatter.org/ for validation. If you cant get it to run, join Ploto Discord for help.  " -ForegroundColor Red
+
+            if ($_.Exception.Message -like "*1384*")
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Looks like your PathToPlotoModule is not specified correctly. You have to use \ instead of /!" -ForegroundColor Yellow
+                }
+
+           if ($_.Exception.Message -like "*1093*")
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Looks like there is a ','  missing somewhere at the end of a line " -ForegroundColor Yellow
+                }
+
+           if ($_.Exception.Message -like "*1094*")
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Looks like there is a '$a' missing somewhere at the  beginning or end of a  property " -ForegroundColor Yellow
+                }
+
+
+            if ($_.Exception.Message -notlike "*1384*" -and $_.Exception.Message -notlike "*1093*" -and $_.Exception.Message -notlike "*1094*") 
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Could not determine possible rootcause. Check your config on https://jsonformatter.org/ for validation. If you cant get it to run, join Ploto Discord for help." -ForegroundColor Red
+                    Write-Host $_.Exception.Message -ForegroundColor red
+                }
+
+            throw "Exiting cause there is no readable config."
+        } 
+
+$TransferMethod = "BITS"
+$DestinationDrives = Get-PlotoOutDrives -Mover $true
+$PlotsToMove = Get-PlotoPlots 
 
 if ($PlotsToMove)
     {
@@ -2467,62 +2510,58 @@ if ($PlotsToMove)
             {
                 Write-Host $plot.filepath -ForegroundColor Green
             }
-        Write-Host "PlotoMover @"(Get-Date)": A total of "$PlotsToMove.Count" plot have been found."
-                          
+        Write-Host "PlotoMover @"(Get-Date)": A total of "$PlotsToMove.Count" plot have been found."     
 
         foreach ($plot in $PlotsToMove)
-        {
-            If ($TransferMethod -eq "BITS")
+        {  
+            #Check if BITS Transfer already in progress:
+            $HasBITSinProgress = Get-BitsTransfer | Where-Object {$_.FileList.RemoteName -eq $plot.Filepath} 
+
+            if ($HasBITSinProgress)
                 {
-                    #Check if BITS Transfer already in progress:
-                    $HasBITSinProgress = Get-BitsTransfer | Where-Object {$_.FileList.RemoteName -eq $plot.Filepath} 
-
-                    if ($HasBITSinProgress)
-                        {
-                            Write-Host "PlotoMover @"(Get-Date)": WARN:" $plot.FilePath "has already a BITS transfer in progress"
-                        }
-
-                    else
-                        {
-                             try 
-                                {
-                                    Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestinationDrive "using BITS"
-                                    $source = $plot.FilePath
-                                    Start-BitsTransfer -Source $source -Destination $DestinationDrive -Description "Moving Plot" -DisplayName "Moving Plot"
-                                }
-
-                            catch
-                                {
-                                    Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
-                                }        
-                        }
-                    }
+                    Write-Host "PlotoMover @"(Get-Date)": WARN:" $plot.FilePath "has already a BITS transfer in progress"
+                }
 
             else
                 {
-                    #Check local destination drive space
-                    $DestSpaceCheck = get-WmiObject win32_logicaldisk | Where-Object {$_.DeviceID -like "*$DestinationDrive*"}
-                    $FreeSpaceDestDrive = [math]::Round($destspaceCheck.FreeSpace  / 1073741824, 2)
-
-                    if ($FreeSpaceDestDrive -gt 107)
+                    #get best Destination Drive 
+                    $collectionWithJobs= New-Object System.Collections.ArrayList
+                    $AllBits = Get-BitsTransfer | Where-Object {$_.JobState -ne "Transferred"}
+                    foreach ($trans in $AllBits)
                         {
-                            Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestinationDrive "using Move-Item."
+                            #getFileName and DrLetter
+                            $DestDriveInJob = $trans.FileList.LocalName.split("\")[0]
 
-                            try 
-                                {
-                                    Move-Item -Path $plot.FilePath -Destination $DestinationDrive
-                                }
-                            catch
-                                {
-                                    Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
-                                }
-                            
+                            $JobtoPass = [PSCustomObject]@{
+                            DriveLetter     =  $DestDriveInJob
+                            PlotName = $Trans.FileList.RemoteName
+                            CompletedOn = $Trans.TransferCompletionTime
+                            }
+
+                            $collectionWithJobs.Add($JobtoPass) | Out-Null 
                         }
-                    else
+
+                    $min = ($collectionWithJobs | Measure-Object -Property DriveLetter -Minimum).Minimum
+                    $DestDrive = Get-PlotoOutDrives -Mover $true | Where-Object {$_.DriveLetter -eq $min}
+                    if ($DestDrive.FullPathToUse -ne $null -or $DestDrive -ne "")
                         {
-                            Write-Host "PlotoMover @"(Get-Date)": Local Destination Drive does not have enough disk space. Cant move." -ForegroundColor Red
+                            $DestDrive = $DestDrive.FullPathToUse
                         }
+
+                    try 
+                    {
+                        Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestinationDrive "using BITS"
+                        $source = $plot.FilePath
+                        Start-BitsTransfer -Source $source -Destination $DestDrive -Description "Moving Plot" -DisplayName "Moving Plot"
+                    }
+
+                    catch
+                        {
+                            Write-Host "PlotoMover @"(Get-Date)": ERROR: Could not move Plot!" -ForegroundColor Red
+                            Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
+                        }        
                 }
+                    
         }
     }
 
@@ -2535,21 +2574,13 @@ else
 
 function Start-PlotoMove
 {
-	Param(
-		[parameter(Mandatory=$true)]
-		$DestinationDrive,
-		[parameter(Mandatory=$true)]
-		$OutDriveDenom,
-        [ValidateSet("BITS", "Move-Item", IgnoreCase = $true)]
-        $TransferMethod
-		)
 
     $count = 0
     $endlessCount = 1000
 
     Do
         {
-            Move-PlotoPlots -DestinationDrive $DestinationDrive -OutDriveDenom $OutDriveDenom -TransferMethod $TransferMethod
+            Move-PlotoPlots
             Start-Sleep 900
         }
 
