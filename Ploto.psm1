@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.1.22
+Version: 1.1.27
 Author: Tydeno
 
 .DESCRIPTION
@@ -2531,7 +2531,7 @@ function Move-PlotoPlots
 
 $TransferMethod = "BITS"
 $DestinationDrives = Get-PlotoOutDrives -Mover $true
-$PlotsToMove = Get-PlotoPlots 
+$PlotsToMove = Get-PlotoPlots
 
 if ($PlotsToMove)
     {
@@ -2555,32 +2555,54 @@ if ($PlotsToMove)
             else
                 {
                     #get best Destination Drive 
-                    $collectionWithJobs= New-Object System.Collections.ArrayList
                     $AllBits = Get-BitsTransfer | Where-Object {$_.JobState -ne "Transferred"}
-                    foreach ($trans in $AllBits)
+                    if ($AllBits)
                         {
-                            #getFileName and DrLetter
-                            $DestDriveInJob = $trans.FileList.LocalName.split("\")[0]
+                            Write-Host "has bits"
+                            $collectionWithJobs= New-Object System.Collections.ArrayList
+                            foreach ($trans in $AllBits)
+                                {
+                                    #getFileName and DrLetter
+                                    $DestDriveInJob = $trans.FileList.LocalName.split("\")[0]
 
-                            $JobtoPass = [PSCustomObject]@{
-                            DriveLetter     =  $DestDriveInJob
-                            PlotName = $Trans.FileList.RemoteName
-                            CompletedOn = $Trans.TransferCompletionTime
-                            }
+                                    $JobtoPass = [PSCustomObject]@{
+                                    DriveLetter     =  $DestDriveInJob
+                                    PlotName = $Trans.FileList.RemoteName
+                                    CompletedOn = $Trans.TransferCompletionTime
+                                    }
+                                }
 
-                            $collectionWithJobs.Add($JobtoPass) | Out-Null 
+                            $collectionWithJobs.Add($JobtoPass) | Out-Null
+                            $min = ($collectionWithJobs | Measure-Object -Property DriveLetter -Minimum).Minimum
+                            write-host "min is:"$min
+                            $DestDrive = Get-PlotoOutDrives -Mover $true | Where-Object {$_.DriveLetter -eq $min}
                         }
+                    else
+                        {
+                            if ($DestinationDrives.count -gt 1)
+                                {
+                                    $dToPick = Get-Random -Maximum (($DestinationDrives).count-1)
+                                    $DestDrive = $DestinationDrives[$dToPick]
+                                }
+                            else
+                                {
+                                    $DestDrive = Get-PlotoOutDrives -Mover $true
+                                }
+                        }
+                    }
 
-                    $min = ($collectionWithJobs | Measure-Object -Property DriveLetter -Minimum).Minimum
-                    $DestDrive = Get-PlotoOutDrives -Mover $true | Where-Object {$_.DriveLetter -eq $min}
-                    if ($DestDrive.FullPathToUse -ne $null -or $DestDrive -ne "")
+                    if ($DestDrive.FullPathToUse -ne "")
                         {
                             $DestDrive = $DestDrive.FullPathToUse
+                        }
+                    else
+                        {
+                            $DestDrive = $DestDrive.DriveLetter
                         }
 
                     try 
                     {
-                        Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestinationDrive "using BITS"
+                        Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestDrive "using BITS"
                         $source = $plot.FilePath
                         Start-BitsTransfer -Source $source -Destination $DestDrive -Description "Moving Plot" -DisplayName "Moving Plot"
                     }
@@ -2592,7 +2614,6 @@ if ($PlotsToMove)
                         }        
                 }   
         }
-    }
 
 else
     {
@@ -2603,19 +2624,6 @@ else
 
 function Start-PlotoMove
 {
-
-    $count = 0
-    $endlessCount = 1000
-
-    Do
-        {
-            Move-PlotoPlots
-            Start-Sleep 900
-        }
-
-    Until ($count -eq $endlessCount)
-
-
     Start-Job -ScriptBlock {
     try 
         {
@@ -2627,7 +2635,6 @@ function Start-PlotoMove
         } 
  
     } -Name 
-
 }
 
 function Request-PlotoMove
