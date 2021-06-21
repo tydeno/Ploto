@@ -6,6 +6,8 @@
   "EnablePlotoFyOnStart": "true",
   "ChiaWindowStyle": "normal",
   "PathToPloto": "C:/Users/Tydeno/Desktop/Ploto/Ploto.psm1",
+  "EnableMover": "true",
+  "PathsToMovePlotsTo",
 
   "DiskConfig": [
     {
