@@ -1,7 +1,8 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.1.31
+
+Version: 1.1.21
 Author: Tydeno
 
 .DESCRIPTION
@@ -2332,7 +2333,6 @@ function Remove-AbortedPlotoJobs
         {
             $JobToReport = [PSCustomObject]@{
             JobId     =  $job.jobid
-            StartTime = $job.StartTime
             PlotId = $job.PlotId
             ArgumentList = $job.ArgumentList
             TempDrive = $job.TempDrive
@@ -2357,8 +2357,8 @@ function Remove-AbortedPlotoJobs
                     )
                 )
 
-                $StaId = "StartTime"
-                $JobDetailsStartTimeMsg = $job.StartTime
+                $StaId = "JobID"
+                $JobDetailsStartTimeMsg = $job.jobid
                 $embedBuilder.AddField(
                     [DiscordField]::New(
                         $StaId,
