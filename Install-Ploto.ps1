@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 0.82
+Version: 0.84
 Author: Tydeno
 
 
@@ -642,7 +642,6 @@ if (Test-Path $pathtolchech)
         if ($checkAdded -match "@")
             {
                 Write-Host "InstallPloto @"(Get-Date)": New properties were introduced in new version, need to update config!" -ForegroundColor Yellow
-                Write-Host "InstallPloto @"(Get-Date)": New properties:" -ForegroundColor Yellow
                 Write-Host "InstallPloto @"(Get-Date)": Added: "$compare.added -ForegroundColor Yellow
                 
             }
