@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.1.3
+Version: 1.1.31
 Author: Tydeno
 
 .DESCRIPTION
@@ -1042,6 +1042,14 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                 if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenJobSpawned -eq "true")
                                                     {
                                                         Write-Host "PlotoSpawner @"(Get-Date)": Event notification in config defined. Sending Discord Notification about spawned job..."
+                                                        $countchars = ($ArgumentList.ToCharArray()).Count
+                                                        if ($countchars -gt 199)
+                                                            {
+                                                                $ArgumentList = $ArgumentList -replace ".{199}$"
+                                                                $exArgs = "-f YourKeys -p YourKeys"
+                                                                $ArgumentListReport = $ArgumentList+$exArgs
+                                                            }
+
 
                                                         try 
                                                             {
@@ -1097,7 +1105,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                                 $embedBuilder.AddField(
                                                                     [DiscordField]::New(
                                                                         'ArgumentList',
-                                                                        $ArgumentList, 
+                                                                        $ArgumentListReport, 
                                                                         $true
                                                                     )
                                                                 )
@@ -2093,6 +2101,7 @@ foreach ($log in $logs)
                 {
                     $IsReplot = "false"
                 }
+
             $countchars = ($ArgumentList.ToCharArray()).Count
             if ($countchars -gt 199)
                 {
@@ -2100,8 +2109,6 @@ foreach ($log in $logs)
                     $exArgs = "-f YourKeys -p YourKeys"
                     $ArgumentList = $ArgumentList+$exArgs
                 }
-
-
 
             if ($PerfCounter)
                 {
@@ -2878,7 +2885,18 @@ function Invoke-PlotoFyStatusReport
                 {   
                     $countji++
                     $ArgId = "ArgumentList Job "+$countji
-                    $JobDetailsArgListMsg = $ji.ArgumentList.TrimStart("plots create ")
+                    $ArgumentList = $ji.ArgumentList
+
+                    $countchars = ($ArgumentList.ToCharArray()).Count
+                    if ($countchars -gt 199)
+                        {
+                            $ArgumentList = $ArgumentList -replace ".{199}$"
+                            $exArgs = "-f YourKeys -p YourKeys"
+                            $ArgumentListReport = $ArgumentList+$exArgs
+                        }
+
+
+                    $JobDetailsArgListMsg = $ArgumentListReport
                     $embedBuilder.AddField(
                         [DiscordField]::New(
                             $ArgId,
