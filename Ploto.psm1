@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.1.1
+Version: 1.1.11
 Author: Tydeno
 
 .DESCRIPTION
@@ -2287,29 +2287,14 @@ function Remove-AbortedPlotoJobs
     $collectionWithJobsToReport= New-Object System.Collections.ArrayList
     foreach ($job in $JobsToAbort)
         {
-            if ($job.CompletionTime -eq "None")
-                {
-                    $completiontime = 0
-                }
-            else
-                {
-                    $completiontime = $job.CompletionTime
-                }
-            [datetime]$StartTime = Get-Date ($job.starttime)
 
             $JobToReport = [PSCustomObject]@{
             JobId     =  $job.jobid
-            StartTime = $job.Starttime
             PlotId = $job.PlotId
             ArgumentList = $job.ArgumentList
             TempDrive = $job.TempDrive
             OutDrive = $job.OutDrive
-            CompletionTime = $job.CompletionTime
-            CompletionTimeP1 = $job.CompletionTimeP1
-            CompletionTimeP2 = $job.CompletionTimeP2
-            CompletionTimeP3 = $job.CompletionTimeP3
-            CompletionTimeP4 = $job.CompletionTimeP4
-            EndDate = (Get-Date $StartTime).AddHours($completiontime)
+
             }
 
             #Send notification about spotted Job that is aborted
@@ -2330,8 +2315,8 @@ function Remove-AbortedPlotoJobs
                     )
                 )
 
-                $StaId = "StartTime"
-                $JobDetailsStartTimeMsg = $job.StartTime
+                $StaId = "JobID"
+                $JobDetailsStartTimeMsg = $job.jobid
                 $embedBuilder.AddField(
                     [DiscordField]::New(
                         $StaId,
