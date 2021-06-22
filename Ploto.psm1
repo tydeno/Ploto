@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.1.28912
+Version: 1.1.3
 Author: Tydeno
 
 .DESCRIPTION
@@ -16,7 +16,6 @@ function Get-PlotoOutDrives
         $Mover
 		)
 
-Write-Host "GetPlotoOutDrives @"(Get-Date)": I've been called" -ForegroundColor Magenta  
 $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
 
 try 
@@ -49,23 +48,19 @@ catch
          exit
     } 
 
-Write-Host "GetPlotoOutDrives @"(Get-Date)": cfg is there" -ForegroundColor Magenta  
 
 #Check Space for outDrives
 $collectionWithDisks= New-Object System.Collections.ArrayList
 foreach ($drive in $outdrivescfg)
     {
-        Write-Host "GetPlotoOutDrives @"(Get-Date)": looping loui" -ForegroundColor Magenta  
 
             if ($drive.contains("\"))
             {
-                Write-Host "GetPlotoOutDrives @"(Get-Date)": drive contains some '\' splitting hard. Means there is FolderDefined" -ForegroundColor Magenta  
                 $drletter = $drive.Split("\")[0]
                 $FullPathToUse = $drive
             }
         else
             {
-                Write-Host "GetPlotoOutDrives @"(Get-Date)": No folder defined" -ForegroundColor Magenta  
                 $drletter = $drive
                 $FullPathToUse = ""
             }
@@ -75,7 +70,7 @@ foreach ($drive in $outdrivescfg)
             }
         catch
             {
-                Write-Host "GetPlotoTempDrives @ "(Get-Date)": Could not fetch defined drive: "$drletter -ForegroundColor Red
+                Write-Host "GetPlotoOutDrives @ "(Get-Date)": Could not fetch defined drive: "$drletter -ForegroundColor Red
             }
 
         if ($drive -ne $null)
@@ -83,11 +78,15 @@ foreach ($drive in $outdrivescfg)
                 $DiskSize = [math]::Round($drive.Size  / 1073741824, 2)
                 $FreeSpace = [math]::Round($drive.FreeSpace  / 1073741824, 2)
 
+                                
+                                
+                $oldea = $ErrorActionPreference
+                $ErrorActionPreference = "SilentlyContinue"
+
 
                 $Partition = Get-Partition | Where-Object {$_.DriveLetter -eq ($drive.DeviceId.TrimEnd(":"))}
         
-                $oldea = $ErrorActionPreference
-                $ErrorActionPreference = "SilentlyContinue"
+
 
                 #Get Disk from partition
                 $Disk = Get-Disk -Number $Partition.DiskNumber
@@ -109,20 +108,15 @@ foreach ($drive in $outdrivescfg)
                         $DiskBus = $PhysicalDisk.BusType
                     }
 
-                    Write-Host "GetPlotoOutDrives @"(Get-Date)": We go here 112ish?" -ForegroundColor Magenta  
-                        #Get-CurrenJobs
-                $activeJobs = Get-PlotoJobs | Where-Object {$_.OutDrive -eq $drive.DeviceId} | Where-Object {$_.Status -ne "Completed"}
-                                    Write-Host "GetPlotoOutDrives @"(Get-Date)": We go here 115?" -ForegroundColor Magenta  
+
+                $activeJobs = Get-PlotoJobs | Where-Object {$_.OutDrive -eq $drive.DeviceId} | Where-Object {$_.Status -ne "Completed"} 
                 if ($activeJobs)
                     {
-                        $HasPlotInProgress = $true
-                                               Write-Host "GetPlotoOutDrives @"(Get-Date)": We go here 118?" -ForegroundColor Magenta  
+                        $HasPlotInProgress = $true 
                         $PlotInProgressName = $activeJobs.PlotId
-                                            Write-Host "GetPlotoOutDrives @"(Get-Date)": We go here 120?" -ForegroundColor Magenta  
                         $PlotInProgressCount = $activeJobs.count
                         $PlotInProgressPhase = $activeJobs.Status
 
-                        Write-Host "GetPlotoOutDrives @"(Get-Date)": We go here 124?" -ForegroundColor Magenta  
                         if ($PlotInProgressCount -eq $null)
                             {
                                 $PlotInProgressCount = 1
@@ -160,7 +154,6 @@ foreach ($drive in $outdrivescfg)
                     {
                         $IsPlottable = $false
                     }
-                                        Write-Host "GetPlotoOutDrives @"(Get-Date)": We go here 160?" -ForegroundColor Magenta  
 
                 If ($FreeSpace -gt 107 -and $AvailableAmounToPlot -ge 1)
                     {
@@ -170,8 +163,7 @@ foreach ($drive in $outdrivescfg)
                     {
                         $PlotToDest = $false
                     }
-
-                                    Write-Host "GetPlotoOutDrives @"(Get-Date)": We go here 170?" -ForegroundColor Magenta  
+                     
                 $outdriveToPass = [PSCustomObject]@{
                 DriveLetter     =  $drive.DeviceID
                 FullPathToUse = $FullPathToUse
@@ -188,7 +180,7 @@ foreach ($drive in $outdrivescfg)
                 PlotInProgressID = $PlotInProgressName
                 PlotInProgressPhase = $PlotInProgressPhase
                 }
-                Write-Host "GetPlotoOutDrives @"(Get-Date)": We go here 188?" -ForegroundColor Magenta  
+
                 $collectionWithDisks.Add($outdriveToPass) | Out-Null   
             }
         else
@@ -2412,16 +2404,16 @@ if ($replot)
     {
         $OutDrivesToScan = Get-PlotoOutDrives -Replot $true
     }
-else
-    {
-        $OutDrivesToScan = Get-PlotoOutDrives
-    }
 
 if ($mover)
     {
         $OutDrivesToScan = Get-PlotoOutDrives -Mover $true
     }
 
+if ($replot -eq $null -and $mover -eq $null)
+    {
+        $OutDrivesToScan = Get-PlotoOutDrives
+    }
 
 if ($OutDrivesToScan)
     {
@@ -2519,11 +2511,9 @@ function Move-PlotoPlots
 
             throw "Exiting cause there is no readable config."
         } 
-
-Write-Host "PlotoMover @"(Get-Date)": Getting OutDrives and Plots to move..." -ForegroundColor Magenta  
+ 
 $DestinationDrives = Get-PlotoOutDrives -Mover $true
-Write-Host "PlotoMover @"(Get-Date)": Destination Drives:"$DestinationDrives 
-$PlotsToMove = Get-PlotoPlots
+$PlotsToMove = Get-PlotoPlots -mover $true
 
 Write-Host "PlotoMover @"(Get-Date)": Checking if we have any plots to move..." 
 
