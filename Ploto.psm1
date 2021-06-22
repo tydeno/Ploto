@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.1.28911
+Version: 1.1.28912
 Author: Tydeno
 
 .DESCRIPTION
@@ -142,7 +142,6 @@ foreach ($drive in $outdrivescfg)
                                 $AmountOfPlotsToTempMax = $AvailableAmounToPlot + $PlotInProgressCount
                             }
                     }
-                    Write-Host "GetPlotoOutDrives @"(Get-Date)": We go here 142?" -ForegroundColor Magenta  
                 else
                     {
                         $HasPlotInProgress = $false
