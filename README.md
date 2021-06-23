@@ -1,19 +1,26 @@
 ## Ploto 
-A Windows PowerShell based Chia Plotting Manager. 
+An easy to use, customizable and heavily reliable Windows PowerShell based Chia Plotting Manager. 
 Consists of a PowerShell Module that allows to spawn, manage and move plots.
 
-Also informs you in Discord about spawned jobs. 
-And if you like, you may define an Intervall upon which Plotofy sends you notifications about whats going on.
-
-
-![image](https://user-images.githubusercontent.com/83050419/119401060-4536a180-bcdb-11eb-8bb5-fa587b229d59.png)
-
-![image](https://user-images.githubusercontent.com/83050419/118192418-662f0500-b446-11eb-9340-e919234d3d5f.png)
-![image](https://user-images.githubusercontent.com/83050419/118396387-a57c7200-b64f-11eb-8ef5-0526bd8cb3c6.png)
-![image](https://user-images.githubusercontent.com/83050419/118396379-9eedfa80-b64f-11eb-9a83-1262a6625f3a.png)
-
-![image](https://user-images.githubusercontent.com/83050419/118398002-f479d580-b656-11eb-82f7-a92a4a0af4a9.png)
-
+## Features at a glance
+* Customizable Plotter to be used; Supports madmax/stotiks and official chia plotter
+* Allows for staggering on several levels;
+  * By Minutes to be waited between each job on the same or separate disk
+  * When a jobs enters a customizable phase (say 4), it kicks off a new job
+  * By limiting amount of max concurrent plots on a single disk, all disks and in phase 1
+* Replotting mechanism;
+  * Define the drives you want to replot and Ploto will gradually replace the plots in those drives with new plots
+  * When a plot that targets a drive to replot is about to enter phase 4, it deletes the oldest plot on the defined drive.  
+* Supports Pool plotting (-c p2singleton and -f params)
+* Automatically starts Jobs on the speediest drive with the least jobs on it
+* Can stop a Plot job and automatically deletes .tmp and . log files
+* Removes aborted jobs automatically and it its leftovers (.tmp and .log files)
+* Can automatically move finished plots to a UNC path or other drive
+* Sends you Discord notification about whats going on with your plotting. Customize what notifications you want to receive;
+  * When a new plot job is spawned
+  * When a plot job aborts
+  * A Summary in customizable intervall about whats going on with your plotting (Jobs in progress and completed jobs)
+  * When there is no plot job going around
 
 
 # Table of content
