@@ -1,6 +1,5 @@
 ## Ploto 
 An easy to use, customizable and heavily reliable Windows PowerShell based Chia Plotting Manager. 
-Consists of a PowerShell Module that allows to spawn, manage and move plots.
 
 ## Features at a glance
 * Customizable Plotter to be used; Supports madmax/stotiks and official chia plotter
