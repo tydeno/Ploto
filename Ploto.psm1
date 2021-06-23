@@ -1642,7 +1642,7 @@ function Start-PlotoSpawns
 
     Write-Host "--------------------------------------------------------------------------------------------------"
 
-    Write-Host "PlotoManager @"(Get-Date)": BaseConfig:" -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": BaseConfig" -ForegroundColor Cyan
 
     Write-Host "PlotoManager @"(Get-Date)": Alerts Enabled:"$EnableAlerts -ForegroundColor Cyan
     Write-Host "PlotoManager @"(Get-Date)": DiscordWebhookURL:"$DiscoUrl -ForegroundColor Cyan
@@ -1651,7 +1651,7 @@ function Start-PlotoSpawns
     Write-Host "PlotoManager @"(Get-Date)": Using Plotter:"$Plotter -ForegroundColor Cyan
     Write-Host "PlotoManager @"(Get-Date)": Custom plotter path"$PathToUnofficialPlotter -ForegroundColor Cyan
     Write-Host "PlotoManager @"(Get-Date)": PlotoMover is enabled:"$EnableMover -ForegroundColor Cyan
-    Write-Host "PlotoManager @"(Get-Date)": Paths to move final Plots to"$PathsToMovePlotsTo-ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": Paths to move final Plots to"$PathsToMovePlotsTo -ForegroundColor Cyan
 
     Write-Host "--------------------------------------------------------------------------------------------------"
 
@@ -1672,7 +1672,7 @@ function Start-PlotoSpawns
     Write-Host "PlotoManager @"(Get-Date)": Using temp drives: "$TempDrives -ForegroundColor Gray
     Write-Host "PlotoManager @"(Get-Date)": Using -2 drives: "$t2drives -ForegroundColor Gray
     Write-Host "PlotoManager @"(Get-Date)": Using destination drives: "$OutDrives -ForegroundColor Gray
-    Write-Host "PlotoManager @"(Get-Date)": Common denominator for destination drives to replot (name of logical volume): "$ReplotDrives -ForegroundColor Gray
+    Write-Host "PlotoManager @"(Get-Date)": Will be replotting the following drives: "$ReplotDrives -ForegroundColor Gray
 
     Write-Host "--------------------------------------------------------------------------------------------------"
 
