@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.21
+Version: 1.1.22
 Author: Tydeno
 
 .DESCRIPTION
@@ -2618,13 +2618,20 @@ function Start-PlotoMove
     Start-Job -ScriptBlock {
     try 
         {
-            Request-PlotoMove
+            $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
+            $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
+            Write-Verbose "Loaded Config successfully"
+            
         }
      catch
         {
             Throw $_.Exception.Message
         } 
- 
+
+    $PathToModule = $config.PathToPloto
+    Unblock-File $PathToModule
+    Request-PlotoMove 
+
     } -Name "PlotoMove" 
 }
 
