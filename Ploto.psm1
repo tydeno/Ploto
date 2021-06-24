@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.22
+Version: 1.1.23
 Author: Tydeno
 
 .DESCRIPTION
@@ -55,7 +55,7 @@ $collectionWithDisks= New-Object System.Collections.ArrayList
 foreach ($drive in $outdrivescfg)
     {
 
-            if ($drive.contains("\"))
+        if ($drive.contains("\"))
             {
                 $drletter = $drive.Split("\")[0]
                 $FullPathToUse = $drive
@@ -2412,12 +2412,7 @@ if ($replot)
         $OutDrivesToScan = Get-PlotoOutDrives -Replot $true
     }
 
-if ($mover)
-    {
-        $OutDrivesToScan = Get-PlotoOutDrives -Mover $true
-    }
-
-if ($replot -eq $null -and $mover -eq $null)
+if ($replot -eq $null)
     {
         $OutDrivesToScan = Get-PlotoOutDrives
     }
