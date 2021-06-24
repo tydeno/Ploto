@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.23
+Version: 1.1.231
 Author: Tydeno
 
 .DESCRIPTION
@@ -2515,7 +2515,7 @@ function Move-PlotoPlots
         } 
  
 $DestinationDrives = Get-PlotoOutDrives -Mover $true
-$PlotsToMove = Get-PlotoPlots -mover $true
+$PlotsToMove = Get-PlotoPlots
 
 Write-Host "PlotoMover @"(Get-Date)": Checking if we have any plots to move..." 
 
