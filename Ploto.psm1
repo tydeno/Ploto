@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.231
+Version: 1.1.232
 Author: Tydeno
 
 .DESCRIPTION
@@ -2623,9 +2623,10 @@ function Start-PlotoMove
             Throw $_.Exception.Message
         } 
 
-    $PathToModule = $config.PathToPloto
-    Unblock-File $PathToModule
-    Request-PlotoMove 
+    $PathToPloto = $config.PathToPloto 
+    Unblock-File $PathToPloto
+    Import-Module $PathToPloto -Force
+    Request-PlotoMove
 
     } -Name "PlotoMove" 
 }
