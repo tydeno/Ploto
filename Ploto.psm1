@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.232
+Version: 1.1.233
 Author: Tydeno
 
 .DESCRIPTION
@@ -3075,7 +3075,7 @@ catch
          exit
     } 
 
-$ReplotDriveDenom = $config.DiskConfig.DenomForOutDrivesToReplotForPools
+$ReplotDriveDenom = $config.DiskConfig.ReplotDrives
 
 $count = 0
     for ($count -lt 100000000000)
