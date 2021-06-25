@@ -1,13 +1,9 @@
-## Ploto 
+## [Ploto](https://www.ploto.rocks)
 An easy to use, customizable and heavily reliable Windows PowerShell based Chia Plotting Manager. 
 
 
 ![image](https://user-images.githubusercontent.com/83050419/123462242-57fa0a00-d5ea-11eb-9506-03cb578ce77d.png)
-
 ![image](https://user-images.githubusercontent.com/83050419/123462300-6c3e0700-d5ea-11eb-9c2f-f5915c758580.png)
-
-
-
 
 # Table of content
 * [Contact](https://github.com/tydeno/Ploto/tree/main#contact)
@@ -33,6 +29,8 @@ An easy to use, customizable and heavily reliable Windows PowerShell based Chia 
 * [FAQ](https://github.com/tydeno/Ploto/tree/main#faq)
 
 ## Contact
+https://www.ploto.rocks/
+
 For general chatting, issues and support of how to use Ploto, you may join the Discord below.
 If you find any bugs, do not hesitate to create or update an issue directly here in GitHub.
 
