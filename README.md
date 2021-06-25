@@ -44,23 +44,6 @@ In case you'd like to to support the development of Ploto in a monetary way, you
 
 Or trough my [GitHub Sponsoring page](https://github.com/sponsors/tydeno)
 
-## Is it safe to use? 
-We've seen some horrific stuff happening with 3rd Party Tools around a Chia. For instance
-there was/is a PowerShell Script that should add some Introducers to your farm. It does that yes. But it also empties your wallet and sends your private keys home.
-
-This was a good reminder that we should never trust blindly on the internet (and everywhere else!).
-Never trust, always verify is the leading principle. 
-
-So I encourage you to go trough the code in this repo, line by line to verify if it does something bad.
-If theres a line you don't understand do not hesitate to raise an issue and ask straight away.
-
-However, bear in mind that my identity is verified by Github trough the sponsoring program. They have my adress, tax and ID number and thus know exactly who I am. Doing bad things with my repo would be a very bad idea in that sense for myself.
-
-From a technical perspective, if you are cooncerned that your private keys and or wallet might be exposed to Ploto, you can mitigate that.
-Ploto only needs chia.exe to start PlotJobs. No private keys, no access to farmers/harvesters nor a wallet.
-If you run Ploto on dedicated plotting machines, you can specify your public keys in the config and generate valid plots for your farm.
-
-On top of that; it always makes sense to set your reward address to a cold wallet.
 
 # PlotoSpawn
 TLDR: It plots 1x plot on each TempDrive (if you have 6x TempDrives = 6x parallel Plot Jobs) as long as you want it to and as long as you have OutDrive space.
@@ -394,7 +377,6 @@ So what works for me, may not ultimately work for you.
 Please also bear in mind that unexpected beahviour and or bugs are possible.
 
 These are known:
-* Only works when plotting in root of drives
 * Only works when Drives are dedicated to plotting (dont hold any other files)
 * If you start to use Ploto and you have Logs created by GUI or any other manager in C:\Users\me.chia\mainnet\plotter\, Get-PlotoPlots wont the able to read the status.
 Make sure you delete/move all existing Logs in said path. 
