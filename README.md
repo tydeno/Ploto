@@ -1,25 +1,12 @@
 ## Ploto 
 An easy to use, customizable and heavily reliable Windows PowerShell based Chia Plotting Manager. 
 
-## Features at a glance
-* Customizable Plotter to be used; Supports madmax/stotiks and official chia plotter
-* Allows for staggering on several levels;
-  * By Minutes to be waited between each job on the same or separate disk
-  * When a jobs enters a customizable phase (say 4), it kicks off a new job
-  * By limiting amount of max concurrent plots on a single disk, all disks and in phase 1
-* Replotting mechanism;
-  * Define the drives you want to replot and Ploto will gradually replace the plots in those drives with new plots
-  * When a plot that targets a drive to replot is about to enter phase 4, it deletes the oldest plot on the defined drive.  
-* Supports Pool plotting (-c p2singleton and -f params)
-* Automatically starts Jobs on the speediest drive with the least jobs on it
-* Can stop a Plot job and automatically deletes .tmp and . log files
-* Removes aborted jobs automatically and it its leftovers (.tmp and .log files)
-* Can automatically move finished plots to a UNC path or other drive
-* Sends you Discord notification about whats going on with your plotting. Customize what notifications you want to receive;
-  * When a new plot job is spawned
-  * When a plot job aborts
-  * A Summary in customizable intervall about whats going on with your plotting (Jobs in progress and completed jobs)
-  * When there is no plot job going around
+
+![image](https://user-images.githubusercontent.com/83050419/123462242-57fa0a00-d5ea-11eb-9506-03cb578ce77d.png)
+
+![image](https://user-images.githubusercontent.com/83050419/123462300-6c3e0700-d5ea-11eb-9c2f-f5915c758580.png)
+
+
 
 
 # Table of content
@@ -222,11 +209,7 @@ PlotoManager @ 4/30/2021 3:49:13 AM : Overall spawned Plots since start of scrip
 
 ## How to get Jobs
 1. Open another PowerShell session 
-2. Import-Module "Ploto" 
-```powershell
-Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
-```
-4. Launch Get-PlotoJobs and format Output
+2. Launch Get-PlotoJobs and format Output
 ```powershell
 Get-PlotoJobs | ft
 ```
@@ -364,34 +347,11 @@ This is only possible as I continously move the final Plots to my farming machin
 
 I do this by moving plots to a external drive and plug that into my farmer, and sometimes I also transfer plots across my network (not the fatest, thats why I kind of have to do  the running around approach)
 
-PlotoMover helps to automate this process.
+PlotoMover helps to automate this process. In PlotoSpawnerConfig.json, you can define several drives you want to move your final plots to. Mover then checks all defined outdrives for final plots and moves one by one trough Background Inteligence Transfer Service (BITS) to the desired location. In order for remote destination targets (your farmers/harvesters) to recognized correctly, these drives needed to be mapped as network drives and have a volume letter assigned (eg Z:\) for mover to tbe able to grab them.
 
-If you want to move your plots to a local/external drive just once:
-1. Launch a PowerShell session and Import Ploto Module
-2. Launch Move-PlotoPLots
+To enable mover,, in the config set EnablerMover to "true" and define the PathsToMovePlotsTo according the example config.
+Then the next time you launch `Start-PlotoSpawns` mover will be launched aswell.
 
-```powershell
-Move-PlotoPlots -DestinationDrive "P:" -OutDriveDenom "out" -TransferMethod Move-Item
-```
-
-If you want to move your plots to a UNC path just once:
-1. Launch a PowerShell session and Import Ploto Module
-2. Launch Move-PlotoPLots
-
-```powershell
-Move-PlotoPlots -DestinationDrive "\\Desktop-xxxxx\d" -OutDriveDenom "out" -TransferMethod Move-Item
-```
-
-Please be aware that if you use UNC paths as Destination, PlotoMover cannot grab the free space there and just fires off.
-
-## But I want to do it continously
-Sure, just use Start-PlotoMove with your needed params:
-
-```powershell
-Move-PlotoPlots -DestinationDrive "\\Desktop-xxxxx\d" -OutDriveDenom "out" -TransferMethod Move-Item
-```
-
-Please be aware that if you use UNC paths as Destination, PlotoMover cannot grab the free space there and just fires off.
 
 ## How to Check Farm Logs
 If you want to peek at your farm logs you can use Check-PLotoFarmLogs:
