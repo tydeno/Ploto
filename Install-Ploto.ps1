@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 0.84
+Version: 0.841
 Author: Tydeno
 
 
@@ -141,7 +141,6 @@ function Get-JsonDifference
     }
 
 }
-
 
 function Get-JsonDifferenceRecursion
 {
@@ -535,6 +534,7 @@ If (Test-Path $DestinationContainer)
                         Write-Host "InstallPloto @"(Get-Date)": We skipped updating. Using currently installed version of Ploto:"$PlotoVersionInSource -ForegroundColor Yellow
                     }
             }
+
     }
 else
     {
