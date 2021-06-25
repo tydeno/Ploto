@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.233
+Version: 1.1.234
 Author: Tydeno
 
 .DESCRIPTION
@@ -3080,7 +3080,7 @@ $ReplotDriveDenom = $config.DiskConfig.ReplotDrives
 $count = 0
     for ($count -lt 100000000000)
         {
-           Invoke-PlotoDeleteForReplot -ReplotDriveDenom $ReplotDriveDenom
+           Invoke-PlotoDeleteForReplot -ReplotDrives $ReplotDriveDenom
            $count++
            Start-Sleep 300 
         }
