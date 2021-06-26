@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.23993
+Version: 1.1.23994
 Author: Tydeno
 
 .DESCRIPTION
@@ -2741,7 +2741,7 @@ function Invoke-PlotoDeleteForReplot
 		)
 
     #Get active jobs entering phase 4.
-    $activeJobs = Get-PlotoJobs | Where-Object {$_.Status -ge 3.9} | Where-Object {$_.IsReplot -eq "true"}
+    $activeJobs = Get-PlotoJobs | Where-Object {$_.Status -ge 3.9} | Where-Object {$_.IsReplot -eq "true"} | Where-Object {$_.Status -ne "Completed"}
     if ($activeJobs)
         {
             Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Found active jobs that are about to enter phase 4")
