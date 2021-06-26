@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.23994
+Version: 1.1.23996
 Author: Tydeno
 
 .DESCRIPTION
@@ -774,9 +774,50 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                             #Pick an Outdrive from ReplotDenom
                                             $replotDrives = Get-PlotoOutDrives -Replot $true
 
-                                            $min = ($replotDrives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
-                                            $OutDrive = $replotDrives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
-  
+                                            $min = ($replotDrives | measure-object -Property FreeSpace -minimum).minimum
+                                            $OutDrive = $replotDrives | Where-Object { $_.FreeSpace -eq $min}
+
+                                            $FinalPlots = Get-PlotoPlots
+                                            $collectionWithPlots= New-Object System.Collections.ArrayList
+                                            if ($FinalPlots)
+                                                {
+                                                     foreach ($FinalPlot in $FinalPlots)
+                                                        {
+                                                            $Plot = [PSCustomObject]@{
+                                                            Name = $FinalPlot.Name
+                                                            FilePath = $FinalPlot.FilePath
+                                                            CreationTime     =  $FinalPlot.CreationTime
+                                                            Drive = $FinalPlot.Filepath.split("plot")[0].TrimEnd("\")
+                                                            }
+
+                                                            $collectionWithPlots.Add($Plot) | Out-Null
+               
+                                                        } 
+                                                        
+                                                        if ($collectionWithPlots | Where-Object {$_.Drive -eq $OutDrive.DriveLetter})
+                                                            {
+                                                                Write-Host "There Are finalplots on this disk, will be using it"    
+                                                            }
+                                                        else
+                                                            {
+                                                                Write-Host "There are no finalplots on this disk. Checking the other one"
+                                                                $plotsOnOtherDisks = $collectionWithPlots | Where-Object {$_.Drive -ne $OutDrive.DriveLetter}
+                                                                if ($plotsOnOtherDisks.count -gt 1)
+                                                                    {
+                                                                        $plot = $plotsOnOtherDisks[0]
+                                                                    }
+                                                                else
+                                                                    {
+                                                                        $plot = $plotsOnOtherDisks
+                                                                    }
+                                                                $OutDrive = Get-PlotoOutDrives | Where-Object {$_.DriveLetter -eq $plot.Drive}
+                                                            }                                            
+                                                }
+                                            else
+                                                {
+                                                    Write-Host ("PlotoSpawner @ "+(Get-Date)+": No final plots have been found. ")
+                                                }
+ 
                                         }
                                     else
                                         {
@@ -2459,11 +2500,31 @@ function Get-PlotoPlots
     $mover
 		)
 
+$PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
+
+
+try 
+    {
+        $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
+        
+    }
+catch
+    {
+         Throw $_.Exception.Message
+         exit
+    } 
+
 #Scan for final Plot Files to Move
 
 if ($replot)
     {
         $OutDrivesToScan = Get-PlotoOutDrives -Replot $true
+        $PlotReplotPlotsOlderThan = $config.SpawnerConfig.ReplotPlotsOlderThan
+        $day = $PlotReplotPlotsOlderThan.Split(".")[0]
+        $month = $PlotReplotPlotsOlderThan.Split(".")[1]
+        $year = $PlotReplotPlotsOlderThan.Split(".")[2]
+        $datetoComp = Get-Date -Day $day -Month $month -Year $year
+
     }
 
 if ($replot -eq $null)
@@ -2478,8 +2539,7 @@ if ($OutDrivesToScan)
         foreach ($OutDriveToScan in $OutDrivesToScan)
         {
             Write-Host "Iterating trough Drive: "$OutDriveToScan
-
-            $ItemsInDrive = Get-ChildItem $OutDriveToScan.DriveLetter
+            $ItemsInDrive = Get-ChildItem $OutDriveToScan.DriveLetter 
             Write-Host "Checking if any item in that drive contains .PLOT as file ending..."
 
             If ($ItemsInDrive)
@@ -2487,7 +2547,8 @@ if ($OutDrivesToScan)
             {
                 foreach ($item in $ItemsInDrive)
                 {
-                    If ($item.Extension -eq ".PLOT")
+                    Write-Host "Searching for plots older than: "$datetoComp
+                    If ($item.Extension -eq ".PLOT" -and $item.CreationTime -le $datetoComp)
                         {
                             Write-Host -ForegroundColor Green "Found a Final plot: "$item
                     
