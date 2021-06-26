@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.2395
+Version: 1.1.23993
 Author: Tydeno
 
 .DESCRIPTION
@@ -26,16 +26,19 @@ try
         if ($replot -eq $true)
             {
                 $outdrivescfg = $config.DiskConfig.ReplotDrives
+                $ChiaDriveType = "Replot"
             }
 
         if ($Mover -eq $true)
             {
                 $outdrivescfg = $config.PathsToMovePlotsTo
+                $ChiaDriveType = "Final Farmer"
             }
 
         if ($mover -ne $true -and $Replot -ne $true)
             {
                 $outdrivescfg = $config.DiskConfig.OutDrives
+                $ChiaDriveType = "Out"
             }
 
         if ($outdrivescfg.contains(","))
@@ -67,6 +70,7 @@ foreach ($drive in $outdrivescfg)
                         #is thgere also an MP for that disk?
                         if (Get-CimInstance win32_volume -Verbose:$false | Where-Object {$_.Name -eq $FullPathToUse})
                             {
+                                Write-Host "GetPlotoOutDrives @ "(Get-Date)": Seems this is a MountPoint: "$FullPathToUse -ForegroundColor yellow
                                 $drive = Get-CimInstance win32_volume -Verbose:$false | Where-Object {$_.Name -eq $FullPathToUse}
                                 $drlettertoreport = $drive.Name
                             }
@@ -80,6 +84,7 @@ foreach ($drive in $outdrivescfg)
                 else
                     {
                         try {
+                                Write-Host "GetPlotoOutDrives @ "(Get-Date)": Seems like this is a MountPoint: "$drletter -ForegroundColor yellow
                                 $drive = Get-CimInstance win32_volume -Verbose:$false | Where-Object {$_.Name -eq $FullPathToUse}
                                 $drlettertoreport = $drive.Name
 
@@ -101,16 +106,14 @@ foreach ($drive in $outdrivescfg)
                     }
                 catch
                     {
-                        Write-Host "GetPlotoOutDrives @ "(Get-Date)": Could not fetch defined drive: "$drletter -ForegroundColor Red
+                        Write-Host "GetPlotoOutDrives @ "(Get-Date)": Could not fetch defined drive: "$drletter -ForegroundColor Yellow
 
                     }
             }
 
-
-
         if ($drive -eq $null)
             {
-                Write-Host "GetPlotoTempDrives @ "(Get-Date)": Seems like this is a Network drive: "$drletter -ForegroundColor yellow
+                Write-Host "GetPlotoOutDrives @ "(Get-Date)": Seems like this is a Network drive: "$drletter -ForegroundColor yellow
                 try {
                         $drive = Get-CimInstance win32_logicaldisk -Verbose:$false | Where-Object {$_.Name -eq $drletter}
                         $drlettertoreport = $drive.DeviceID
@@ -148,7 +151,7 @@ foreach ($drive in $outdrivescfg)
 
                 If ($Partition.DiskNumber -eq $null)
                     {
-                        Write-Host "GetPlotoTempDrives @ "(Get-Date)": Cannot get disks for the logical volume" $tmpDrive.DeviceID "by PowerShell using Get-Partition/Get-Disk cmdlet. Cannot get the disk and temperature for reporting. Can keep going." -ForegroundColor Yellow
+                        Write-Host "GetPlotoOutDrives @ "(Get-Date)": Cannot get disks for the logical volume" $tmpDrive.DeviceID "by PowerShell using Get-Partition/Get-Disk cmdlet. Cannot get the disk and temperature for reporting. Can keep going." -ForegroundColor Yellow
                         $Disk = "Not available"
                         $DiskType = "Not available"
                         $DiskBus = "Not available"
@@ -220,7 +223,7 @@ foreach ($drive in $outdrivescfg)
                 DriveLetter     =  $drlettertoreport
                 FullPathToUse = $FullPathToUse
                 Disk = $Disk
-                ChiaDriveType = "Out"
+                ChiaDriveType = $ChiaDriveType
                 VolumeName = $drive.Label
                 FreeSpace = $FreeSpace
                 TotalSpace = $DiskSize
@@ -237,7 +240,7 @@ foreach ($drive in $outdrivescfg)
             }
         else
             {
-                Write-Host "GetPlotoTempDrives @ "(Get-Date)": Could not fetch defined drive: "$drletter -ForegroundColor Red
+                Write-Host "GetPlotoOutDrives @ "(Get-Date)": Could not fetch defined drive: "$drletter -ForegroundColor Red
             }
 
       
@@ -2522,7 +2525,9 @@ else
     
     Write-Host "--------------------------------------------------------------------------------------------------"
 
-    return $collectionWithFinalPlots
+    $collectionWithFinalPlotsSorted = $collectionWithFinalPlots | sort CreationTime -Descending
+
+    return $collectionWithFinalPlotsSorted 
 }
 
 function Move-PlotoPlots
@@ -2568,6 +2573,27 @@ function Move-PlotoPlots
 $DestinationDrives = Get-PlotoOutDrives -Mover $true
 $PlotsToMove = Get-PlotoPlots
 
+
+foreach ($plot in $PlotsToMove)
+    {
+            $IsAlreadyTransferred = Get-BitsTransfer | Where-Object {$_.FileList.localname -eq $plot.filepath}  | Where-Object {$_.JobState -eq "Transferred"}
+            if ($IsAlreadyTransferred)
+                {
+                    Write-Host "PlotoMover @"(Get-Date)": WARN:" $plot.FilePath "was already transferred but file still exists on source. Deleting it now."
+                    
+                    try
+                        {
+                            Remove-Item -Path $IsAlreadyTransferred.FileList.localname -Force
+                        }
+                    catch
+                        {
+                            Write-Host "PlotoMover @"(Get-Date)": Could not delete local plot that was already transferred to finaldir" -ForegroundColor red
+                            throw $_.Exception.Message
+                        }
+                }
+    }
+
+$PlotsToMove = Get-PlotoPlots
 Write-Host "PlotoMover @"(Get-Date)": Checking if we have any plots to move..." 
 
 if ($PlotsToMove)
@@ -2582,11 +2608,12 @@ if ($PlotsToMove)
         foreach ($plot in $PlotsToMove)
         {  
             #Check if BITS Transfer already in progress:
-            $HasBITSinProgress = Get-BitsTransfer | Where-Object {$_.FileList.RemoteName -eq $plot.Filepath} 
+
+            $HasBITSinProgress = Get-BitsTransfer | Where-Object {$_.FileList.localname -eq $plot.filepath}  | Where-Object {$_.JobState -ne "Transferred"}
 
             if ($HasBITSinProgress)
                 {
-                    Write-Host "PlotoMover @"(Get-Date)": WARN:" $plot.FilePath "has already a BITS transfer in progress"
+                    Write-Host "PlotoMover @"(Get-Date)": WARN:" $plot.FilePath "has already a BITS transfer in progress, skipping this plot"
                 }
 
             else
