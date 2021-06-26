@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.236
+Version: 1.1.2395
 Author: Tydeno
 
 .DESCRIPTION
@@ -59,33 +59,83 @@ foreach ($drive in $outdrivescfg)
             {
                 $drletter = $drive.Split("\")[0]
                 $FullPathToUse = $drive
+                $FullPathToUse = $FullPathToUse+"\"
+
+                #is this a real "drive" or an MP?
+                if (Get-CimInstance win32_logicaldisk -Verbose:$false | Where-Object {$_.DeviceID -eq $drletter})
+                    {
+                        #is thgere also an MP for that disk?
+                        if (Get-CimInstance win32_volume -Verbose:$false | Where-Object {$_.Name -eq $FullPathToUse})
+                            {
+                                $drive = Get-CimInstance win32_volume -Verbose:$false | Where-Object {$_.Name -eq $FullPathToUse}
+                                $drlettertoreport = $drive.Name
+                            }
+
+                        else
+                            {
+                                $drive = Get-CimInstance win32_volume -Verbose:$false | Where-Object {$_.DriveLetter -eq $drletter}
+                                $drlettertoreport = $drive.DriveLetter
+                            }
+                    }
+                else
+                    {
+                        try {
+                                $drive = Get-CimInstance win32_volume -Verbose:$false | Where-Object {$_.Name -eq $FullPathToUse}
+                                $drlettertoreport = $drive.Name
+
+                            }
+                        catch
+                            {
+                                Write-Host "GetPlotoOutDrives @ "(Get-Date)": Could not fetch defined drive: "$FullPathToUse -ForegroundColor red
+                            }
+                    }
             }
         else
             {
                 $drletter = $drive
                 $FullPathToUse = ""
+                try {
+                        $drive = Get-CimInstance win32_volume -Verbose:$false | Where-Object {$_.DriveLetter -eq $drletter}
+                        $drlettertoreport = $drive.DriveLetter
+
+                    }
+                catch
+                    {
+                        Write-Host "GetPlotoOutDrives @ "(Get-Date)": Could not fetch defined drive: "$drletter -ForegroundColor Red
+
+                    }
             }
 
-        try {
-                $drive = Get-CimInstance win32_logicaldisk -Verbose:$false | Where-Object {$_.DeviceID -eq $drletter}
-            }
-        catch
+
+
+        if ($drive -eq $null)
             {
-                Write-Host "GetPlotoOutDrives @ "(Get-Date)": Could not fetch defined drive: "$drletter -ForegroundColor Red
+                Write-Host "GetPlotoTempDrives @ "(Get-Date)": Seems like this is a Network drive: "$drletter -ForegroundColor yellow
+                try {
+                        $drive = Get-CimInstance win32_logicaldisk -Verbose:$false | Where-Object {$_.Name -eq $drletter}
+                        $drlettertoreport = $drive.DeviceID
+                        $DiskSize = [math]::Round($drive.Size  / 1073741824, 2)
+
+                    }
+                catch
+                    {
+                        Write-Host "GetPlotoOutDrives @ "(Get-Date)": Could not fetch defined drive: "$FullPathToUse -ForegroundColor red
+                    }
+            }
+        else
+            {
+                $DiskSize = [math]::Round($drive.Capacity  / 1073741824, 2)
+                $FreeSpace = [math]::Round($drive.FreeSpace  / 1073741824, 2)
             }
 
         if ($drive -ne $null)
-            {
-                $DiskSize = [math]::Round($drive.Size  / 1073741824, 2)
-                $FreeSpace = [math]::Round($drive.FreeSpace  / 1073741824, 2)
-
-                                
+            {                                
                                 
                 $oldea = $ErrorActionPreference
                 $ErrorActionPreference = "SilentlyContinue"
 
 
-                $Partition = Get-Partition | Where-Object {$_.DriveLetter -eq ($drive.DeviceId.TrimEnd(":"))}
+                $Partition = Get-Partition | Where-Object {$_.DriveLetter -eq ($drive.DriveLetter.TrimEnd(":"))}
         
 
 
@@ -94,6 +144,7 @@ foreach ($drive in $outdrivescfg)
                 $PhysicalDisk = Get-PhysicalDisk | Where-Object {$_.FriendlyName -eq $Disk.Model}
 
                 $ErrorActionPreference = $oldea
+
 
                 If ($Partition.DiskNumber -eq $null)
                     {
@@ -166,11 +217,11 @@ foreach ($drive in $outdrivescfg)
                     }
                      
                 $outdriveToPass = [PSCustomObject]@{
-                DriveLetter     =  $drive.DeviceID
+                DriveLetter     =  $drlettertoreport
                 FullPathToUse = $FullPathToUse
                 Disk = $Disk
                 ChiaDriveType = "Out"
-                VolumeName = $drive.VolumeName
+                VolumeName = $drive.Label
                 FreeSpace = $FreeSpace
                 TotalSpace = $DiskSize
                 IsPlottable    = $PlotToDest
@@ -2579,7 +2630,6 @@ if ($PlotsToMove)
                                     $DestDrive = Get-PlotoOutDrives -Mover $true
                                 }
                         }
-                    }
 
                     if ($DestDrive.FullPathToUse -ne "")
                         {
@@ -2590,7 +2640,7 @@ if ($PlotsToMove)
                             $DestDrive = $DestDrive.DriveLetter
                         }
 
-                    if ($DestinationDrive -eq $null)
+                    if ($DestDrive -eq $null)
                         {
                             Write-Host "PlotoMover @"(Get-Date)": ERROR: No Outdrives found!" -ForegroundColor Red
                             break
@@ -2600,16 +2650,18 @@ if ($PlotsToMove)
                         {
                             Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestDrive "using BITS"
                             $source = $plot.FilePath
-                            Start-BitsTransfer -Source $source -Destination $DestDrive -Description "Moving Plot" -DisplayName "Moving Plot"
+                            Start-BitsTransfer -Source $source -Destination $DestDrive -Description "Moving Ploto Plot" -DisplayName "Moving Plot" -TransferType Upload -Asynchronous
                         }
 
                     catch
                         {
                             Write-Host "PlotoMover @"(Get-Date)": ERROR: Could not move Plot!" -ForegroundColor Red
                             Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
-                        }        
-                }   
-        }
+                        } 
+                    
+                    }
+        }   
+    }
 
 else
     {
