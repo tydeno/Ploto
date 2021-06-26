@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.234
+Version: 1.1.236
 Author: Tydeno
 
 .DESCRIPTION
@@ -2567,8 +2567,12 @@ if ($PlotsToMove)
                         {
                             if ($DestinationDrives.count -gt 1)
                                 {
-                                    $dToPick = Get-Random -Maximum (($DestinationDrives).count-1)
-                                    $DestDrive = $DestinationDrives[$dToPick]
+
+                                   #Get the FinalDir with most free space (availableamountofplotstohold)
+                                    $max = ($DestinationDrives | Measure-Object -Property AvailableAmountToPlot -Maximum).maximum
+                                    write-host "max is:"$max
+                                    $DestDrive = Get-PlotoOutDrives -Mover $true | Where-Object {$_.AvailableAmountToPlot -eq $max}
+
                                 }
                             else
                                 {
@@ -2586,12 +2590,18 @@ if ($PlotsToMove)
                             $DestDrive = $DestDrive.DriveLetter
                         }
 
+                    if ($DestinationDrive -eq $null)
+                        {
+                            Write-Host "PlotoMover @"(Get-Date)": ERROR: No Outdrives found!" -ForegroundColor Red
+                            break
+                        }
+
                     try 
-                    {
-                        Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestDrive "using BITS"
-                        $source = $plot.FilePath
-                        Start-BitsTransfer -Source $source -Destination $DestDrive -Description "Moving Plot" -DisplayName "Moving Plot"
-                    }
+                        {
+                            Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestDrive "using BITS"
+                            $source = $plot.FilePath
+                            Start-BitsTransfer -Source $source -Destination $DestDrive -Description "Moving Plot" -DisplayName "Moving Plot"
+                        }
 
                     catch
                         {
