@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.2399997
+Version: 1.1.2399998
 Author: Tydeno
 
 .DESCRIPTION
@@ -2736,7 +2736,7 @@ if ($PlotsToMove)
                             foreach ($trans in $AllBits)
                                 {
                                     #getFileName and DrLetter
-                                    $DestDriveInJob = $trans.FileList.LocalName.split("\")[0]
+                                    $DestDriveInJob = $trans.FileList.RemoteName.split("\")[0]
 
                                     $JobtoPass = [PSCustomObject]@{
                                     DriveLetter     =  $DestDriveInJob
