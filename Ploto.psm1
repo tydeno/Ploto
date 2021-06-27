@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.239995
+Version: 1.1.2399992
 Author: Tydeno
 
 .DESCRIPTION
@@ -770,13 +770,15 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                     #Building ArgumentList for chia.exe
                                     if ($Replot -eq "true" -and $ReplotDrives -ne "")
                                         {
-                                            Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Replotting enabled. Will delete existing plots shortly upon before a job enters phase 4. Also ignoring the fact that an OutDrive has no space, as a plot will be deleted to make space for new one.")
+                                            Write-Host ("PlotoSpawner @ "+(Get-Date)+": Replotting enabled. Will delete existing plots shortly upon before a job enters phase 4. Also ignoring the fact that an OutDrive has no space, as a plot will be deleted to make space for new one.")
                                             #Pick an Outdrive from ReplotDenom
                                             $replotDrives = Get-PlotoOutDrives -Replot $true
 
                                             $min = ($replotDrives | measure-object -Property FreeSpace -minimum).minimum
                                             $OutDrive = $replotDrives | Where-Object { $_.FreeSpace -eq $min}
 
+
+                                            Write-Host ("PlotoSpawner @ "+(Get-Date)+": Checking if we have any plots to replot older than specified on OutDrives...")
                                             $FinalPlots = Get-PlotoPlots -replot $true 
                                             $collectionWithPlots= New-Object System.Collections.ArrayList
                                             if ($FinalPlots)
@@ -796,11 +798,11 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                         
                                                         if ($collectionWithPlots | Where-Object {$_.Drive -eq $OutDrive.DriveLetter})
                                                             {
-                                                                Write-Host "There Are finalplots on this disk, will be using it"    
+                                                                Write-Host ("PlotoSpawner @ "+(Get-Date)+": There are final plots to replot on this disk. Will be using it as OutDrive..")  
                                                             }
                                                         else
                                                             {
-                                                                Write-Host "There are no finalplots on this disk. Checking the other one"
+                                                                Write-Host ("PlotoSpawner @ "+(Get-Date)+": There are no finalplots on this disk. Checking the other ones...")
                                                                 $plotsOnOtherDisks = $collectionWithPlots | Where-Object {$_.Drive -ne $OutDrive.DriveLetter}
                                                                 if ($plotsOnOtherDisks.count -gt 1)
                                                                     {
@@ -813,11 +815,12 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                                 $OutDrive = Get-PlotoOutDrives | Where-Object {$_.DriveLetter -eq $plot.Drive}
                                                                 if ($OutDrive -eq $null)
                                                                     {
-                                                                        Write-Host "There is no OutDrive that has plots older than specified. Selecting OutDrive with space."
+                                                                        Write-Host ("PlotoSpawner @ "+(Get-Date)+": There is no OutDrive that has plots older than specified. Selecting OutDrive with space. Using the Outdrive with most free space for plotting.")
                                                                         $max = ($replotDrives | measure-object -Property FreeSpace -maximum).maximum
                                                                         $OutDrive = $replotDrives | Where-Object { $_.FreeSpace -eq $max}
                                                                         if ($OutDrive -eq $null)
                                                                             {
+                                                                                Write-Host ("PlotoSpawner @ "+(Get-Date)+": There is no OutDrive with free space. Aborting now.") -ForegroundColor red
                                                                                 throw "Error, no outdrives to replot and none with space found. stopping now"
                                                                             }
                                                                     }
@@ -826,7 +829,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                             else
                                                 {
                                                     Write-Host ("PlotoSpawner @ "+(Get-Date)+": No final plots have been found. ")
-                                                    Write-Host "There is no OutDrive that has plots older than specified. Selecting OutDrive with space. Using the Outdrive with most free space for plotting."
+                                                    Write-Host ("PlotoSpawner @ "+(Get-Date)+": There is no OutDrive that has plots older than specified. Selecting OutDrive with space. Using the Outdrive with most free space for plotting.")
                                                     $max = ($replotDrives | measure-object -Property FreeSpace -maximum).maximum
                                                     $OutDrive = $replotDrives | Where-Object { $_.FreeSpace -eq $max}
                                                 }
@@ -2545,6 +2548,7 @@ if ($replot)
         $month = $PlotReplotPlotsOlderThan.Split(".")[1]
         $year = $PlotReplotPlotsOlderThan.Split(".")[2]
         $datetoComp = Get-Date -Day $day -Month $month -Year $year
+        Write-Host ("GetPlotoPlotsReplot @ "+(Get-Date)+": Searching for plots older than: "+$datetoComp)
 
     }
 
@@ -2559,21 +2563,18 @@ if ($OutDrivesToScan)
 
         foreach ($OutDriveToScan in $OutDrivesToScan)
         {
-            Write-Host "Iterating trough Drive: "$OutDriveToScan
+            Write-Host ("GetPlotoPlots @ "+(Get-Date)+": Iterating trough Drive: "+$OutDriveToScan)
             $ItemsInDrive = Get-ChildItem $OutDriveToScan.DriveLetter 
-            Write-Host "Checking if any item in that drive contains .PLOT as file ending..."
-
+            Write-Host ("GetPlotoPlots @ "+(Get-Date)+": Checking if any item in that drive contains .PLOT as file ending...")
             If ($ItemsInDrive)
             {
                 foreach ($item in $ItemsInDrive)
                 {
-                    Write-Host "Searching for plots older than: "$datetoComp
                     if ($replot)
                         {
                             If ($item.Extension -eq ".PLOT" -and $item.CreationTime -le $datetoComp)
                                 {
-                                    Write-Host -ForegroundColor Green "Found a Final plot: "$item
-                    
+                                    Write-Host ("GetPlotoPlots @ "+(Get-Date)+": Found a Final plot that is older than specified date: "+$item.fullname)
                                     $FilePath = $item.Directory.Name + $item.name
                                     $Size = [math]::Round($item.Length  / 1073741824, 2)
 
@@ -2588,7 +2589,7 @@ if ($OutDrivesToScan)
                                 }
                             else
                                 {
-                                    Write-Host "This is no plot: "$item -ForegroundColor Yellow
+                                    Write-Host ("GetPlotoPlotsReplot @ "+(Get-Date)+": This is no plot that is older than specified date: "+$item.fullname) -ForegroundColor Yellow
                                 }
                         }
                     if ($mover)
@@ -2596,7 +2597,7 @@ if ($OutDrivesToScan)
                         
                             If ($item.Extension -eq ".PLOT")
                                 {
-                                    Write-Host -ForegroundColor Green "Found a Final plot: "$item
+                                    Write-Host -ForegroundColor Green "Found a Final plot to move: "$item
                     
                                     $FilePath = $item.Directory.Name + $item.name
                                     $Size = [math]::Round($item.Length  / 1073741824, 2)
@@ -2628,7 +2629,7 @@ if ($OutDrivesToScan)
     }
 else
     {
-        Write-Host "No drives to Scan. Make sure you set your denominator correctly. Dont specify the drive, speficy the denom across all drives!" -ForegroundColor Red
+        Write-Host "No drives to Scan. Make sure you set your drives/paths correctly." -ForegroundColor Red
     }
     
     Write-Host "--------------------------------------------------------------------------------------------------"
@@ -2864,7 +2865,8 @@ function Invoke-PlotoDeleteForReplot
                             {
                                 Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Not enough space available for new plot, need to delete oldest one for replotting... ")
                                 #pick oldest plottodel
-                                $plottoDel = (Get-PlotoPlots -replot $true | sort creationtime)[0]
+                                $fp = $OutDriveToCheck.DriveLetter
+                                $plottoDel = (Get-PlotoPlots -replot $true | Where-Object {$_.FilePath -like "*$fp*"} )
                                 Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Oldest Plot in ReplotDrive "+$OutDriveToCheck.DriveLetter+ " of job with id "+$job.JobId+" that is about to finish: "+$plottoDel.FilePath)
 
                                 $plotitemtodel = Get-ChildItem $plottoDel.FilePath
