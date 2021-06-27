@@ -126,7 +126,7 @@ Be advises that this in BETA mode right now.
 
 To create portable pool plots, we need to use the param "P2Singleton" in the config. 
 Therefore we need to create a singleton that points to a pool first, and then we can start plotting. 
-If you want to plot portable pools, make sure your PoolKey is NOT specified in the config, as this will mess thing up
+If you want to plot portable pools, make sure your PoolKey is NOT specified in the config, as this will mess thing up.
 
 ### About replotting
 Ploto now supports the ability to replot existing drives. This assumes you have one or more drives with final plots that are actively being farmed.
@@ -136,6 +136,9 @@ If you now launch Ploto with 'Replot: "true"' and your denom for your ReplotDriv
 2. If there is a job entering phase 4 with "IsReplot=True", it deletes the oldest plot on the drive, the replotJob uses as OutDrive.
 
 All ReplotJobs launchd, will use the the drives as OutDrive, that match the ReplotDriveDenom. So if you replot, make sure you set the InputAmountToSpawn to exactly the number of Plots you want to Replot. Currently Ploto does not know with which keys/singletons a Plot was plotted. So it keeps going and potentially deletes already replotted jobs, if InputAmountToSpawn is too high. This can lead to unneccesary wear & tear.
+
+The replotting mechanism features a * `"ReplotPlotsOlderThan": "20.6.2021` parameter in config. It allows you to define which plots shall be replotted and which not by specifying a date as seen above. This is a mandatory param if you want to replot, as its the only way to determine which plots shall be replotted
+It picks those drives that have final plots on it for replotting. If there is no drive that has plots to replot, its chooses the best suited OutDrive by free space. If there is none, it aborts. 
 
 ## About running custom plotters
 Ploto now supports custom plotters. This functionality was implemented to support madMAx43v3r's chia-plotter. It also allows to use sever other forks, like Stotiks and catchmeifyoucans release.
