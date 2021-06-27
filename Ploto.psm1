@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.239999994
+Version: 1.1.239999995
 Author: Tydeno
 
 .DESCRIPTION
@@ -2575,7 +2575,7 @@ if ($OutDrivesToScan)
                         {
                             If ($item.Extension -eq ".PLOT" -and $item.CreationTime -le $datetoComp)
                                 {
-                                    Write-Host ("GetPlotoPlots @ "+(Get-Date)+": Found a Final plot that is older than specified date: "+$item.fullname)
+                                    Write-Verbose ("GetPlotoPlots @ "+(Get-Date)+": Found a Final plot that is older than specified date: "+$item.fullname)
                                     $FilePath = $item.Directory.Name + $item.name
                                     $Size = [math]::Round($item.Length  / 1073741824, 2)
 
@@ -2590,7 +2590,7 @@ if ($OutDrivesToScan)
                                 }
                             else
                                 {
-                                    Write-Host ("GetPlotoPlotsReplot @ "+(Get-Date)+": This is no plot that is older than specified date: "+$item.fullname) -ForegroundColor Yellow
+                                    Write-Verbose ("GetPlotoPlotsReplot @ "+(Get-Date)+": This is no plot that is older than specified date: "+$item.fullname) 
                                 }
                         }
                     if ($mover)
@@ -2598,7 +2598,7 @@ if ($OutDrivesToScan)
                         
                             If ($item.Extension -eq ".PLOT")
                                 {
-                                    Write-Host -ForegroundColor Green "Found a Final plot to move: "$item
+                                    Write-Verbose ("Found a Final plot to move: "+$item.fullname)
                     
                                     $FilePath = $item.Directory.Name + $item.name
                                     $Size = [math]::Round($item.Length  / 1073741824, 2)
@@ -2614,7 +2614,7 @@ if ($OutDrivesToScan)
                                 }
                             else
                                 {
-                                    Write-Host "This is no plot: "$item -ForegroundColor Yellow
+                                    Write-Verbose ("This is no plot: "+$item) 
                                 }                        
                         }
                 }
@@ -2703,7 +2703,22 @@ foreach ($plot in $PlotsToMove)
                 }
     }
 
-$PlotsToMove = Get-PlotoPlots -mover $true
+
+$replot = $config.SpawnerConfig.ReplotForPool
+$crtime = $config.SpawnerConfig.ReplotPlotsOlderThan
+$crtime = Get-Date -Day ($crtime.Split(".")[0]) -Month ($crtime.Split(".")[1]) -Year ($crtime.Split(".")[2])
+
+if ($replot -eq "true")
+    {
+        $PlotsToMove = Get-PlotoPlots -mover $true | where-object {$_.CreationTime -lt $crtime}
+    }
+
+else
+    {
+        $PlotsToMove = Get-PlotoPlots -mover $true   
+    }
+
+
 Write-Host "PlotoMover @"(Get-Date)": Checking if we have any plots to move..." 
 
 if ($PlotsToMove)
