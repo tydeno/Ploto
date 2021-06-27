@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.239991
+Version: 1.1.239992
 Author: Tydeno
 
 .DESCRIPTION
@@ -777,7 +777,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                             $min = ($replotDrives | measure-object -Property FreeSpace -minimum).minimum
                                             $OutDrive = $replotDrives | Where-Object { $_.FreeSpace -eq $min}
 
-                                            $FinalPlots = Get-PlotoPlots -replot $true
+                                            $FinalPlots = Get-PlotoPlots -replot $true | out-null
                                             $collectionWithPlots= New-Object System.Collections.ArrayList
                                             if ($FinalPlots)
                                                 {
@@ -826,6 +826,9 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                             else
                                                 {
                                                     Write-Host ("PlotoSpawner @ "+(Get-Date)+": No final plots have been found. ")
+                                                    Write-Host "There is no OutDrive that has plots older than specified. Selecting OutDrive with space. Using the Outdrive with most free space for plotting."
+                                                    $max = ($replotDrives | measure-object -Property FreeSpace -maximum).maximum
+                                                    $OutDrive = $replotDrives | Where-Object { $_.FreeSpace -eq $max}
                                                 }
  
                                         }
