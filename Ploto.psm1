@@ -2710,7 +2710,7 @@ $crtime = Get-Date -Day ($crtime.Split(".")[0]) -Month ($crtime.Split(".")[1]) -
 
 if ($replot -eq "true")
     {
-        $PlotsToMove = Get-PlotoPlots -mover $true | where-object {$_.CreationTime -lt $crtime}
+        $PlotsToMove = Get-PlotoPlots -mover $true | where-object {$_.CreationTime -gt $crtime}
     }
 
 else
