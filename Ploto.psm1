@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.239993
+Version: 1.1.239994
 Author: Tydeno
 
 .DESCRIPTION
@@ -1405,6 +1405,14 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                     if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenJobSpawned -eq "true")
                                                         {
                                                             Write-Host "PlotoSpawner @"(Get-Date)": Event notification in config defined. Sending Discord Notification about spawned job..."
+                                                            $countchars = ($ArgumentList.ToCharArray()).Count
+                                                            if ($countchars -gt 199)
+                                                                {
+                                                                    $ArgumentList = $ArgumentList -replace ".{199}$"
+                                                                    $exArgs = "-f YourKeys -p YourKeys"
+                                                                    $ArgumentListReport = $ArgumentList+$exArgs
+                                                                }
+
 
                                                             try 
                                                                 {
@@ -1460,7 +1468,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                                     $embedBuilder.AddField(
                                                                         [DiscordField]::New(
                                                                             'ArgumentList',
-                                                                            $ArgumentList, 
+                                                                            $ArgumentListReport, 
                                                                             $true
                                                                         )
                                                                     )
