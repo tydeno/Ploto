@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.2399996
+Version: 1.1.2399997
 Author: Tydeno
 
 .DESCRIPTION
@@ -2702,7 +2702,7 @@ foreach ($plot in $PlotsToMove)
                 }
     }
 
-$PlotsToMove = Get-PlotoPlots
+$PlotsToMove = Get-PlotoPlots -mover $true
 Write-Host "PlotoMover @"(Get-Date)": Checking if we have any plots to move..." 
 
 if ($PlotsToMove)
