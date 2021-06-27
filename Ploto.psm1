@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.239999995
+Version: 1.1.239999996
 Author: Tydeno
 
 .DESCRIPTION
@@ -3384,7 +3384,7 @@ $count = 0
         {
            Invoke-PlotoDeleteForReplot -ReplotDrives $ReplotDriveDenom
            $count++
-           Start-Sleep 300 
+           Start-Sleep 60
         }
 
 }
