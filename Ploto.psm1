@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.239999998
+Version: 1.1.2
 Author: Tydeno
 
 .DESCRIPTION
