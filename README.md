@@ -165,9 +165,9 @@ Set-ExecutionPolicy Bypass -Scope CurrentUser
 ```
 
 ## How to Install Ploto
-1. Make sure your Out and TempDrives are named accordingly
-2. Download Ploto as .ZIP from [here](https://github.com/tydeno/Ploto/archive/refs/heads/main.zip)
-3. Launch `Install-Ploto.ps1` (If your User does not have Admin right, run it as Admin)
+1. Download Ploto as .ZIP from [here](https://github.com/tydeno/Ploto/archive/refs/heads/main.zip)
+2. Launch PowerShell as Admin and cd to the path where the downloaded source is
+3. Launch `Install-Ploto.ps1` (If your User does not have Admin right, run it as Admin) by dotsourcing it.
 4. Let the Script run trough and if you do not have a config yet, let the Script create one for you
 
 ## How to Spawn Plots
