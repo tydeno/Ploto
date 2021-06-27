@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.23996
+Version: 1.1.23999
 Author: Tydeno
 
 .DESCRIPTION
@@ -777,7 +777,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                             $min = ($replotDrives | measure-object -Property FreeSpace -minimum).minimum
                                             $OutDrive = $replotDrives | Where-Object { $_.FreeSpace -eq $min}
 
-                                            $FinalPlots = Get-PlotoPlots
+                                            $FinalPlots = Get-PlotoPlots -replot $true
                                             $collectionWithPlots= New-Object System.Collections.ArrayList
                                             if ($FinalPlots)
                                                 {
@@ -811,6 +811,16 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                                         $plot = $plotsOnOtherDisks
                                                                     }
                                                                 $OutDrive = Get-PlotoOutDrives | Where-Object {$_.DriveLetter -eq $plot.Drive}
+                                                                if ($OutDrive -eq $null)
+                                                                    {
+                                                                        Write-Host "There is no OutDrive that has plots older than specified. Selecting OutDrive with space."
+                                                                        $max = ($replotDrives | measure-object -Property FreeSpace -maximum).maximum
+                                                                        $OutDrive = $replotDrives | Where-Object { $_.FreeSpace -eq $max}
+                                                                        if ($OutDrive -eq $null)
+                                                                            {
+                                                                                throw "Error, no outdrives to replot and none with space found. stopping now"
+                                                                            }
+                                                                    }
                                                             }                                            
                                                 }
                                             else
@@ -2543,30 +2553,56 @@ if ($OutDrivesToScan)
             Write-Host "Checking if any item in that drive contains .PLOT as file ending..."
 
             If ($ItemsInDrive)
-
             {
                 foreach ($item in $ItemsInDrive)
                 {
                     Write-Host "Searching for plots older than: "$datetoComp
-                    If ($item.Extension -eq ".PLOT" -and $item.CreationTime -le $datetoComp)
+                    if ($replot)
                         {
-                            Write-Host -ForegroundColor Green "Found a Final plot: "$item
+                            If ($item.Extension -eq ".PLOT" -and $item.CreationTime -le $datetoComp)
+                                {
+                                    Write-Host -ForegroundColor Green "Found a Final plot: "$item
                     
-                            $FilePath = $item.Directory.Name + $item.name
-                            $Size = [math]::Round($item.Length  / 1073741824, 2)
+                                    $FilePath = $item.Directory.Name + $item.name
+                                    $Size = [math]::Round($item.Length  / 1073741824, 2)
 
-                            $PlotToMove = [PSCustomObject]@{
-                            FilePath     =  $FilePath
-                            Name = $item.Name
-                            Size = $Size
-                            CreationTime = $item.CreationTime
-                            }
+                                    $PlotToMove = [PSCustomObject]@{
+                                    FilePath     =  $FilePath
+                                    Name = $item.Name
+                                    Size = $Size
+                                    CreationTime = $item.CreationTime
+                                    }
 
-                            $collectionWithFinalPlots.Add($PlotToMove) | Out-Null
+                                    $collectionWithFinalPlots.Add($PlotToMove) | Out-Null
+                                }
+                            else
+                                {
+                                    Write-Host "This is no plot: "$item -ForegroundColor Yellow
+                                }
                         }
-                    else
+                    if ($mover)
                         {
-                            Write-Host "This is no plot: "$item -ForegroundColor Yellow
+                        
+                            If ($item.Extension -eq ".PLOT")
+                                {
+                                    Write-Host -ForegroundColor Green "Found a Final plot: "$item
+                    
+                                    $FilePath = $item.Directory.Name + $item.name
+                                    $Size = [math]::Round($item.Length  / 1073741824, 2)
+
+                                    $PlotToMove = [PSCustomObject]@{
+                                    FilePath     =  $FilePath
+                                    Name = $item.Name
+                                    Size = $Size
+                                    CreationTime = $item.CreationTime
+                                    }
+
+                                    $collectionWithFinalPlots.Add($PlotToMove) | Out-Null
+                                }
+                            else
+                                {
+                                    Write-Host "This is no plot: "$item -ForegroundColor Yellow
+                                }                        
                         }
                 }
             }
