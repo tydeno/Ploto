@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.239994
+Version: 1.1.239995
 Author: Tydeno
 
 .DESCRIPTION
@@ -1419,7 +1419,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                                     #Create embed builder object via the [DiscordEmbed] class
                                                                     $embedBuilder = [DiscordEmbed]::New(
                                                                                         'New Job Spawned',
-                                                                                        'Hei its Ploto here. I spawned a new plot job for you.'
+                                                                                        'Hei its Ploto here. I spawned a new plot job for you. I used Stotiks plotter.'
                                                                                     )
 
                                                                     #Create the field and then add it to the embed. The last value ($true) is if you want it to be in-line or not
