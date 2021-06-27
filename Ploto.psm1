@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.2399998
+Version: 1.1.239999994
 Author: Tydeno
 
 .DESCRIPTION
@@ -118,6 +118,7 @@ foreach ($drive in $outdrivescfg)
                         $drive = Get-CimInstance win32_logicaldisk -Verbose:$false | Where-Object {$_.Name -eq $drletter}
                         $drlettertoreport = $drive.DeviceID
                         $DiskSize = [math]::Round($drive.Size  / 1073741824, 2)
+                        $FreeSpace = [math]::Round($drive.FreeSpace  / 1073741824, 2)
 
                     }
                 catch
@@ -2736,10 +2737,20 @@ if ($PlotsToMove)
                             foreach ($trans in $AllBits)
                                 {
                                     #getFileName and DrLetter
-                                    $DestDriveInJob = $trans.FileList.RemoteName.split("\")[0]
+
+                                    #if RemoteName is a MountPoint or folder...cannot do this logic
+                                    $DestDriveInJob = $trans.FileList.RemoteName.split("\")
+                                    if ($DestDriveInJob.Count -gt 2)
+                                        {
+                                           $DestDriveInJobReport = $DestDriveInJob[0]+"\"+$DestDriveInJob[1]
+                                        }
+                                    else
+                                        {
+                                            $DestDriveInJobReport = $DestDriveInJob[0]
+                                        }
 
                                     $JobtoPass = [PSCustomObject]@{
-                                    DriveLetter     =  $DestDriveInJob
+                                    DriveLetter     =  $DestDriveInJobReport
                                     PlotName = $Trans.FileList.RemoteName
                                     CompletedOn = $Trans.TransferCompletionTime
                                     }
@@ -2748,7 +2759,8 @@ if ($PlotsToMove)
                             $collectionWithJobs.Add($JobtoPass) | Out-Null
                             $min = ($collectionWithJobs | Measure-Object -Property DriveLetter -Minimum).Minimum
                             write-host "min is:"$min
-                            $DestDrive = Get-PlotoOutDrives -Mover $true | Where-Object {$_.DriveLetter -eq $min}
+                            $DestDrive = Get-PlotoOutDrives -Mover $true | Where-Object {$_.IsPlottable -eq "true"} | Where-Object {$_.DriveLetter -eq $min}
+
                         }
                     else
                         {
@@ -2758,12 +2770,11 @@ if ($PlotsToMove)
                                    #Get the FinalDir with most free space (availableamountofplotstohold)
                                     $max = ($DestinationDrives | Measure-Object -Property AvailableAmountToPlot -Maximum).maximum
                                     write-host "max is:"$max
-                                    $DestDrive = Get-PlotoOutDrives -Mover $true | Where-Object {$_.AvailableAmountToPlot -eq $max}
-
+                                    $DestDrive = Get-PlotoOutDrives -Mover $true | Where-Object {$_.AvailableAmountToPlot -eq $max} | Where-Object {$_.IsPlottable -eq "true"}
                                 }
                             else
                                 {
-                                    $DestDrive = Get-PlotoOutDrives -Mover $true
+                                    $DestDrive = Get-PlotoOutDrives -Mover $true | Where-Object {$_.IsPlottable -eq "true"}
                                 }
                         }
 
@@ -2776,14 +2787,17 @@ if ($PlotsToMove)
                             $DestDrive = $DestDrive.DriveLetter
                         }
 
+                    Write-Host "DestinationDrive is:" $DestDrive
                     if ($DestDrive -eq $null)
                         {
                             Write-Host "PlotoMover @"(Get-Date)": ERROR: No Outdrives found!" -ForegroundColor Red
+                            throw "error"
                             break
                         }
 
                     try 
                         {
+                            
                             Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestDrive "using BITS"
                             $source = $plot.FilePath
                             Start-BitsTransfer -Source $source -Destination $DestDrive -Description "Moving Ploto Plot" -DisplayName "Moving Plot" -TransferType Upload -Asynchronous
@@ -2793,9 +2807,11 @@ if ($PlotsToMove)
                         {
                             Write-Host "PlotoMover @"(Get-Date)": ERROR: Could not move Plot!" -ForegroundColor Red
                             Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
+                            Write-Host "PlotoMover @"(Get-Date)": ERROR: DestinationDrive is (source for Detsination Param):" $DestDrive -ForegroundColor Red
                         } 
                     
                     }
+            start-sleep 1800
         }   
     }
 
@@ -3170,16 +3186,7 @@ function Invoke-PlotoFyStatusReport
                     $ArgId = "ArgumentList Job "+$countji
                     $ArgumentList = $ji.ArgumentList
 
-                    $countchars = ($ArgumentList.ToCharArray()).Count
-                    if ($countchars -gt 199)
-                        {
-                            $ArgumentList = $ArgumentList -replace ".{199}$"
-                            $exArgs = "-f YourKeys -p YourKeys"
-                            $ArgumentListReport = $ArgumentList+$exArgs
-                        }
-
-
-                    $JobDetailsArgListMsg = $ArgumentListReport
+                    $JobDetailsArgListMsg = $ArgumentList
                     $embedBuilder.AddField(
                         [DiscordField]::New(
                             $ArgId,
