@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.2399993
+Version: 1.1.2399996
 Author: Tydeno
 
 .DESCRIPTION
@@ -2849,8 +2849,43 @@ function Invoke-PlotoDeleteForReplot
 		$ReplotDrives
 		)
 
+    $PathToConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
+    try 
+        {
+            $config = Get-Content -raw -Path $PathToConfig | ConvertFrom-Json
+            Write-Host "PlotoManager @"(Get-Date)": Loaded config successfully." -ForegroundColor Green
+        }
+    catch
+        {
+            Write-Host "PlotoManager @"(Get-Date)": Could not read Config. Check your config with the hints below and on https://jsonformatter.org/ for validation. If you cant get it to run, join Ploto Discord for help.  " -ForegroundColor Red
+
+            if ($_.Exception.Message -like "*1384*")
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Looks like your PathToPlotoModule is not specified correctly. You have to use \ instead of /!" -ForegroundColor Yellow
+                }
+
+           if ($_.Exception.Message -like "*1093*")
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Looks like there is a ','  missing somewhere at the end of a line " -ForegroundColor Yellow
+                }
+
+           if ($_.Exception.Message -like "*1094*")
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Looks like there is a '$a' missing somewhere at the  beginning or end of a  property " -ForegroundColor Yellow
+                }
+
+
+            if ($_.Exception.Message -notlike "*1384*" -and $_.Exception.Message -notlike "*1093*" -and $_.Exception.Message -notlike "*1094*") 
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Could not determine possible rootcause. Check your config on https://jsonformatter.org/ for validation. If you cant get it to run, join Ploto Discord for help." -ForegroundColor Red
+                    Write-Host $_.Exception.Message -ForegroundColor red
+                }
+
+            throw "Exiting cause there is no readable config."
+        }
+
     #Get active jobs entering phase 4.
-    $activeJobs = Get-PlotoJobs | Where-Object {$_.Status -ge 3.9} | Where-Object {$_.IsReplot -eq "true"} | Where-Object {$_.Status -ne "Completed"} | Where-Object {$_.Status -ne "Aborted"}
+    $activeJobs = Get-PlotoJobs | Where-Object {$_.Status -ge 3.8} | Where-Object {$_.IsReplot -eq "true"} | Where-Object {$_.Status -ne "Completed"} | Where-Object {$_.Status -ne "Aborted"}
     if ($activeJobs)
         {
             Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Found active jobs that are about to enter phase 4")
@@ -2867,6 +2902,12 @@ function Invoke-PlotoDeleteForReplot
                                 #pick oldest plottodel
                                 $fp = $OutDriveToCheck.DriveLetter
                                 $plottoDel = (Get-PlotoPlots -replot $true | Where-Object {$_.FilePath -like "*$fp*"} )
+                                if ($plottoDel.count -gt 1)
+                                    {
+                                        $plottoDel = $plottoDel[0]
+                                    }
+
+
                                 Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Oldest Plot in ReplotDrive "+$OutDriveToCheck.DriveLetter+ " of job with id "+$job.JobId+" that is about to finish: "+$plottoDel.FilePath)
 
                                 $plotitemtodel = Get-ChildItem $plottoDel.FilePath
@@ -2879,6 +2920,46 @@ function Invoke-PlotoDeleteForReplot
                                     {
                                         Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": ERROR: Could not delete Plot! See below for details. ") -ForegroundColor Red
                                         Write-Host $_.Exception.Message -ForegroundColor Red
+                                    }
+                                if ($EnableAlerts -eq $true)
+                                    {
+                                        #Create embed builder object via the [DiscordEmbed] class
+                                        $embedBuilder = [DiscordEmbed]::New(
+                                                            'We deleted a Plot to make space for a new one',
+                                                            'Just letting you know that I we have to delete a final plot, cause we needed space for a shiny, brand new plot.'
+                                                        )
+                                        $StaId = "Plot removed"
+                                        $JobDetailsStartTimeMsg = $plottoDel
+                                        $embedBuilder.AddField(
+                                            [DiscordField]::New(
+                                                $StaId,
+                                                $JobDetailsStartTimeMsg, 
+                                                $true
+                                            )
+                                        )
+
+
+                                        #Add purple color
+                                        $embedBuilder.WithColor(
+                                            [DiscordColor]::New(
+                                                'yellow'
+                                            )
+                                        )
+
+                                        $plotname = $config.PlotterName
+                                        $footie = "Ploto: "+$plotname
+                                        #Add a footer
+                                        $embedBuilder.AddFooter(
+                                            [DiscordFooter]::New(
+                                                $footie
+                                            )
+                                        )
+
+                                        $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
+
+                                        Invoke-PsDsHook -CreateConfig $WebHookURL -Verbose:$false | Out-Null 
+                                        Invoke-PSDsHook $embedBuilder -Verbose:$false | Out-Null 
+                                    
                                     }
                             }
                         else
