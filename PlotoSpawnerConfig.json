@@ -1,57 +1,57 @@
 {
-  "PlotterName": "SirNotPlotAlot",
-  "PlotterUsed": "Stotik",
-  "PathToUnofficialPlotter": "...\\chia_plot.exe",
-  "EnableAlerts": "false",
-  "EnablePlotoFyOnStart": "true",
-  "ChiaWindowStyle": "normal",
-  "PathToPloto": "C:/Users/Tydeno/Desktop/Ploto/Ploto.psm1",
+    "PlotterName":  "plotozero",
+    "PlotterUsed":  "Stotik",
+    "PathToUnofficialPlotter":  "C:\\Users\\Tydeno\\Desktop\\madMAx43v3r_chia-plotter_win_build_v0.0.4\\chia_plot.exe",
+    "EnableAlerts":  "true",
+    "EnablePlotoFyOnStart":  "true",
+    "ChiaWindowStyle":  "normal",
+    "PathToPloto":  "C:\\Users\\Tydeno\\Desktop\\Ploto\\Ploto.psm1",
+    "EnableMover": "true",
+    "PathsToMovePlotsTo": "Q:\\Plotter,Z:",
 
-  "DiskConfig": [
-    {
-      "TempDrives": "E:\\,P:\\",
-      "Temp2Drives": "K:\\Plotter",
-      "OutDrives": "",
-      "EnableT2": "false",
-      "ReplotDrives": ""
-    }
-  ],
-
-  "SpawnerConfig": [
-      {
-        "ReplotForPool": "false",
-        "IntervallToCheckInMinutes": "5",
-        "InputAmountToSpawn": "100", 
-        "WaitTimeBetweenPlotOnSeparateDisks": "15",
-        "WaitTimeBetweenPlotOnSameDisk": "30",
-        "MaxParallelJobsOnAllDisks": "8",
-        "MaxParallelJobsOnSameDisk": "2",
-        "MaxParallelJobsInPhase1OnAllDisks" : "4",
-        "StartEarly": "true",
-        "StartEarlyPhase": "4"
-      }
-    ],
-
-  "JobConfig": [
-      {
-        "KSizeToPlot": "32",
-        "BufferSize": "",
-        "Thread": "4",
-        "Buckets": "128",
-        "Bitfield": "true",
-        "FarmerKey": "",
-        "PoolKey": "",
-        "P2SingletonAdress": ""
-      }
-    ],
-
-  "SpawnerAlerts": [
-    {
-      "DiscordWebhookURL": "https://discord.com/api/webhooks/xxxxxxxxxxxxxxxx",
-      "WhenJobSpawned": "true",
-      "WhenNoOutDrivesAvailable": "true",
-      "WhenJobCouldNotBeSpawned": "true",
-      "PeriodOfReportInHours": "1"
-    }
-  ]
+    "DiskConfig":  [
+                       {
+                           "TempDrives":  "F:",
+                           "Temp2Drives":  "J:",
+                           "OutDrives":  "L:,K:",
+                           "EnableT2":  "true",
+                           "ReplotDrives":  ""
+                       }
+                   ],
+    "SpawnerConfig":  [
+                          {
+                              "ReplotForPool":  "false",
+                              "ReplotPlotsOlderThan": "18.6.2021",
+                              "IntervallToCheckInMinutes":  "1",
+                              "InputAmountToSpawn":  "50",
+                              "WaitTimeBetweenPlotOnSeparateDisks":  "1",
+                              "WaitTimeBetweenPlotOnSameDisk":  "1",
+                              "MaxParallelJobsOnAllDisks":  "1",
+                              "MaxParallelJobsOnSameDisk":  "1",
+                              "MaxParallelJobsInPhase1OnAllDisks":  "1",
+                              "StartEarly":  "false",
+                              "StartEarlyPhase":  "4"
+                          }
+                      ],
+    "JobConfig":  [
+                      {
+                          "KSizeToPlot":  "32",
+                          "BufferSize":  "",
+                          "Thread":  "24",
+                          "Buckets":  "256",
+                          "Bitfield":  "false",
+                          "FarmerKey":  "YourKey",
+                          "PoolKey":  "YourKey",
+                          "P2SingletonAdress":  ""
+                      }
+                  ],
+    "SpawnerAlerts":  [
+                          {
+                              "DiscordWebhookURL":  "https://discord.com/api/webhooks/YourcustomURLWebhookEnding",
+                              "WhenJobSpawned":  "true",
+                              "WhenNoOutDrivesAvailable":  "true",
+                              "WhenJobCouldNotBeSpawned":  "true",
+                              "PeriodOfReportInHours":  "0.5"
+                          }
+                      ]
 }

@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 0.8
+Version: 0.841
 Author: Tydeno
 
 
@@ -141,7 +141,6 @@ function Get-JsonDifference
     }
 
 }
-
 
 function Get-JsonDifferenceRecursion
 {
@@ -535,6 +534,7 @@ If (Test-Path $DestinationContainer)
                         Write-Host "InstallPloto @"(Get-Date)": We skipped updating. Using currently installed version of Ploto:"$PlotoVersionInSource -ForegroundColor Yellow
                     }
             }
+
     }
 else
     {
@@ -642,7 +642,6 @@ if (Test-Path $pathtolchech)
         if ($checkAdded -match "@")
             {
                 Write-Host "InstallPloto @"(Get-Date)": New properties were introduced in new version, need to update config!" -ForegroundColor Yellow
-                Write-Host "InstallPloto @"(Get-Date)": New properties:" -ForegroundColor Yellow
                 Write-Host "InstallPloto @"(Get-Date)": Added: "$compare.added -ForegroundColor Yellow
                 
             }
@@ -738,6 +737,19 @@ else
     {
         $config | % {$_.EnableAlerts = "false"}
         $config | % {$_.EnablePlotoFyOnStart = "false"}
+    }
+
+$EnableMover = Read-Host "ConfigurePloto: Do you want to enable PlotoMover (moves final plots to defined path)? (eg: Yes or No)"
+if ($EnableMover -eq "y" -or $EnableMover -eq "Yes")
+    {
+        $PathsToMoveTo = Read-Host "Configure Ploto: Define the paths you want to move final plots to:"
+        $config | % {$_.EnableMover = "true"}
+        $config | % {$_.PathsToMovePlotsTo = $PathsToMoveTo}
+    }
+else
+    {
+         $config | % {$_.EnableMover = "false"}
+         $config | % {$_.PathsToMovePlotsTo = ""}
     }
 
 $WindowStyle = Read-Host -Prompt "ConfigurePloto: Do you want to the plot jobs in background? (eg: Yes or No)"

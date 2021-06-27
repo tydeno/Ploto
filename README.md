@@ -1,20 +1,9 @@
-## Ploto 
-A Windows PowerShell based Chia Plotting Manager. 
-Consists of a PowerShell Module that allows to spawn, manage and move plots.
-
-Also informs you in Discord about spawned jobs. 
-And if you like, you may define an Intervall upon which Plotofy sends you notifications about whats going on.
+## [Ploto](https://www.ploto.rocks)
+An easy to use, customizable and heavily reliable Windows PowerShell based Chia Plotting Manager. 
 
 
-![image](https://user-images.githubusercontent.com/83050419/119401060-4536a180-bcdb-11eb-8bb5-fa587b229d59.png)
-
-![image](https://user-images.githubusercontent.com/83050419/118192418-662f0500-b446-11eb-9340-e919234d3d5f.png)
-![image](https://user-images.githubusercontent.com/83050419/118396387-a57c7200-b64f-11eb-8ef5-0526bd8cb3c6.png)
-![image](https://user-images.githubusercontent.com/83050419/118396379-9eedfa80-b64f-11eb-9a83-1262a6625f3a.png)
-
-![image](https://user-images.githubusercontent.com/83050419/118398002-f479d580-b656-11eb-82f7-a92a4a0af4a9.png)
-
-
+![image](https://user-images.githubusercontent.com/83050419/123462242-57fa0a00-d5ea-11eb-9506-03cb578ce77d.png)
+![image](https://user-images.githubusercontent.com/83050419/123462300-6c3e0700-d5ea-11eb-9c2f-f5915c758580.png)
 
 # Table of content
 * [Contact](https://github.com/tydeno/Ploto/tree/main#contact)
@@ -40,6 +29,8 @@ And if you like, you may define an Intervall upon which Plotofy sends you notifi
 * [FAQ](https://github.com/tydeno/Ploto/tree/main#faq)
 
 ## Contact
+https://www.ploto.rocks/
+
 For general chatting, issues and support of how to use Ploto, you may join the Discord below.
 If you find any bugs, do not hesitate to create or update an issue directly here in GitHub.
 
@@ -51,23 +42,6 @@ In case you'd like to to support the development of Ploto in a monetary way, you
 
 Or trough my [GitHub Sponsoring page](https://github.com/sponsors/tydeno)
 
-## Is it safe to use? 
-We've seen some horrific stuff happening with 3rd Party Tools around a Chia. For instance
-there was/is a PowerShell Script that should add some Introducers to your farm. It does that yes. But it also empties your wallet and sends your private keys home.
-
-This was a good reminder that we should never trust blindly on the internet (and everywhere else!).
-Never trust, always verify is the leading principle. 
-
-So I encourage you to go trough the code in this repo, line by line to verify if it does something bad.
-If theres a line you don't understand do not hesitate to raise an issue and ask straight away.
-
-However, bear in mind that my identity is verified by Github trough the sponsoring program. They have my adress, tax and ID number and thus know exactly who I am. Doing bad things with my repo would be a very bad idea in that sense for myself.
-
-From a technical perspective, if you are cooncerned that your private keys and or wallet might be exposed to Ploto, you can mitigate that.
-Ploto only needs chia.exe to start PlotJobs. No private keys, no access to farmers/harvesters nor a wallet.
-If you run Ploto on dedicated plotting machines, you can specify your public keys in the config and generate valid plots for your farm.
-
-On top of that; it always makes sense to set your reward address to a cold wallet.
 
 # PlotoSpawn
 TLDR: It plots 1x plot on each TempDrive (if you have 6x TempDrives = 6x parallel Plot Jobs) as long as you want it to and as long as you have OutDrive space.
@@ -152,7 +126,7 @@ Be advises that this in BETA mode right now.
 
 To create portable pool plots, we need to use the param "P2Singleton" in the config. 
 Therefore we need to create a singleton that points to a pool first, and then we can start plotting. 
-If you want to plot portable pools, make sure your PoolKey is NOT specified in the config, as this will mess thing up
+If you want to plot portable pools, make sure your PoolKey is NOT specified in the config, as this will mess thing up.
 
 ### About replotting
 Ploto now supports the ability to replot existing drives. This assumes you have one or more drives with final plots that are actively being farmed.
@@ -162,6 +136,9 @@ If you now launch Ploto with 'Replot: "true"' and your denom for your ReplotDriv
 2. If there is a job entering phase 4 with "IsReplot=True", it deletes the oldest plot on the drive, the replotJob uses as OutDrive.
 
 All ReplotJobs launchd, will use the the drives as OutDrive, that match the ReplotDriveDenom. So if you replot, make sure you set the InputAmountToSpawn to exactly the number of Plots you want to Replot. Currently Ploto does not know with which keys/singletons a Plot was plotted. So it keeps going and potentially deletes already replotted jobs, if InputAmountToSpawn is too high. This can lead to unneccesary wear & tear.
+
+The replotting mechanism features a * `"ReplotPlotsOlderThan": "20.6.2021` parameter in config. It allows you to define which plots shall be replotted and which not by specifying a date as seen above. This is a mandatory param if you want to replot, as its the only way to determine which plots shall be replotted
+It picks those drives that have final plots on it for replotting. If there is no drive that has plots to replot, its chooses the best suited OutDrive by free space. If there is none, it aborts. 
 
 ## About running custom plotters
 Ploto now supports custom plotters. This functionality was implemented to support madMAx43v3r's chia-plotter. It also allows to use sever other forks, like Stotiks and catchmeifyoucans release.
@@ -216,11 +193,7 @@ PlotoManager @ 4/30/2021 3:49:13 AM : Overall spawned Plots since start of scrip
 
 ## How to get Jobs
 1. Open another PowerShell session 
-2. Import-Module "Ploto" 
-```powershell
-Import-Module "C:\Users\Me\Downloads\Ploto\Ploto.psm1"
-```
-4. Launch Get-PlotoJobs and format Output
+2. Launch Get-PlotoJobs and format Output
 ```powershell
 Get-PlotoJobs | ft
 ```
@@ -358,34 +331,11 @@ This is only possible as I continously move the final Plots to my farming machin
 
 I do this by moving plots to a external drive and plug that into my farmer, and sometimes I also transfer plots across my network (not the fatest, thats why I kind of have to do  the running around approach)
 
-PlotoMover helps to automate this process.
+PlotoMover helps to automate this process. In PlotoSpawnerConfig.json, you can define several drives you want to move your final plots to. Mover then checks all defined outdrives for final plots and moves one by one trough Background Inteligence Transfer Service (BITS) to the desired location. In order for remote destination targets (your farmers/harvesters) to recognized correctly, these drives needed to be mapped as network drives and have a volume letter assigned (eg Z:\) for mover to tbe able to grab them.
 
-If you want to move your plots to a local/external drive just once:
-1. Launch a PowerShell session and Import Ploto Module
-2. Launch Move-PlotoPLots
+To enable mover,, in the config set EnablerMover to "true" and define the PathsToMovePlotsTo according the example config.
+Then the next time you launch `Start-PlotoSpawns` mover will be launched aswell.
 
-```powershell
-Move-PlotoPlots -DestinationDrive "P:" -OutDriveDenom "out" -TransferMethod Move-Item
-```
-
-If you want to move your plots to a UNC path just once:
-1. Launch a PowerShell session and Import Ploto Module
-2. Launch Move-PlotoPLots
-
-```powershell
-Move-PlotoPlots -DestinationDrive "\\Desktop-xxxxx\d" -OutDriveDenom "out" -TransferMethod Move-Item
-```
-
-Please be aware that if you use UNC paths as Destination, PlotoMover cannot grab the free space there and just fires off.
-
-## But I want to do it continously
-Sure, just use Start-PlotoMove with your needed params:
-
-```powershell
-Move-PlotoPlots -DestinationDrive "\\Desktop-xxxxx\d" -OutDriveDenom "out" -TransferMethod Move-Item
-```
-
-Please be aware that if you use UNC paths as Destination, PlotoMover cannot grab the free space there and just fires off.
 
 ## How to Check Farm Logs
 If you want to peek at your farm logs you can use Check-PLotoFarmLogs:
@@ -428,7 +378,6 @@ So what works for me, may not ultimately work for you.
 Please also bear in mind that unexpected beahviour and or bugs are possible.
 
 These are known:
-* Only works when plotting in root of drives
 * Only works when Drives are dedicated to plotting (dont hold any other files)
 * If you start to use Ploto and you have Logs created by GUI or any other manager in C:\Users\me.chia\mainnet\plotter\, Get-PlotoPlots wont the able to read the status.
 Make sure you delete/move all existing Logs in said path. 

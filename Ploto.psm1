@@ -1,7 +1,8 @@
 <#
 .SYNOPSIS
 Name: Ploto
-Version: 1.1.11
+
+Version: 1.1.2
 Author: Tydeno
 
 .DESCRIPTION
@@ -12,9 +13,9 @@ https://github.com/tydeno/Ploto
 function Get-PlotoOutDrives
 {
 	Param(
-		$Replot
+		$Replot,
+        $Mover
 		)
-
 
 $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
 
@@ -22,13 +23,22 @@ try
     {
         $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
         
-        if ($replot)
+        if ($replot -eq $true)
             {
                 $outdrivescfg = $config.DiskConfig.ReplotDrives
+                $ChiaDriveType = "Replot"
             }
-        else
+
+        if ($Mover -eq $true)
+            {
+                $outdrivescfg = $config.PathsToMovePlotsTo
+                $ChiaDriveType = "Final Farmer"
+            }
+
+        if ($mover -ne $true -and $Replot -ne $true)
             {
                 $outdrivescfg = $config.DiskConfig.OutDrives
+                $ChiaDriveType = "Out"
             }
 
         if ($outdrivescfg.contains(","))
@@ -43,41 +53,95 @@ catch
     } 
 
 
-
 #Check Space for outDrives
 $collectionWithDisks= New-Object System.Collections.ArrayList
 foreach ($drive in $outdrivescfg)
     {
 
-            if ($drive.contains("\"))
+        if ($drive.contains("\"))
             {
                 $drletter = $drive.Split("\")[0]
                 $FullPathToUse = $drive
+                $FullPathToUse = $FullPathToUse+"\"
+
+                #is this a real "drive" or an MP?
+                if (Get-CimInstance win32_logicaldisk -Verbose:$false | Where-Object {$_.DeviceID -eq $drletter})
+                    {
+                        #is thgere also an MP for that disk?
+                        if (Get-CimInstance win32_volume -Verbose:$false | Where-Object {$_.Name -eq $FullPathToUse})
+                            {
+                                Write-Host "GetPlotoOutDrives @ "(Get-Date)": Seems this is a MountPoint: "$FullPathToUse -ForegroundColor yellow
+                                $drive = Get-CimInstance win32_volume -Verbose:$false | Where-Object {$_.Name -eq $FullPathToUse}
+                                $drlettertoreport = $drive.Name
+                            }
+
+                        else
+                            {
+                                $drive = Get-CimInstance win32_volume -Verbose:$false | Where-Object {$_.DriveLetter -eq $drletter}
+                                $drlettertoreport = $drive.DriveLetter
+                            }
+                    }
+                else
+                    {
+                        try {
+                                Write-Host "GetPlotoOutDrives @ "(Get-Date)": Seems like this is a MountPoint: "$drletter -ForegroundColor yellow
+                                $drive = Get-CimInstance win32_volume -Verbose:$false | Where-Object {$_.Name -eq $FullPathToUse}
+                                $drlettertoreport = $drive.Name
+
+                            }
+                        catch
+                            {
+                                Write-Host "GetPlotoOutDrives @ "(Get-Date)": Could not fetch defined drive: "$FullPathToUse -ForegroundColor red
+                            }
+                    }
             }
         else
             {
                 $drletter = $drive
                 $FullPathToUse = ""
+                try {
+                        $drive = Get-CimInstance win32_volume -Verbose:$false | Where-Object {$_.DriveLetter -eq $drletter}
+                        $drlettertoreport = $drive.DriveLetter
+
+                    }
+                catch
+                    {
+                        Write-Host "GetPlotoOutDrives @ "(Get-Date)": Could not fetch defined drive: "$drletter -ForegroundColor Yellow
+
+                    }
             }
 
-        try {
-                $drive = Get-CimInstance win32_logicaldisk -Verbose:$false | Where-Object {$_.DeviceID -eq $drletter}
-            }
-        catch
+        if ($drive -eq $null)
             {
-                Write-Host "GetPlotoTempDrives @ "(Get-Date)": Could not fetch defined drive: "$drletter -ForegroundColor Red
+                Write-Host "GetPlotoOutDrives @ "(Get-Date)": Seems like this is a Network drive: "$drletter -ForegroundColor yellow
+                try {
+                        $drive = Get-CimInstance win32_logicaldisk -Verbose:$false | Where-Object {$_.Name -eq $drletter}
+                        $drlettertoreport = $drive.DeviceID
+                        $DiskSize = [math]::Round($drive.Size  / 1073741824, 2)
+                        $FreeSpace = [math]::Round($drive.FreeSpace  / 1073741824, 2)
+
+                    }
+                catch
+                    {
+                        Write-Host "GetPlotoOutDrives @ "(Get-Date)": Could not fetch defined drive: "$FullPathToUse -ForegroundColor red
+                    }
+            }
+        else
+            {
+                $DiskSize = [math]::Round($drive.Capacity  / 1073741824, 2)
+                $FreeSpace = [math]::Round($drive.FreeSpace  / 1073741824, 2)
             }
 
         if ($drive -ne $null)
-            {
-                $DiskSize = [math]::Round($drive.Size  / 1073741824, 2)
-                $FreeSpace = [math]::Round($drive.FreeSpace  / 1073741824, 2)
-
-
-                $Partition = Get-Partition | Where-Object {$_.DriveLetter -eq ($drive.DeviceId.TrimEnd(":"))}
-        
+            {                                
+                                
                 $oldea = $ErrorActionPreference
                 $ErrorActionPreference = "SilentlyContinue"
+
+
+                $Partition = Get-Partition | Where-Object {$_.DriveLetter -eq ($drive.DriveLetter.TrimEnd(":"))}
+        
+
 
                 #Get Disk from partition
                 $Disk = Get-Disk -Number $Partition.DiskNumber
@@ -85,9 +149,10 @@ foreach ($drive in $outdrivescfg)
 
                 $ErrorActionPreference = $oldea
 
+
                 If ($Partition.DiskNumber -eq $null)
                     {
-                        Write-Host "GetPlotoTempDrives @ "(Get-Date)": Cannot get disks for the logical volume" $tmpDrive.DeviceID "by PowerShell using Get-Partition/Get-Disk cmdlet. Cannot get the disk and temperature for reporting. Can keep going." -ForegroundColor Yellow
+                        Write-Host "GetPlotoOutDrives @ "(Get-Date)": Cannot get disks for the logical volume" $tmpDrive.DeviceID "by PowerShell using Get-Partition/Get-Disk cmdlet. Cannot get the disk and temperature for reporting. Can keep going." -ForegroundColor Yellow
                         $Disk = "Not available"
                         $DiskType = "Not available"
                         $DiskBus = "Not available"
@@ -100,11 +165,10 @@ foreach ($drive in $outdrivescfg)
                     }
 
 
-                        #Get-CurrenJobs
-                $activeJobs = Get-PlotoJobs | Where-Object {$_.OutDrive -eq $drive.DeviceId} | Where-Object {$_.Status -ne "Completed"}
+                $activeJobs = Get-PlotoJobs | Where-Object {$_.OutDrive -eq $drive.DeviceId} | Where-Object {$_.Status -ne "Completed"} 
                 if ($activeJobs)
                     {
-                        $HasPlotInProgress = $true
+                        $HasPlotInProgress = $true 
                         $PlotInProgressName = $activeJobs.PlotId
                         $PlotInProgressCount = $activeJobs.count
                         $PlotInProgressPhase = $activeJobs.Status
@@ -128,7 +192,6 @@ foreach ($drive in $outdrivescfg)
                                 $AmountOfPlotsToTempMax = $AvailableAmounToPlot + $PlotInProgressCount
                             }
                     }
-
                 else
                     {
                         $HasPlotInProgress = $false
@@ -148,7 +211,6 @@ foreach ($drive in $outdrivescfg)
                         $IsPlottable = $false
                     }
 
-
                 If ($FreeSpace -gt 107 -and $AvailableAmounToPlot -ge 1)
                     {
                         $PlotToDest = $true
@@ -157,13 +219,13 @@ foreach ($drive in $outdrivescfg)
                     {
                         $PlotToDest = $false
                     }
-
+                     
                 $outdriveToPass = [PSCustomObject]@{
-                DriveLetter     =  $drive.DeviceID
+                DriveLetter     =  $drlettertoreport
                 FullPathToUse = $FullPathToUse
                 Disk = $Disk
-                ChiaDriveType = "Out"
-                VolumeName = $drive.VolumeName
+                ChiaDriveType = $ChiaDriveType
+                VolumeName = $drive.Label
                 FreeSpace = $FreeSpace
                 TotalSpace = $DiskSize
                 IsPlottable    = $PlotToDest
@@ -179,7 +241,7 @@ foreach ($drive in $outdrivescfg)
             }
         else
             {
-                Write-Host "GetPlotoTempDrives @ "(Get-Date)": Could not fetch defined drive: "$drletter -ForegroundColor Red
+                Write-Host "GetPlotoOutDrives @ "(Get-Date)": Could not fetch defined drive: "$drletter -ForegroundColor Red
             }
 
       
@@ -709,13 +771,70 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                     #Building ArgumentList for chia.exe
                                     if ($Replot -eq "true" -and $ReplotDrives -ne "")
                                         {
-                                            Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Replotting enabled. Will delete existing plots shortly upon before a job enters phase 4. Also ignoring the fact that an OutDrive has no space, as a plot will be deleted to make space for new one.")
+                                            Write-Host ("PlotoSpawner @ "+(Get-Date)+": Replotting enabled. Will delete existing plots shortly upon before a job enters phase 4. Also ignoring the fact that an OutDrive has no space, as a plot will be deleted to make space for new one.")
                                             #Pick an Outdrive from ReplotDenom
                                             $replotDrives = Get-PlotoOutDrives -Replot $true
 
-                                            $min = ($replotDrives | measure-object -Property AmountOfPlotsInProgress -minimum).minimum
-                                            $OutDrive = $replotDrives | Where-Object { $_.AmountOfPlotsInProgress -eq $min}
-  
+                                            $min = ($replotDrives | measure-object -Property FreeSpace -minimum).minimum
+                                            $OutDrive = $replotDrives | Where-Object { $_.FreeSpace -eq $min}
+
+
+                                            Write-Host ("PlotoSpawner @ "+(Get-Date)+": Checking if we have any plots to replot older than specified on OutDrives...")
+                                            $FinalPlots = Get-PlotoPlots -replot $true 
+                                            $collectionWithPlots= New-Object System.Collections.ArrayList
+                                            if ($FinalPlots)
+                                                {
+                                                     foreach ($FinalPlot in $FinalPlots)
+                                                        {
+                                                            $Plot = [PSCustomObject]@{
+                                                            Name = $FinalPlot.Name
+                                                            FilePath = $FinalPlot.FilePath
+                                                            CreationTime     =  $FinalPlot.CreationTime
+                                                            Drive = $FinalPlot.Filepath.split("plot")[0].TrimEnd("\")
+                                                            }
+
+                                                            $collectionWithPlots.Add($Plot) | Out-Null
+               
+                                                        } 
+                                                        
+                                                        if ($collectionWithPlots | Where-Object {$_.Drive -eq $OutDrive.DriveLetter})
+                                                            {
+                                                                Write-Host ("PlotoSpawner @ "+(Get-Date)+": There are final plots to replot on this disk. Will be using it as OutDrive..")  
+                                                            }
+                                                        else
+                                                            {
+                                                                Write-Host ("PlotoSpawner @ "+(Get-Date)+": There are no finalplots on this disk. Checking the other ones...")
+                                                                $plotsOnOtherDisks = $collectionWithPlots | Where-Object {$_.Drive -ne $OutDrive.DriveLetter}
+                                                                if ($plotsOnOtherDisks.count -gt 1)
+                                                                    {
+                                                                        $plot = $plotsOnOtherDisks[0]
+                                                                    }
+                                                                else
+                                                                    {
+                                                                        $plot = $plotsOnOtherDisks
+                                                                    }
+                                                                $OutDrive = Get-PlotoOutDrives | Where-Object {$_.DriveLetter -eq $plot.Drive}
+                                                                if ($OutDrive -eq $null)
+                                                                    {
+                                                                        Write-Host ("PlotoSpawner @ "+(Get-Date)+": There is no OutDrive that has plots older than specified. Selecting OutDrive with space. Using the Outdrive with most free space for plotting.")
+                                                                        $max = ($replotDrives | measure-object -Property FreeSpace -maximum).maximum
+                                                                        $OutDrive = $replotDrives | Where-Object { $_.FreeSpace -eq $max}
+                                                                        if ($OutDrive -eq $null)
+                                                                            {
+                                                                                Write-Host ("PlotoSpawner @ "+(Get-Date)+": There is no OutDrive with free space. Aborting now.") -ForegroundColor red
+                                                                                throw "Error, no outdrives to replot and none with space found. stopping now"
+                                                                            }
+                                                                    }
+                                                            }                                            
+                                                }
+                                            else
+                                                {
+                                                    Write-Host ("PlotoSpawner @ "+(Get-Date)+": No final plots have been found. ")
+                                                    Write-Host ("PlotoSpawner @ "+(Get-Date)+": There is no OutDrive that has plots older than specified. Selecting OutDrive with space. Using the Outdrive with most free space for plotting.")
+                                                    $max = ($replotDrives | measure-object -Property FreeSpace -maximum).maximum
+                                                    $OutDrive = $replotDrives | Where-Object { $_.FreeSpace -eq $max}
+                                                }
+ 
                                         }
                                     else
                                         {
@@ -1036,6 +1155,14 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                 if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenJobSpawned -eq "true")
                                                     {
                                                         Write-Host "PlotoSpawner @"(Get-Date)": Event notification in config defined. Sending Discord Notification about spawned job..."
+                                                        $countchars = ($ArgumentList.ToCharArray()).Count
+                                                        if ($countchars -gt 199)
+                                                            {
+                                                                $ArgumentList = $ArgumentList -replace ".{199}$"
+                                                                $exArgs = "-f YourKeys -p YourKeys"
+                                                                $ArgumentListReport = $ArgumentList+$exArgs
+                                                            }
+
 
                                                         try 
                                                             {
@@ -1091,7 +1218,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                                 $embedBuilder.AddField(
                                                                     [DiscordField]::New(
                                                                         'ArgumentList',
-                                                                        $ArgumentList, 
+                                                                        $ArgumentListReport, 
                                                                         $true
                                                                     )
                                                                 )
@@ -1282,13 +1409,21 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                     if ($EnableAlerts -eq $true -and $config.SpawnerAlerts.WhenJobSpawned -eq "true")
                                                         {
                                                             Write-Host "PlotoSpawner @"(Get-Date)": Event notification in config defined. Sending Discord Notification about spawned job..."
+                                                            $countchars = ($ArgumentList.ToCharArray()).Count
+                                                            if ($countchars -gt 199)
+                                                                {
+                                                                    $ArgumentList = $ArgumentList -replace ".{199}$"
+                                                                    $exArgs = "-f YourKeys -p YourKeys"
+                                                                    $ArgumentListReport = $ArgumentList+$exArgs
+                                                                }
+
 
                                                             try 
                                                                 {
                                                                     #Create embed builder object via the [DiscordEmbed] class
                                                                     $embedBuilder = [DiscordEmbed]::New(
                                                                                         'New Job Spawned',
-                                                                                        'Hei its Ploto here. I spawned a new plot job for you.'
+                                                                                        'Hei its Ploto here. I spawned a new plot job for you. I used Stotiks plotter.'
                                                                                     )
 
                                                                     #Create the field and then add it to the embed. The last value ($true) is if you want it to be in-line or not
@@ -1337,7 +1472,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                                                     $embedBuilder.AddField(
                                                                         [DiscordField]::New(
                                                                             'ArgumentList',
-                                                                            $ArgumentList, 
+                                                                            $ArgumentListReport, 
                                                                             $true
                                                                         )
                                                                     )
@@ -1512,11 +1647,8 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                             Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Amount of Plots in Progress overall: "+$JobCountAll)                    
                             Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Amount of Plots in Progress on this Drive: "+$JobCountOnSameDisk) 
                             Write-Verbose ("PlotoSpawner @ "+(Get-Date)+": Skipping Drive: "+$PlottableTempDrive)
-                    }                             
-
-                
-                         
-    }
+                    }                                           
+            }
     }    
 else
     {
@@ -1599,6 +1731,8 @@ function Start-PlotoSpawns
     $EnableFy = $config.EnablePlotoFyOnStart
     $Plotter = $config.PlotterUsed
     $PathToUnofficialPlotter = $config.PathToUnofficialPlotter
+    $EnableMover = $config.EnableMover
+    $PathsToMovePlotsTo = $config.PathsToMovePlotsTo
 
     [int]$IntervallToWait = $config.SpawnerConfig.IntervallToCheckInMinutes
     [int]$InputAmountToSpawn = $config.SpawnerConfig.InputAmountToSpawn 
@@ -1624,15 +1758,20 @@ function Start-PlotoSpawns
     $P2Singleton = $config.JobConfig.P2SingletonAdress
     $ksize = $config.JobConfig.KSizeToPlot
     $Buckets = $config.JobConfig.Buckets
+    $DiscoUrl = $config.SpawnerAlerts.DiscordWebhookURL
+
     Write-Host "--------------------------------------------------------------------------------------------------"
 
-    Write-Host "PlotoManager @"(Get-Date)": BaseConfig:" -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": BaseConfig" -ForegroundColor Cyan
 
-    Write-Host "PlotoManager @"(Get-Date)": AlertsEnabled:"$EnableAlerts -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": Alerts Enabled:"$EnableAlerts -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": DiscordWebhookURL:"$DiscoUrl -ForegroundColor Cyan
     Write-Host "PlotoManager @"(Get-Date)": WindowStyle:"$WindowStyle -ForegroundColor Cyan
-    Write-Host "PlotoManager @"(Get-Date)": EnableAlertWatchdogOnStartUp:"$EnableFy -ForegroundColor Cyan
-    Write-Host "PlotoManager @"(Get-Date)": UsingPlotter:"$Plotter -ForegroundColor Cyan
-    Write-Host "PlotoManager @"(Get-Date)": CustomPlotterPath"$PathToUnofficialPlotter -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": Enable AlertWatchdog OnStartUp:"$EnableFy -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": Using Plotter:"$Plotter -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": Custom plotter path"$PathToUnofficialPlotter -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": PlotoMover is enabled:"$EnableMover -ForegroundColor Cyan
+    Write-Host "PlotoManager @"(Get-Date)": Paths to move final Plots to"$PathsToMovePlotsTo -ForegroundColor Cyan
 
     Write-Host "--------------------------------------------------------------------------------------------------"
 
@@ -1653,7 +1792,7 @@ function Start-PlotoSpawns
     Write-Host "PlotoManager @"(Get-Date)": Using temp drives: "$TempDrives -ForegroundColor Gray
     Write-Host "PlotoManager @"(Get-Date)": Using -2 drives: "$t2drives -ForegroundColor Gray
     Write-Host "PlotoManager @"(Get-Date)": Using destination drives: "$OutDrives -ForegroundColor Gray
-    Write-Host "PlotoManager @"(Get-Date)": Common denominator for destination drives to replot (name of logical volume): "$ReplotDrives -ForegroundColor Gray
+    Write-Host "PlotoManager @"(Get-Date)": Will be replotting the following drives: "$ReplotDrives -ForegroundColor Gray
 
     Write-Host "--------------------------------------------------------------------------------------------------"
 
@@ -1676,16 +1815,17 @@ function Start-PlotoSpawns
             if ($bgjobs)
                 {
                     Write-Host "PlotoManager @"(Get-Date)": We have found active PlotoFy jobs. Stopping it and starting fresh..."
-                    $bgjobs | Stop-Job | Remove-Job
+                    $bgjobs | Stop-Job | Remove-Job | Out-Null
                 }
             try 
                 {
-                    Start-PlotoFy
+                    Start-PlotoFy | Out-Null
                     Write-Host "PlotoManager @"(Get-Date)": Started PlotoFy successfully. Check your Discord" -ForegroundColor Green
                 }
             catch
                 {
                     Write-Host "PlotoManager @"(Get-Date)": Could not launch PlotoFy!" -ForegroundColor Red
+                    Write-Host $_.Exception.Message -ForegroundColor red
                 }
 
            Write-Host "---------------------------------------------------------------------------------"
@@ -1700,32 +1840,57 @@ function Start-PlotoSpawns
             if ($bgjobs)
                 {
                     Write-Host "PlotoManager @"(Get-Date)": We have found active ReplotWatchdog jobs. Stopping it and starting fresh..."
-                    $bgjobs | Stop-Job | Remove-Job
+                    $bgjobs | Stop-Job | Remove-Job | Out-Null
                 }
             try 
                 {
-                    Start-ReplotWatchDog
+                    Start-ReplotWatchDog | Out-Null
                     Write-Host "PlotoManager @"(Get-Date)": Started ReplotWatchDog successfully." -ForegroundColor Green
                 }
             catch
                 {
                     Write-Host "PlotoManager @"(Get-Date)": Could not launch ReplotWatchDog!" -ForegroundColor Red
+                    Write-Host $_.Exception.Message -ForegroundColor red
                 }
 
            Write-Host "---------------------------------------------------------------------------------"
             
         }
 
+    if ($EnableMover -eq "true")
+        {
+            Write-Host "PlotoManager @"(Get-Date)": Mover is enabled. Checking for active Watchdog jobs..."
+
+            $bgjobs = Get-Job | Where-Object {$_.Name -like "*PlotoMover*"}
+            if ($bgjobs)
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": We have found active MoverWatchdog jobs. Stopping it and starting fresh..."
+                    $bgjobs | Stop-Job | Remove-Job | Out-Null
+                }
+            try 
+                {
+                    Start-PlotoMove | Out-Null
+                    Write-Host "PlotoManager @"(Get-Date)": Started MoveWatchdog successfully." -ForegroundColor Green
+                }
+            catch
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Could not launch MoveWatchDog!" -ForegroundColor Red
+                    Write-Host $_.Exception.Message -ForegroundColor red
+                }
+
+           Write-Host "---------------------------------------------------------------------------------"
+        
+        }
+
     $SpawnedCountOverall = 0 
 
     Do
     {
-            if  (Get-PlotoJobs | Where-Object {$_.Status -eq "Aborted"})
-
-                {
-                    Write-Host "PlotoManager @"(Get-Date)": Detected aborted jobs. Removing them..."
-                    Remove-AbortedPlotoJobs
-                }
+        if  (Get-PlotoJobs | Where-Object {$_.Status -eq "Aborted"})
+            {
+                Write-Host "PlotoManager @"(Get-Date)": Detected aborted jobs. Removing them..."
+                Remove-AbortedPlotoJobs
+            }
 
         if ($verbose)
             {
@@ -2057,6 +2222,7 @@ foreach ($log in $logs)
                 {
                     $IsReplot = "false"
                 }
+
             $countchars = ($ArgumentList.ToCharArray()).Count
             if ($countchars -gt 199)
                 {
@@ -2064,8 +2230,6 @@ foreach ($log in $logs)
                     $exArgs = "-f YourKeys -p YourKeys"
                     $ArgumentList = $ArgumentList+$exArgs
                 }
-
-
 
             if ($PerfCounter)
                 {
@@ -2287,14 +2451,12 @@ function Remove-AbortedPlotoJobs
     $collectionWithJobsToReport= New-Object System.Collections.ArrayList
     foreach ($job in $JobsToAbort)
         {
-
             $JobToReport = [PSCustomObject]@{
             JobId     =  $job.jobid
             PlotId = $job.PlotId
             ArgumentList = $job.ArgumentList
             TempDrive = $job.TempDrive
             OutDrive = $job.OutDrive
-
             }
 
             #Send notification about spotted Job that is aborted
@@ -2359,20 +2521,42 @@ function Remove-AbortedPlotoJobs
 function Get-PlotoPlots
 {
 	Param(
-    $replot
+    $replot,
+    $mover
 		)
+
+$PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
+
+
+try 
+    {
+        $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
+        
+    }
+catch
+    {
+         Throw $_.Exception.Message
+         exit
+    } 
 
 #Scan for final Plot Files to Move
 
 if ($replot)
     {
         $OutDrivesToScan = Get-PlotoOutDrives -Replot $true
+        $PlotReplotPlotsOlderThan = $config.SpawnerConfig.ReplotPlotsOlderThan
+        $day = $PlotReplotPlotsOlderThan.Split(".")[0]
+        $month = $PlotReplotPlotsOlderThan.Split(".")[1]
+        $year = $PlotReplotPlotsOlderThan.Split(".")[2]
+        $datetoComp = Get-Date -Day $day -Month $month -Year $year
+        Write-Host ("GetPlotoPlotsReplot @ "+(Get-Date)+": Searching for plots older than: "+$datetoComp)
+
     }
-else
+
+if ($replot -eq $null)
     {
         $OutDrivesToScan = Get-PlotoOutDrives
     }
-
 
 if ($OutDrivesToScan)
     {
@@ -2380,35 +2564,58 @@ if ($OutDrivesToScan)
 
         foreach ($OutDriveToScan in $OutDrivesToScan)
         {
-            Write-Host "Iterating trough Drive: "$OutDriveToScan
-
-            $ItemsInDrive = Get-ChildItem $OutDriveToScan.DriveLetter
-            Write-Host "Checking if any item in that drive contains .PLOT as file ending..."
-
+            Write-Host ("GetPlotoPlots @ "+(Get-Date)+": Iterating trough Drive: "+$OutDriveToScan)
+            $ItemsInDrive = Get-ChildItem $OutDriveToScan.DriveLetter 
+            Write-Host ("GetPlotoPlots @ "+(Get-Date)+": Checking if any item in that drive contains .PLOT as file ending...")
             If ($ItemsInDrive)
-
             {
                 foreach ($item in $ItemsInDrive)
                 {
-                    If ($item.Extension -eq ".PLOT")
+                    if ($replot)
                         {
-                            Write-Host -ForegroundColor Green "Found a Final plot: "$item
-                    
-                            $FilePath = $item.Directory.Name + $item.name
-                            $Size = [math]::Round($item.Length  / 1073741824, 2)
+                            If ($item.Extension -eq ".PLOT" -and $item.CreationTime -le $datetoComp)
+                                {
+                                    Write-Verbose ("GetPlotoPlots @ "+(Get-Date)+": Found a Final plot that is older than specified date: "+$item.fullname)
+                                    $FilePath = $item.Directory.Name + $item.name
+                                    $Size = [math]::Round($item.Length  / 1073741824, 2)
 
-                            $PlotToMove = [PSCustomObject]@{
-                            FilePath     =  $FilePath
-                            Name = $item.Name
-                            Size = $Size
-                            CreationTime = $item.CreationTime
-                            }
+                                    $PlotToMove = [PSCustomObject]@{
+                                    FilePath     =  $FilePath
+                                    Name = $item.Name
+                                    Size = $Size
+                                    CreationTime = $item.CreationTime
+                                    }
 
-                            $collectionWithFinalPlots.Add($PlotToMove) | Out-Null
+                                    $collectionWithFinalPlots.Add($PlotToMove) | Out-Null
+                                }
+                            else
+                                {
+                                    Write-Verbose ("GetPlotoPlotsReplot @ "+(Get-Date)+": This is no plot that is older than specified date: "+$item.fullname) 
+                                }
                         }
-                    else
+                    if ($mover)
                         {
-                            Write-Host "This is no plot: "$item -ForegroundColor Yellow
+                        
+                            If ($item.Extension -eq ".PLOT")
+                                {
+                                    Write-Verbose ("Found a Final plot to move: "+$item.fullname)
+                    
+                                    $FilePath = $item.Directory.Name + $item.name
+                                    $Size = [math]::Round($item.Length  / 1073741824, 2)
+
+                                    $PlotToMove = [PSCustomObject]@{
+                                    FilePath     =  $FilePath
+                                    Name = $item.Name
+                                    Size = $Size
+                                    CreationTime = $item.CreationTime
+                                    }
+
+                                    $collectionWithFinalPlots.Add($PlotToMove) | Out-Null
+                                }
+                            else
+                                {
+                                    Write-Verbose ("This is no plot: "+$item) 
+                                }                        
                         }
                 }
             }
@@ -2423,92 +2630,204 @@ if ($OutDrivesToScan)
     }
 else
     {
-        Write-Host "No drives to Scan. Make sure you set your denominator correctly. Dont specify the drive, speficy the denom across all drives!" -ForegroundColor Red
+        Write-Host "No drives to Scan. Make sure you set your drives/paths correctly." -ForegroundColor Red
     }
     
     Write-Host "--------------------------------------------------------------------------------------------------"
 
-    return $collectionWithFinalPlots
+    $collectionWithFinalPlotsSorted = $collectionWithFinalPlots | sort CreationTime -Descending
+
+    return $collectionWithFinalPlotsSorted 
 }
 
 function Move-PlotoPlots
 {
-	Param(
-		[parameter(Mandatory=$true)]
-		$DestinationDrive,
-		[parameter(Mandatory=$true)]
-		$OutDriveDenom,
-		[parameter(Mandatory=$true)]
-        [ValidateSet("BITS", "Move-Item", IgnoreCase = $true)]
-		$TransferMethod
-		)
 
-$PlotsToMove = Get-PlotoPlots
+    Write-Host "PlotoManager @"(Get-Date)": Loading config from "$env:HOMEDRIVE$env:HOMEPath"\.chia\mainnet\config\PlotoSpawnerConfig.json..."
+    $PathToConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
+
+    try 
+        {
+            $config = Get-Content -raw -Path $PathToConfig | ConvertFrom-Json
+            Write-Host "PlotoManager @"(Get-Date)": Loaded config successfully." -ForegroundColor Green
+        }
+    catch
+        {
+            Write-Host "PlotoManager @"(Get-Date)": Could not read Config. Check your config with the hints below and on https://jsonformatter.org/ for validation. If you cant get it to run, join Ploto Discord for help.  " -ForegroundColor Red
+
+            if ($_.Exception.Message -like "*1384*")
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Looks like your PathToPlotoModule is not specified correctly. You have to use \ instead of /!" -ForegroundColor Yellow
+                }
+
+           if ($_.Exception.Message -like "*1093*")
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Looks like there is a ','  missing somewhere at the end of a line " -ForegroundColor Yellow
+                }
+
+           if ($_.Exception.Message -like "*1094*")
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Looks like there is a '$a' missing somewhere at the  beginning or end of a  property " -ForegroundColor Yellow
+                }
+
+
+            if ($_.Exception.Message -notlike "*1384*" -and $_.Exception.Message -notlike "*1093*" -and $_.Exception.Message -notlike "*1094*") 
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Could not determine possible rootcause. Check your config on https://jsonformatter.org/ for validation. If you cant get it to run, join Ploto Discord for help." -ForegroundColor Red
+                    Write-Host $_.Exception.Message -ForegroundColor red
+                }
+
+            throw "Exiting cause there is no readable config."
+        } 
+ 
+$DestinationDrives = Get-PlotoOutDrives -Mover $true
+$PlotsToMove = Get-PlotoPlots -mover $true
+
+
+foreach ($plot in $PlotsToMove)
+    {
+            $IsAlreadyTransferred = Get-BitsTransfer | Where-Object {$_.FileList.localname -eq $plot.filepath}  | Where-Object {$_.JobState -eq "Transferred"}
+            if ($IsAlreadyTransferred)
+                {
+                    Write-Host "PlotoMover @"(Get-Date)": WARN:" $plot.FilePath "was already transferred but file still exists on source. Deleting it now."
+                    
+                    try
+                        {
+                            Remove-Item -Path $IsAlreadyTransferred.FileList.localname -Force
+                        }
+                    catch
+                        {
+                            Write-Host "PlotoMover @"(Get-Date)": Could not delete local plot that was already transferred to finaldir" -ForegroundColor red
+                            throw $_.Exception.Message
+                        }
+                }
+    }
+
+
+$replot = $config.SpawnerConfig.ReplotForPool
+$crtime = $config.SpawnerConfig.ReplotPlotsOlderThan
+$crtime = Get-Date -Day ($crtime.Split(".")[0]) -Month ($crtime.Split(".")[1]) -Year ($crtime.Split(".")[2])
+
+if ($replot -eq "true")
+    {
+        $PlotsToMove = Get-PlotoPlots -mover $true | where-object {$_.CreationTime -gt $crtime}
+    }
+
+else
+    {
+        $PlotsToMove = Get-PlotoPlots -mover $true   
+    }
+
+
+Write-Host "PlotoMover @"(Get-Date)": Checking if we have any plots to move..." 
 
 if ($PlotsToMove)
     {
-        Write-Host "PlotoMover @"(Get-Date)": There are Plots found to be moved: "
+        Write-Host "PlotoMover @"(Get-Date)": There were Plots found to be moved: "
         foreach ($plot in $PlotsToMove)
             {
                 Write-Host $plot.filepath -ForegroundColor Green
             }
-        Write-Host "PlotoMover @"(Get-Date)": A total of "$PlotsToMove.Count" plot have been found."
-                          
+        Write-Host "PlotoMover @"(Get-Date)": A total of "$PlotsToMove.Count" plot have been found."     
 
         foreach ($plot in $PlotsToMove)
-        {
-            If ($TransferMethod -eq "BITS")
+        {  
+            #Check if BITS Transfer already in progress:
+
+            $HasBITSinProgress = Get-BitsTransfer | Where-Object {$_.FileList.localname -eq $plot.filepath}  | Where-Object {$_.JobState -ne "Transferred"}
+
+            if ($HasBITSinProgress)
                 {
-                    #Check if BITS Transfer already in progress:
-                    $HasBITSinProgress = Get-BitsTransfer | Where-Object {$_.FileList.RemoteName -eq $plot.Filepath} 
-
-                    if ($HasBITSinProgress)
-                        {
-                            Write-Host "PlotoMover @"(Get-Date)": WARN:" $plot.FilePath "has already a BITS transfer in progress"
-                        }
-
-                    else
-                        {
-                             try 
-                                {
-                                    Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestinationDrive "using BITS"
-                                    $source = $plot.FilePath
-                                    Start-BitsTransfer -Source $source -Destination $DestinationDrive -Description "Moving Plot" -DisplayName "Moving Plot"
-                                }
-
-                            catch
-                                {
-                                    Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
-                                }        
-                        }
-                    }
+                    Write-Host "PlotoMover @"(Get-Date)": WARN:" $plot.FilePath "has already a BITS transfer in progress, skipping this plot"
+                }
 
             else
                 {
-                    #Check local destination drive space
-                    $DestSpaceCheck = get-WmiObject win32_logicaldisk | Where-Object {$_.DeviceID -like "*$DestinationDrive*"}
-                    $FreeSpaceDestDrive = [math]::Round($destspaceCheck.FreeSpace  / 1073741824, 2)
-
-                    if ($FreeSpaceDestDrive -gt 107)
+                    #get best Destination Drive 
+                    $AllBits = Get-BitsTransfer | Where-Object {$_.JobState -ne "Transferred"}
+                    if ($AllBits)
                         {
-                            Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestinationDrive "using Move-Item."
+                            Write-Host "has bits"
+                            $collectionWithJobs= New-Object System.Collections.ArrayList
+                            foreach ($trans in $AllBits)
+                                {
+                                    #getFileName and DrLetter
 
-                            try 
-                                {
-                                    Move-Item -Path $plot.FilePath -Destination $DestinationDrive
+                                    #if RemoteName is a MountPoint or folder...cannot do this logic
+                                    $DestDriveInJob = $trans.FileList.RemoteName.split("\")
+                                    if ($DestDriveInJob.Count -gt 2)
+                                        {
+                                           $DestDriveInJobReport = $DestDriveInJob[0]+"\"+$DestDriveInJob[1]
+                                        }
+                                    else
+                                        {
+                                            $DestDriveInJobReport = $DestDriveInJob[0]
+                                        }
+
+                                    $JobtoPass = [PSCustomObject]@{
+                                    DriveLetter     =  $DestDriveInJobReport
+                                    PlotName = $Trans.FileList.RemoteName
+                                    CompletedOn = $Trans.TransferCompletionTime
+                                    }
                                 }
-                            catch
-                                {
-                                    Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
-                                }
-                            
+
+                            $collectionWithJobs.Add($JobtoPass) | Out-Null
+                            $min = ($collectionWithJobs | Measure-Object -Property DriveLetter -Minimum).Minimum
+                            write-host "min is:"$min
+                            $DestDrive = Get-PlotoOutDrives -Mover $true | Where-Object {$_.IsPlottable -eq "true"} | Where-Object {$_.DriveLetter -eq $min}
+
                         }
                     else
                         {
-                            Write-Host "PlotoMover @"(Get-Date)": Local Destination Drive does not have enough disk space. Cant move." -ForegroundColor Red
+                            if ($DestinationDrives.count -gt 1)
+                                {
+
+                                   #Get the FinalDir with most free space (availableamountofplotstohold)
+                                    $max = ($DestinationDrives | Measure-Object -Property AvailableAmountToPlot -Maximum).maximum
+                                    write-host "max is:"$max
+                                    $DestDrive = Get-PlotoOutDrives -Mover $true | Where-Object {$_.AvailableAmountToPlot -eq $max} | Where-Object {$_.IsPlottable -eq "true"}
+                                }
+                            else
+                                {
+                                    $DestDrive = Get-PlotoOutDrives -Mover $true | Where-Object {$_.IsPlottable -eq "true"}
+                                }
                         }
-                }
-        }
+
+                    if ($DestDrive.FullPathToUse -ne "")
+                        {
+                            $DestDrive = $DestDrive.FullPathToUse
+                        }
+                    else
+                        {
+                            $DestDrive = $DestDrive.DriveLetter
+                        }
+
+                    Write-Host "DestinationDrive is:" $DestDrive
+                    if ($DestDrive -eq $null)
+                        {
+                            Write-Host "PlotoMover @"(Get-Date)": ERROR: No Outdrives found!" -ForegroundColor Red
+                            throw "error"
+                            break
+                        }
+
+                    try 
+                        {
+                            
+                            Write-Host "PlotoMover @"(Get-Date)": Moving plot: "$plot.FilePath "to" $DestDrive "using BITS"
+                            $source = $plot.FilePath
+                            Start-BitsTransfer -Source $source -Destination $DestDrive -Description "Moving Ploto Plot" -DisplayName "Moving Plot" -TransferType Upload -Asynchronous
+                        }
+
+                    catch
+                        {
+                            Write-Host "PlotoMover @"(Get-Date)": ERROR: Could not move Plot!" -ForegroundColor Red
+                            Write-Host "PlotoMover @"(Get-Date)": ERROR: " $_.Exception.Message -ForegroundColor Red
+                            Write-Host "PlotoMover @"(Get-Date)": ERROR: DestinationDrive is (source for Detsination Param):" $DestDrive -ForegroundColor Red
+                        } 
+                    
+                    }
+            start-sleep 1800
+        }   
     }
 
 else
@@ -2520,25 +2839,37 @@ else
 
 function Start-PlotoMove
 {
-	Param(
-		[parameter(Mandatory=$true)]
-		$DestinationDrive,
-		[parameter(Mandatory=$true)]
-		$OutDriveDenom,
-        [ValidateSet("BITS", "Move-Item", IgnoreCase = $true)]
-        $TransferMethod
-		)
-
-    $count = 0
-    $endlessCount = 1000
-
-    Do
+    Start-Job -ScriptBlock {
+    try 
         {
-            Move-PlotoPlots -DestinationDrive $DestinationDrive -OutDriveDenom $OutDriveDenom -TransferMethod $TransferMethod
-            Start-Sleep 900
+            $PathToAlarmConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
+            $config = Get-Content -raw -Path $PathToAlarmConfig | ConvertFrom-Json -ErrorAction Stop
+            Write-Verbose "Loaded Config successfully"
+            
         }
+     catch
+        {
+            Throw $_.Exception.Message
+        } 
 
-    Until ($count -eq $endlessCount)
+    $PathToPloto = $config.PathToPloto 
+    Unblock-File $PathToPloto
+    Import-Module $PathToPloto -Force
+    Request-PlotoMove
+
+    } -Name "PlotoMove" 
+}
+
+function Request-PlotoMove
+{
+$count = 0
+    for ($count -lt 100000000000)
+        {
+           Write-Host "RequestPlotoMove @"(Get-Date)": Calling Move-PlotoPlots..."
+           Move-PlotoPlots
+           $count++
+           Start-Sleep 300 
+        }
 }
 
 function Invoke-PlotoDeleteForReplot
@@ -2549,8 +2880,43 @@ function Invoke-PlotoDeleteForReplot
 		$ReplotDrives
 		)
 
+    $PathToConfig = $env:HOMEDRIVE+$env:HOMEPath+"\.chia\mainnet\config\PlotoSpawnerConfig.json"
+    try 
+        {
+            $config = Get-Content -raw -Path $PathToConfig | ConvertFrom-Json
+            Write-Host "PlotoManager @"(Get-Date)": Loaded config successfully." -ForegroundColor Green
+        }
+    catch
+        {
+            Write-Host "PlotoManager @"(Get-Date)": Could not read Config. Check your config with the hints below and on https://jsonformatter.org/ for validation. If you cant get it to run, join Ploto Discord for help.  " -ForegroundColor Red
+
+            if ($_.Exception.Message -like "*1384*")
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Looks like your PathToPlotoModule is not specified correctly. You have to use \ instead of /!" -ForegroundColor Yellow
+                }
+
+           if ($_.Exception.Message -like "*1093*")
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Looks like there is a ','  missing somewhere at the end of a line " -ForegroundColor Yellow
+                }
+
+           if ($_.Exception.Message -like "*1094*")
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Looks like there is a '$a' missing somewhere at the  beginning or end of a  property " -ForegroundColor Yellow
+                }
+
+
+            if ($_.Exception.Message -notlike "*1384*" -and $_.Exception.Message -notlike "*1093*" -and $_.Exception.Message -notlike "*1094*") 
+                {
+                    Write-Host "PlotoManager @"(Get-Date)": Could not determine possible rootcause. Check your config on https://jsonformatter.org/ for validation. If you cant get it to run, join Ploto Discord for help." -ForegroundColor Red
+                    Write-Host $_.Exception.Message -ForegroundColor red
+                }
+
+            throw "Exiting cause there is no readable config."
+        }
+
     #Get active jobs entering phase 4.
-    $activeJobs = Get-PlotoJobs | Where-Object {$_.Status -ge 3.9} | Where-Object {$_.IsReplot -eq "true"}
+    $activeJobs = Get-PlotoJobs | Where-Object {$_.Status -ge 3.8} | Where-Object {$_.IsReplot -eq "true"} | Where-Object {$_.Status -ne "Completed"} | Where-Object {$_.Status -ne "Aborted"}
     if ($activeJobs)
         {
             Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Found active jobs that are about to enter phase 4")
@@ -2565,7 +2931,14 @@ function Invoke-PlotoDeleteForReplot
                             {
                                 Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Not enough space available for new plot, need to delete oldest one for replotting... ")
                                 #pick oldest plottodel
-                                $plottoDel = (Get-PlotoPlots -replot $true | sort creationtime)[0]
+                                $fp = $OutDriveToCheck.DriveLetter
+                                $plottoDel = (Get-PlotoPlots -replot $true | Where-Object {$_.FilePath -like "*$fp*"} )
+                                if ($plottoDel.count -gt 1)
+                                    {
+                                        $plottoDel = $plottoDel[0]
+                                    }
+
+
                                 Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": Oldest Plot in ReplotDrive "+$OutDriveToCheck.DriveLetter+ " of job with id "+$job.JobId+" that is about to finish: "+$plottoDel.FilePath)
 
                                 $plotitemtodel = Get-ChildItem $plottoDel.FilePath
@@ -2578,6 +2951,46 @@ function Invoke-PlotoDeleteForReplot
                                     {
                                         Write-Host ("PlotoDeleteForReplot @ "+(Get-Date)+": ERROR: Could not delete Plot! See below for details. ") -ForegroundColor Red
                                         Write-Host $_.Exception.Message -ForegroundColor Red
+                                    }
+                                if ($EnableAlerts -eq $true)
+                                    {
+                                        #Create embed builder object via the [DiscordEmbed] class
+                                        $embedBuilder = [DiscordEmbed]::New(
+                                                            'We deleted a Plot to make space for a new one',
+                                                            'Just letting you know that I we have to delete a final plot, cause we needed space for a shiny, brand new plot.'
+                                                        )
+                                        $StaId = "Plot removed"
+                                        $JobDetailsStartTimeMsg = $plottoDel
+                                        $embedBuilder.AddField(
+                                            [DiscordField]::New(
+                                                $StaId,
+                                                $JobDetailsStartTimeMsg, 
+                                                $true
+                                            )
+                                        )
+
+
+                                        #Add purple color
+                                        $embedBuilder.WithColor(
+                                            [DiscordColor]::New(
+                                                'yellow'
+                                            )
+                                        )
+
+                                        $plotname = $config.PlotterName
+                                        $footie = "Ploto: "+$plotname
+                                        #Add a footer
+                                        $embedBuilder.AddFooter(
+                                            [DiscordFooter]::New(
+                                                $footie
+                                            )
+                                        )
+
+                                        $WebHookURL = $config.SpawnerAlerts.DiscordWebHookURL
+
+                                        Invoke-PsDsHook -CreateConfig $WebHookURL -Verbose:$false | Out-Null 
+                                        Invoke-PSDsHook $embedBuilder -Verbose:$false | Out-Null 
+                                    
                                     }
                             }
                         else
@@ -2786,7 +3199,9 @@ function Invoke-PlotoFyStatusReport
                 {   
                     $countji++
                     $ArgId = "ArgumentList Job "+$countji
-                    $JobDetailsArgListMsg = $ji.ArgumentList.TrimStart("plots create ")
+                    $ArgumentList = $ji.ArgumentList
+
+                    $JobDetailsArgListMsg = $ArgumentList
                     $embedBuilder.AddField(
                         [DiscordField]::New(
                             $ArgId,
@@ -2962,14 +3377,14 @@ catch
          exit
     } 
 
-$ReplotDriveDenom = $config.DiskConfig.DenomForOutDrivesToReplotForPools
+$ReplotDriveDenom = $config.DiskConfig.ReplotDrives
 
 $count = 0
     for ($count -lt 100000000000)
         {
-           Invoke-PlotoDeleteForReplot -ReplotDriveDenom $ReplotDriveDenom
+           Invoke-PlotoDeleteForReplot -ReplotDrives $ReplotDriveDenom
            $count++
-           Start-Sleep 300 
+           Start-Sleep 60
         }
 
 }
@@ -3855,7 +4270,6 @@ function Invoke-PayloadBuilder {
 
     }
 }
-
 
 function Measure-Latest {
     BEGIN { $latest = $null }
