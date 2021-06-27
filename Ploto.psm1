@@ -2,7 +2,7 @@
 .SYNOPSIS
 Name: Ploto
 
-Version: 1.1.239992
+Version: 1.1.239993
 Author: Tydeno
 
 .DESCRIPTION
@@ -777,7 +777,7 @@ if ($PlottableTempDrives -and $JobCountAll0 -lt $MaxParallelJobsOnAllDisks)
                                             $min = ($replotDrives | measure-object -Property FreeSpace -minimum).minimum
                                             $OutDrive = $replotDrives | Where-Object { $_.FreeSpace -eq $min}
 
-                                            $FinalPlots = Get-PlotoPlots -replot $true | out-null
+                                            $FinalPlots = Get-PlotoPlots -replot $true 
                                             $collectionWithPlots= New-Object System.Collections.ArrayList
                                             if ($FinalPlots)
                                                 {
